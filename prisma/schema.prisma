@@ -1,0 +1,153 @@
+// Este é o arquivo do seu schema Prisma, usado para definir a estrutura do banco de dados
+// Consulte a documentação para mais informações: https://pris.ly/d/prisma-schema
+
+// Definição do gerador do cliente Prisma para JS
+generator client {
+  provider = "prisma-client-js" // Gera o Prisma Client para acesso ao banco de dados
+}
+
+// Definição da fonte de dados (o banco de dados PostgreSQL)
+datasource db {
+  provider = "postgresql" // Tipo de banco de dados que estamos usando
+  url      = env("DATABASE_URL") // URL de conexão ao banco de dados, que está definida em um arquivo .env
+}
+
+// Enum de Titulação para os usuários, que define os tipos de titulação acadêmica
+enum Titulacao {
+  Bacharel      // Bacharel
+  Licenciado    // Licenciado
+  Especialista // Especialista
+  Mestre        // Mestre
+  Doutor       // Doutor
+}
+
+// Enum para definir o tipo de participação nos eventos
+enum tipoParticipacao {
+  Ouvinte      // Participante como ouvinte
+  Palestrante  // Participante como palestrante
+  Organizador  // Organizador do evento
+}
+
+// Model para o Projeto, contendo as informações relacionadas a um projeto
+model Projeto {
+  id          Int      @id @default(autoincrement()) // ID único para cada projeto
+  titulo      String   // Título do projeto
+  imagem      String   // URL da imagem do projeto
+  descricao   String   // Descrição do projeto
+  categoria   String   // Categoria do projeto
+  dataInicio DateTime  // Data de início do projeto
+  dataFim    DateTime  // Data de término do projeto
+  createdAt DateTime @default(now()) // Data de criação (automática)
+  updatedAt DateTime @updatedAt // Data de última atualização (automática)
+}
+
+// Model para o Curso, que inclui os detalhes de cursos oferecidos
+model Curso {
+  id          Int      @id @default(autoincrement()) // ID único para cada curso
+  titulo      String   // Título do curso
+  imagem      String   // URL da imagem do curso
+  descricao   String   // Descrição do curso
+  categoria   String   // Categoria do curso
+  cargaHoraria Float   // Carga horária do curso
+  linkInscricao String // Link para inscrição no curso
+  vagas       Int      // Quantidade de vagas disponíveis
+  bibliografia String // Bibliografia do curso
+  metodologia String  // Metodologia utilizada no curso
+  metodoAvaliacao String // Método de avaliação do curso
+  idProjeto  Int // Relacionamento com o projeto ao qual o curso pertence
+  idUsuario Int // Relacionamento com o usuário que criou o curso
+  createdAt DateTime @default(now()) // Data de criação (automática)
+  updatedAt DateTime @updatedAt // Data de última atualização (automática)
+}
+
+// Model para as Aulas, contendo informações sobre cada aula oferecida
+model Aula {
+  id          Int      @id @default(autoincrement()) // ID único para cada aula
+  titulo      String   // Título da aula
+  linkPdf     String   // Link para o PDF da aula
+  linkVideo   String   // Link para o vídeo da aula
+  createdAt DateTime @default(now()) // Data de criação (automática)
+  updatedAt DateTime @updatedAt // Data de última atualização (automática)
+}
+
+// Model para os Usuários, contendo dados sobre cada usuário no sistema
+model Usuario {
+  id          Int      @id @default(autoincrement()) // ID único para cada usuário
+  email       String   @unique // Email único do usuário
+  fotoPerfil  String   // URL da foto de perfil do usuário
+  senha       String   // Senha do usuário
+  Nome        String   // Nome completo do usuário
+  Titulacao   Titulacao // Titulação acadêmica do usuário (enum Titulacao)
+  instituicaoEnsino String // Instituição de ensino do usuário
+  formacaoAcademica String // Formação acadêmica do usuário
+  resumoPessoal   String // Resumo pessoal do usuário
+  createdAt DateTime @default(now()) // Data de criação (automática)
+  updatedAt DateTime @updatedAt // Data de última atualização (automática)
+}
+
+// Model para os Links associados aos usuários, como links externos ou redes sociais
+model Link {
+  id      Int   @id @default(autoincrement()) // ID único para cada link
+  link    String // URL do link
+  idUsuario Int  // Relacionamento com o usuário dono do link
+  createdAt DateTime @default(now()) // Data de criação (automática)
+  updatedAt DateTime @updatedAt // Data de última atualização (automática)
+}
+
+// Model para as Publicações feitas pelos usuários, como artigos, pesquisas, etc.
+model Publicacao {
+  id          Int      @id @default(autoincrement()) // ID único para cada publicação
+  descricao   String   // Descrição da publicação
+  link        String   // Link para acessar a publicação
+  idUsuario   Int      // Relacionamento com o usuário que fez a publicação
+  createdAt DateTime @default(now()) // Data de criação (automática)
+  updatedAt DateTime @updatedAt // Data de última atualização (automática)
+}
+
+// Model para Eventos, onde são armazenados detalhes de cada evento
+model Evento {
+  id          Int      @id @default(autoincrement()) // ID único para cada evento
+  titulo      String   // Título do evento
+  descricao   String   // Descrição do evento
+  data        DateTime // Data e hora do evento
+  linkParticipacao String // Link para participar do evento
+  createdAt   DateTime @default(now()) // Data de criação (automática)
+  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+}
+
+// Model para as Imagens associadas aos Eventos, com links para as imagens
+model imagemEvento {
+  id          Int      @id @default(autoincrement()) // ID único para cada imagem
+  link        String   // URL da imagem
+  idEvento    Int      // Relacionamento com o evento a qual a imagem pertence
+  createdAt   DateTime @default(now()) // Data de criação (automática)
+  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+}
+
+// Model para associar os usuários aos eventos e definir o tipo de participação
+model eventoUsuario {
+  id          Int      @id @default(autoincrement()) // ID único para cada associação
+  idUsuario   Int      // Relacionamento com o usuário
+  idEvento    Int      // Relacionamento com o evento
+  tipoParticipacao  tipoParticipacao // Tipo de participação do usuário no evento (enum tipoParticipacao)
+  createdAt   DateTime @default(now()) // Data de criação (automática)
+  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+}
+
+// Model para associar os usuários aos cursos em que se matricularam
+model cursoUsuario {
+  id          Int      @id @default(autoincrement()) // ID único para cada associação
+  idCurso     Int      // Relacionamento com o curso
+  idUsuario   Int      // Relacionamento com o usuário
+  createdAt   DateTime @default(now()) // Data de criação (automática)
+  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+}
+
+// Model para associar os usuários aos projetos em que estão envolvidos
+model projetoUsuario {
+  id          Int      @id @default(autoincrement()) // ID único para cada associação
+  idProjeto   Int      // Relacionamento com o projeto
+  idUsuario   Int      // Relacionamento com o usuário
+  createdAt   DateTime @default(now()) // Data de criação (automática)
+  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+}
