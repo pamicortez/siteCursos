@@ -2,10 +2,18 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
 
+
+/*
+- Se chegar aqui, significa que a solicitação já deve ter sido validada e o token de acesso deve ter sido verificado. Portanto, não é necessário verificar o token de acesso novamente.
+- Deve-se criar objetos dto para resposta ao usuário?
+- Quais outros  tipos de filtros deve ter para a busca de projetos?
+*/
+
 // Método GET para retornar todos os projetos
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const titulo = searchParams.get('titulo');
+	const categoria = searchParams.get('categoria');
 	try {
 		// === Buscando projetos com título ===
 		if (titulo) {
@@ -16,9 +24,18 @@ export async function GET(request: Request) {
 			});
 		
 			return NextResponse.json(projetos);
-		
-		// === Buscando todos os projetos ===
-		} else {
+		}
+		// === Buscando projetos com categoria ===
+		else if (categoria) {
+			console.log('Buscando projetos com categoria:', categoria); // http://localhost:3000/api/projeto?categoria=IA
+			// Buscar projetos que tenham a categoria especificada
+			const projetos = await prisma.projeto.findMany({
+				where: { categoria },
+			});
+			return NextResponse.json(projetos);
+		}
+		// === Buscando todos os projetos === 
+		else {
 			console.log('Buscando todos os projetos'); // http://localhost:3000/api/projeto
 			// Retorna todos os projetos se não houver título na URL
 			const projetos = await prisma.projeto.findMany();
