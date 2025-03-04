@@ -16,11 +16,23 @@ VALUES
 ('Curso de IA', 'https://example.com/curso1.jpg', 'Curso sobre inteligência artificial', 'Tecnologia', 40, 'https://inscricao.com/curso1', 50, 'Bibliografia AI', 'Metodologia prática', 'Provas e projetos', 1, 1, NOW(), NOW()),
 ('Curso de Biotecnologia', 'https://example.com/curso2.jpg', 'Curso sobre biotecnologia', 'Ciências', 35, 'https://inscricao.com/curso2', 30, 'Bibliografia Bio', 'Aulas expositivas', 'Trabalhos e provas', 2, 2, NOW(), NOW());
 
+-- Inserindo aulas
+INSERT INTO "Aula" (titulo, "linkPdf", "linkVideo", "idAula", "createdAt", "updatedAt")
+VALUES
+('Introdução à IA', 'https://example.com/ia1.pdf', 'https://example.com/ia1.mp4', 1, NOW(), NOW()),
+('Fundamentos de Biotecnologia', 'https://example.com/bio1.pdf', 'https://example.com/bio1.mp4', 2, NOW(), NOW());
+
 -- Inserindo eventos
 INSERT INTO "Evento" (titulo, descricao, "data", "linkParticipacao", "createdAt", "updatedAt")
 VALUES
 ('Congresso de IA', 'Evento sobre inteligência artificial', '2024-09-10', 'https://evento.com/ia', NOW(), NOW()),
 ('Seminário de Biotecnologia', 'Discussões sobre biotecnologia avançada', '2024-10-15', 'https://evento.com/bio', NOW(), NOW());
+
+-- Inserindo imagens dos eventos
+INSERT INTO "imagemEvento" (link, "idEvento", "createdAt", "updatedAt")
+VALUES
+('https://example.com/evento1.jpg', 1, NOW(), NOW()),
+('https://example.com/evento2.jpg', 2, NOW(), NOW());
 
 -- Inserindo participação nos eventos
 INSERT INTO "eventoUsuario" ("idUsuario", "idEvento", "tipoParticipacao", "createdAt", "updatedAt")
@@ -39,3 +51,15 @@ INSERT INTO "Publicacao" (descricao, link, "idUsuario", "createdAt", "updatedAt"
 VALUES
 ('Artigo sobre redes neurais', 'https://arxiv.org/ai', 1, NOW(), NOW()),
 ('Pesquisa sobre genômica', 'https://arxiv.org/bio', 2, NOW(), NOW());
+
+-- Relacionando usuários com cursos
+INSERT INTO "cursoUsuario" ("idCurso", "idUsuario", "createdAt", "updatedAt")
+VALUES
+(1, 1, NOW(), NOW()),
+(2, 2, NOW(), NOW());
+
+-- Relacionando usuários com projetos
+INSERT INTO "projetoUsuario" ("idProjeto", "idUsuario", "createdAt", "updatedAt")
+VALUES
+(1, 1, NOW(), NOW()),
+(2, 2, NOW(), NOW());
