@@ -46,6 +46,7 @@ CREATE TABLE "Aula" (
     "titulo" TEXT NOT NULL,
     "linkPdf" TEXT NOT NULL,
     "linkVideo" TEXT NOT NULL,
+    "idCurso" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

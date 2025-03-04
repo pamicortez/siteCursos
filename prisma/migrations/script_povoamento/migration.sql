@@ -17,7 +17,7 @@ VALUES
 ('Curso de Biotecnologia', 'https://example.com/curso2.jpg', 'Curso sobre biotecnologia', 'Ciências', 35, 'https://inscricao.com/curso2', 30, 'Bibliografia Bio', 'Aulas expositivas', 'Trabalhos e provas', 2, 2, NOW(), NOW());
 
 -- Inserindo aulas
-INSERT INTO "Aula" (titulo, "linkPdf", "linkVideo", "idAula", "createdAt", "updatedAt")
+INSERT INTO "Aula" (titulo, "linkPdf", "linkVideo", "idCurso", "createdAt", "updatedAt")
 VALUES
 ('Introdução à IA', 'https://example.com/ia1.pdf', 'https://example.com/ia1.mp4', 1, NOW(), NOW()),
 ('Fundamentos de Biotecnologia', 'https://example.com/bio1.pdf', 'https://example.com/bio1.mp4', 2, NOW(), NOW());

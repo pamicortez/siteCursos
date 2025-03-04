@@ -66,7 +66,7 @@ model Aula {
   titulo      String   // Título da aula
   linkPdf     String   // Link para o PDF da aula
   linkVideo   String   // Link para o vídeo da aula
-  idAula      Int  // Relacionamento com o curso ao qual a aula pertence
+  idCurso     Int  // Relacionamento com o curso ao qual a aula pertence
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
 }
