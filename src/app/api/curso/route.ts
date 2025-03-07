@@ -67,13 +67,29 @@ export async function DELETE(request: Request) {
 // Método para criar um novo Curso. É preciso ter um Projeto e um Usuário
 export async function POST(request: Request) {
 	try {
-	  const data: Prisma.CursoCreateInput = await request.json(); // Pega os dados do corpo da requisição
-	  const novoCurso = await prisma.curso.create({
-		data, // Dados do Curso que será criado
-	  });
-	  return NextResponse.json(novoCurso, { status: 201 }); // Retorna o novo Curso com status 201
-	} catch (error) {
-	  console.error('Erro ao criar o Curso:', error);
-	  return NextResponse.error(); // Retorna um erro em caso de falha
+		const data: Prisma.CursoCreateInput = await request.json(); // Pega os dados do corpo da requisição
+
+		const {idUsuario, idProjeto} = data;
+
+		// Verifica se o usuário existe
+		const usuario = await prisma.usuario.findUnique({ where: { id: idUsuario } });
+		const projeto = await prisma.projeto.findUnique({ where: { id: idProjeto } })
+		if (!usuario) {
+			return NextResponse.json({error: 'Usuário não encontrado'}, {status: 400})
+		} else if (!projeto){
+			return NextResponse.json({error: 'Projeto não encontrado'}, {status: 400})
+		}
+
+		const novoCurso = await prisma.curso.create({
+			data, // Dados do Curso que será criado
+		});
+		return NextResponse.json(novoCurso, { status: 201 }); // Retorna o novo Curso com status 201
+	} catch (error ) {
+		if (error instanceof Prisma.PrismaClientValidationError){
+			return NextResponse.json({error: 'Tipos dos dados incorretos'}, {status: 400})
+		} 
+
+		console.error('Erro ao criar o Curso:', error);
+		return NextResponse.error(); // Retorna um erro em caso de falha
 	}
   }
