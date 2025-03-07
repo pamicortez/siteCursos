@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
+import bcrypt from "bcryptjs";
 
 // Método GET para retornar todos os usuários
 export async function GET() {
@@ -16,9 +17,17 @@ export async function GET() {
 // Método POST para criar um novo usuário
 export async function POST(request: Request) {
   try {
+    const saltRounds = 10
+
     const data: Prisma.UsuarioCreateInput = await request.json(); // Pega os dados do corpo da requisição
+    
+    const hashSenha = await bcrypt.hash(data.senha, saltRounds); // Encriptando a senha
+    
     const novoUsuario = await prisma.usuario.create({
-      data, // Dados do usuário a serem criados
+      data: {
+        ...data, // Dados do usuário a serem criados
+        senha: hashSenha,
+      },
     });
     return NextResponse.json(novoUsuario, { status: 201 }); // Retorna o novo usuário com status 201
   } catch (error) {

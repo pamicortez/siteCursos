@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
+import { Prisma } from '@prisma/client';
 
 
 /*
@@ -68,3 +69,48 @@ export async function DELETE(request: Request) {
 		return new NextResponse('Erro interno', { status: 500 });
 	}
 }
+
+// Método para criar um novo Projeto. É preciso ter um usuário
+export async function POST(request: Request) {
+	try {
+	  const data: Prisma.ProjetoCreateInput = await request.json(); // Pega os dados do corpo da requisição
+	  
+	  const { dataInicio, dataFim } = data;
+	  const { usuarioId, funcao, ...projetoData } = data as any;
+
+	  // Validação: usuárioId e funcao são obrigatórios
+	  if (!usuarioId || !funcao) {
+		return NextResponse.json({error: 'Usuário e funcao são obrigatórios'}, {status: 400})
+	  }
+  
+	  // Verifica se o usuário existe
+	  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+	  if (!usuario) {
+		return NextResponse.json({error: 'Usuário não encontrado'}, {status: 400})
+	  }
+
+	  // Verificação lógica para garantir que a data de fim não seja anterior à data de início
+	  if (new Date(dataFim) < new Date(dataInicio)) {
+		return NextResponse.json({error: 'O fim do projeto é anterior ao início'}, {status: 400});
+	  }
+
+	  const novoProjeto = await prisma.projeto.create({
+		data:{
+			...projetoData, // Dados do projeto que será criado
+		}
+	  });
+
+	  // Relação entre o usuário e o projeto
+	  const novoProjUsu = await prisma.projetoUsuario.create({ 
+		data:{
+			idProjeto: novoProjeto.id,
+			idUsuario: usuarioId,
+		}
+	  })
+
+	  return NextResponse.json(novoProjeto, { status: 201 }); // Retorna o novo projeto com status 201
+	} catch (error) {
+	  console.error('Erro ao criar o Projeto:', error);
+	  return NextResponse.error(); // Retorna um erro em caso de falha
+	}
+  }

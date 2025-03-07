@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
+import { Prisma } from '@prisma/client';
 
 
 // Método GET para retornar todos os cursos
@@ -62,3 +63,17 @@ export async function DELETE(request: Request) {
 		return new NextResponse('Erro interno', { status: 500 });
 	}
 }
+
+// Método para criar um novo Curso. É preciso ter um Projeto e um Usuário
+export async function POST(request: Request) {
+	try {
+	  const data: Prisma.CursoCreateInput = await request.json(); // Pega os dados do corpo da requisição
+	  const novoCurso = await prisma.curso.create({
+		data, // Dados do Curso que será criado
+	  });
+	  return NextResponse.json(novoCurso, { status: 201 }); // Retorna o novo Curso com status 201
+	} catch (error) {
+	  console.error('Erro ao criar o Curso:', error);
+	  return NextResponse.error(); // Retorna um erro em caso de falha
+	}
+  }
