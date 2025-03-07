@@ -12,6 +12,21 @@ datasource db {
   url      = env("DATABASE_URL") // URL de conexão ao banco de dados, que está definida em um arquivo .env
 }
 
+enum tipoLink {
+  Instragram
+  Whatsapp
+  Linkedin
+  Facebook
+  Genérico
+}
+
+enum funcaoProjeto {
+  Coordenador
+  Colaborador
+  Bolsista
+  Voluntário
+}
+
 // Enum de Titulação para os usuários, que define os tipos de titulação acadêmica
 enum Titulacao {
   Bacharel      // Bacharel
@@ -78,7 +93,7 @@ model Usuario {
   fotoPerfil  String   // URL da foto de perfil do usuário
   senha       String   // Senha do usuário
   Nome        String   // Nome completo do usuário
-  Titulacao   Titulacao // Titulação acadêmica do usuário (enum Titulacao)
+  Titulacao   Titulacao @default(Bacharel)// Titulação acadêmica do usuário (enum Titulacao)
   instituicaoEnsino String // Instituição de ensino do usuário
   formacaoAcademica String // Formação acadêmica do usuário
   resumoPessoal   String // Resumo pessoal do usuário
@@ -91,6 +106,7 @@ model Link {
   id      Int   @id @default(autoincrement()) // ID único para cada link
   link    String // URL do link
   idUsuario Int  // Relacionamento com o usuário dono do link
+  tipo  tipoLink @default(Genérico)// Tipo de link, instagram, facebook etc
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
 }
@@ -130,7 +146,7 @@ model eventoUsuario {
   id          Int      @id @default(autoincrement()) // ID único para cada associação
   idUsuario   Int      // Relacionamento com o usuário
   idEvento    Int      // Relacionamento com o evento
-  tipoParticipacao  tipoParticipacao // Tipo de participação do usuário no evento (enum tipoParticipacao)
+  tipoParticipacao  tipoParticipacao @default(Ouvinte)// Tipo de participação do usuário no evento (enum tipoParticipacao)
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
 }
@@ -149,6 +165,7 @@ model projetoUsuario {
   id          Int      @id @default(autoincrement()) // ID único para cada associação
   idProjeto   Int      // Relacionamento com o projeto
   idUsuario   Int      // Relacionamento com o usuário
+  funcao funcaoProjeto @default(Colaborador)// Funcao do usuario no projeto
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
 }
