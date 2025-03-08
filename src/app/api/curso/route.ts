@@ -75,9 +75,9 @@ export async function POST(request: Request) {
 		const usuario = await prisma.usuario.findUnique({ where: { id: idUsuario } });
 		const projeto = await prisma.projeto.findUnique({ where: { id: idProjeto } })
 		if (!usuario) {
-			return NextResponse.json({error: 'Usuário não encontrado'}, {status: 400})
+			return NextResponse.json({error: 'Usuário não encontrado'}, {status: 404})
 		} else if (!projeto){
-			return NextResponse.json({error: 'Projeto não encontrado'}, {status: 400})
+			return NextResponse.json({error: 'Projeto não encontrado'}, {status: 404})
 		}
 
 		const novoCurso = await prisma.curso.create({

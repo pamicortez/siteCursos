@@ -21,6 +21,11 @@ export async function POST(request: Request) {
 
     const data: Prisma.UsuarioCreateInput = await request.json(); // Pega os dados do corpo da requisição
     
+    const email_unico = await prisma.usuario.findUnique( { where: { email: data.email } });
+    if (email_unico){
+      return NextResponse.json({error: 'Email já cadastrado'}, {status: 409})
+    }
+
     const hashSenha = await bcrypt.hash(data.senha, saltRounds); // Encriptando a senha
     
     const novoUsuario = await prisma.usuario.create({

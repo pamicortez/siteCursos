@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 	  // Verifica se o usuário existe
 	  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
 	  if (!usuario) {
-		return NextResponse.json({error: 'Usuário não encontrado'}, {status: 400})
+		return NextResponse.json({error: 'Usuário não encontrado'}, {status: 404})
 	  }
 
 	  // Verificação lógica para garantir que a data de fim não seja anterior à data de início
@@ -105,11 +105,15 @@ export async function POST(request: Request) {
 		data:{
 			idProjeto: novoProjeto.id,
 			idUsuario: usuarioId,
+			funcao: funcao
 		}
 	  })
 
 	  return NextResponse.json(novoProjeto, { status: 201 }); // Retorna o novo projeto com status 201
 	} catch (error) {
+	  if (error instanceof Prisma.PrismaClientValidationError){
+		return NextResponse.json({error: 'Tipos dos dados incorretos'}, {status: 400})
+	  } 
 	  console.error('Erro ao criar o Projeto:', error);
 	  return NextResponse.error(); // Retorna um erro em caso de falha
 	}
