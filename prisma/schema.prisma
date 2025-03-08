@@ -54,6 +54,8 @@ model Projeto {
   dataFim    DateTime  // Data de término do projeto
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
+
+  projetoUsuario projetoUsuario[]
 }
 
 // Model para o Curso, que inclui os detalhes de cursos oferecidos
@@ -73,6 +75,9 @@ model Curso {
   idUsuario Int // Relacionamento com o usuário que criou o curso
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
+
+  aula  Aula[]
+  cursoUsuario cursoUsuario[]
 }
 
 // Model para as Aulas, contendo informações sobre cada aula oferecida
@@ -82,6 +87,7 @@ model Aula {
   linkPdf     String   // Link para o PDF da aula
   linkVideo   String   // Link para o vídeo da aula
   idCurso     Int  // Relacionamento com o curso ao qual a aula pertence
+  curso       Curso @relation(fields: [idCurso], references: [id]) // Relacionamento com o curso ao qual a aula pertence
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
 }
@@ -99,6 +105,12 @@ model Usuario {
   resumoPessoal   String // Resumo pessoal do usuário
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
+
+  link Link[]
+  publicacao Publicacao[]
+  eventoUsuario eventoUsuario[]
+  cursoUsuario cursoUsuario[]
+  projetoUsuario projetoUsuario[]
 }
 
 // Model para os Links associados aos usuários, como links externos ou redes sociais
@@ -106,6 +118,7 @@ model Link {
   id      Int   @id @default(autoincrement()) // ID único para cada link
   link    String // URL do link
   idUsuario Int  // Relacionamento com o usuário dono do link
+  usuario  Usuario @relation(fields: [idUsuario], references: [id])
   tipo  tipoLink @default(Genérico)// Tipo de link, instagram, facebook etc
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
@@ -117,6 +130,7 @@ model Publicacao {
   descricao   String   // Descrição da publicação
   link        String   // Link para acessar a publicação
   idUsuario   Int      // Relacionamento com o usuário que fez a publicação
+  usuario  Usuario @relation(fields: [idUsuario], references: [id])
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
 }
@@ -130,6 +144,9 @@ model Evento {
   linkParticipacao String // Link para participar do evento
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+
+  imagemEvento imagemEvento[]
+  eventoUsuario eventoUsuario[]
 }
 
 // Model para as Imagens associadas aos Eventos, com links para as imagens
@@ -137,6 +154,7 @@ model imagemEvento {
   id          Int      @id @default(autoincrement()) // ID único para cada imagem
   link        String   // URL da imagem
   idEvento    Int      // Relacionamento com o evento a qual a imagem pertence
+  evento Evento @relation(fields: [idEvento], references: [id]) // Relacionamento com o evento a qual a imagem pertence
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
 }
@@ -145,7 +163,9 @@ model imagemEvento {
 model eventoUsuario {
   id          Int      @id @default(autoincrement()) // ID único para cada associação
   idUsuario   Int      // Relacionamento com o usuário
+  usuario  Usuario @relation(fields: [idUsuario], references: [id]) // Relacionamento com o usuário
   idEvento    Int      // Relacionamento com o evento
+  evento Evento @relation(fields: [idEvento], references: [id]) // Relacionamento com o evento
   tipoParticipacao  tipoParticipacao @default(Ouvinte)// Tipo de participação do usuário no evento (enum tipoParticipacao)
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
@@ -155,7 +175,9 @@ model eventoUsuario {
 model cursoUsuario {
   id          Int      @id @default(autoincrement()) // ID único para cada associação
   idCurso     Int      // Relacionamento com o curso
+  curso       Curso @relation(fields: [idCurso], references: [id]) // Relacionamento com o curso
   idUsuario   Int      // Relacionamento com o usuário
+  usuario  Usuario @relation(fields: [idUsuario], references: [id]) // Relacionamento com o usuário
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
 }
@@ -164,7 +186,9 @@ model cursoUsuario {
 model projetoUsuario {
   id          Int      @id @default(autoincrement()) // ID único para cada associação
   idProjeto   Int      // Relacionamento com o projeto
+  projeto     Projeto @relation(fields: [idProjeto], references: [id])// Relacionamento com o projeto
   idUsuario   Int      // Relacionamento com o usuário
+  usuario     Usuario @relation(fields: [idUsuario], references: [id])
   funcao funcaoProjeto @default(Colaborador)// Funcao do usuario no projeto
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
