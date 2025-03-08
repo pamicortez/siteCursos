@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
+import { Prisma } from '@prisma/client';
+import { tipoParticipacao } from '@prisma/client';
 
 
 // Método GET para retornar todos os eventos
@@ -70,3 +72,59 @@ export async function DELETE(request: Request) {
 		return new NextResponse('Erro interno', { status: 500 });
 	}
 }
+
+// Método para criar um novo evento. É preciso ter um usuário
+export async function POST(request: Request) {
+	try {
+	  const setParticipacao = new Set(Object.values(tipoParticipacao))
+	  const data: Prisma.EventoCreateInput = await request.json(); // Pega os dados do corpo da requisição
+	  
+	  const { usuarioId, participacao, linkImgVid, ...eventoData } = data as any;
+
+	  // Validação: usuárioId e funcao são obrigatórios
+	  if (!usuarioId || !participacao) {
+		return NextResponse.json({error: 'Id do usuário e o tipo de participação são obrigatórios'}, {status: 400})
+	  } else if (!setParticipacao.has(participacao)){
+		return NextResponse.json({error: 'Tipo de participação não reconhecido'}, {status: 400})
+	  }else if (!linkImgVid) {
+		return NextResponse.json({error: 'Link da imagem/video do evento é obrigatório'}, {status: 400})
+	  }
+  
+	  // Verifica se o usuário existe
+	  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
+	  if (!usuario) {
+		return NextResponse.json({error: 'Usuário não encontrado'}, {status: 404})
+	  }
+
+	  const novoEvento = await prisma.evento.create({
+		data:{
+			...eventoData, // Dados do evento que será criado
+		}
+	  });
+
+	  // Relação entre o usuário e o evento
+	  const novoEventUsu = await prisma.eventoUsuario.create({ 
+		data:{
+			idEvento: novoEvento.id,
+			idUsuario: usuarioId,
+			tipoParticipacao: participacao
+		}
+	  })
+
+	  // Imagem/video do evento
+	  const novoImagemEvento = await prisma.imagemEvento.create({
+		data: {
+			link: linkImgVid,
+			idEvento: novoEvento.id
+		}
+	  })
+
+	  return NextResponse.json(novoEvento, { status: 201 }); // Retorna o novo evento com status 201
+	} catch (error) {
+	  if (error instanceof Prisma.PrismaClientValidationError){
+		return NextResponse.json({error: 'Tipos dos dados incorretos (Ou enum não correspondente)'}, {status: 400})
+	  } 
+	  console.error('Erro ao criar o evento:', error);
+	  return NextResponse.error(); // Retorna um erro em caso de falha
+	}
+  }

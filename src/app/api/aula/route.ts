@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
-
+import { Prisma } from '@prisma/client';
 
 // Método GET para retornar todos os aulas
 export async function GET(request: Request) {
@@ -57,3 +57,31 @@ export async function DELETE(request: Request) {
 		return new NextResponse('Erro interno', { status: 500 });
 	}
 }
+
+// Método para criar uma nova Aula. É preciso ter um Curso
+export async function POST(request: Request) {
+	try {
+		const data: Prisma.AulaCreateInput = await request.json(); // Pega os dados do corpo da requisição
+
+		const {idCurso} = data;
+
+		// Verifica se o curso existe
+		const curso = await prisma.curso.findUnique({ where: { id: idCurso } });
+		if (!curso) {
+			return NextResponse.json({error: 'Curso não encontrado'}, {status: 404})
+		}
+
+		const novaAula = await prisma.aula.create({
+			data, // Dados da aula que será criada
+		});
+
+		return NextResponse.json(novaAula, { status: 201 }); // Retorna a nova aula com status 201
+	} catch (error ) {
+		if (error instanceof Prisma.PrismaClientValidationError){
+			return NextResponse.json({error: 'Tipos dos dados incorretos'}, {status: 400})
+		} 
+
+		console.error('Erro ao criar a Aula:', error);
+		return NextResponse.error(); // Retorna um erro em caso de falha
+	}
+  }

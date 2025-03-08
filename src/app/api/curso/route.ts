@@ -83,6 +83,13 @@ export async function POST(request: Request) {
 		const novoCurso = await prisma.curso.create({
 			data, // Dados do Curso que será criado
 		});
+
+		const cursoUsuario = await prisma.cursoUsuario.create({
+			data:{
+				idUsuario: idUsuario,
+				idCurso: novoCurso.id
+			}
+		})
 		return NextResponse.json(novoCurso, { status: 201 }); // Retorna o novo Curso com status 201
 	} catch (error ) {
 		if (error instanceof Prisma.PrismaClientValidationError){
