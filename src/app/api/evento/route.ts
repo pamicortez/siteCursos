@@ -14,8 +14,8 @@ export async function GET(request: Request) {
 	try {
 		// === Buscando eventos com título ===
 		if (titulo) {
-			console.log('Buscando cursos com título:', titulo);
-			// Buscar cursos que tenham o título especificado
+			console.log('Buscando eventos com título:', titulo);
+			// Buscar eventos que tenham o título especificado
 			const eventos = await prisma.evento.findMany({
 				where: { titulo },
 			});
@@ -126,5 +126,42 @@ export async function POST(request: Request) {
 	  } 
 	  console.error('Erro ao criar o evento:', error);
 	  return NextResponse.error(); // Retorna um erro em caso de falha
+	}
+  }
+
+  // Método para atualização de um atributo do evento
+  export async function PATCH(request: Request) {
+	try {
+	  const { id, atributo, novoValor } = await request.json();
+  
+	  // Certificar que todos os dados foram passados
+	  if (!id || !atributo || novoValor === undefined) {
+		return NextResponse.json({ error: "Todos os campos são obrigatórios" }, { status: 400 });
+	  }
+  
+	  // Verifica se o evento existe
+		const evento = await prisma.evento.findUnique({ where: { id: id } });
+		if (!evento) {
+			return NextResponse.json({error: 'Evento não encontrado'}, {status: 404})
+		}
+	  // Atributos que NÃO podem ser alterados
+	  const atributosFixos = ["id", "idUsuario"];
+	  
+	  if (atributosFixos.includes(atributo)) {
+		return NextResponse.json({ error: "Atributo não pode ser atualizaddo" }, { status: 400 });
+	  }
+  
+	  let valorAtualizado = novoValor;
+  
+	  const eventoAtualizado = await prisma.evento.update({
+		where: { id },
+		data: { [atributo]: valorAtualizado },
+	  });
+  
+	  return NextResponse.json(eventoAtualizado, { status: 200 });
+  
+	} catch (error) {
+	  console.error(error);
+	  return NextResponse.json({ error: "Erro ao atualizar evento" }, { status: 500 });
 	}
   }

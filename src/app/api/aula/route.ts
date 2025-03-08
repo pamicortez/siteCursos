@@ -85,3 +85,40 @@ export async function POST(request: Request) {
 		return NextResponse.error(); // Retorna um erro em caso de falha
 	}
   }
+
+// Método para atualização de um atributo da aula
+export async function PATCH(request: Request) {
+	try {
+	  const { id, atributo, novoValor } = await request.json();
+  
+	  // Certificar que todos os dados foram passados
+	  if (!id || !atributo || novoValor === undefined) {
+		return NextResponse.json({ error: "Todos os campos são obrigatórios" }, { status: 400 });
+	  }
+  
+	  // Verifica se a aula existe
+		const aula = await prisma.aula.findUnique({ where: { id: id } });
+		if (!aula) {
+			return NextResponse.json({error: 'Aula não encontrada'}, {status: 404})
+		}
+	  // Atributos que NÃO podem ser alterados
+	  const atributosFixos = ["id"];
+	  
+	  if (atributosFixos.includes(atributo)) {
+		return NextResponse.json({ error: "Atributo não pode ser atualizaddo" }, { status: 400 });
+	  }
+  
+	  let valorAtualizado = novoValor;
+  
+	  const aulaAtualizado = await prisma.aula.update({
+		where: { id },
+		data: { [atributo]: valorAtualizado },
+	  });
+  
+	  return NextResponse.json(aulaAtualizado, { status: 200 });
+  
+	} catch (error) {
+	  console.error(error);
+	  return NextResponse.json({ error: "Erro ao atualizar aula" }, { status: 500 });
+	}
+  }

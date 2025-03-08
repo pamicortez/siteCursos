@@ -118,3 +118,40 @@ export async function POST(request: Request) {
 	  return NextResponse.error(); // Retorna um erro em caso de falha
 	}
   }
+
+    // Método para atualização de um atributo do projeto
+export async function PATCH(request: Request) {
+	try {
+	  const { id, atributo, novoValor } = await request.json();
+  
+	  // Certificar que todos os dados foram passados
+	  if (!id || !atributo || novoValor === undefined) {
+		return NextResponse.json({ error: "Todos os campos são obrigatórios" }, { status: 400 });
+	  }
+  
+	  // Verifica se o projeto existe
+		const projeto = await prisma.projeto.findUnique({ where: { id: id } });
+		if (!projeto) {
+			return NextResponse.json({error: 'Projeto não encontrado'}, {status: 404})
+		}
+	  // Atributos que NÃO podem ser alterados
+	  const atributosFixos = ["id", "usuarioId"];
+	  
+	  if (atributosFixos.includes(atributo)) {
+		return NextResponse.json({ error: "Atributo não pode ser atualizaddo" }, { status: 400 });
+	  }
+  
+	  let valorAtualizado = novoValor;
+  
+	  const projetoAtualizado = await prisma.projeto.update({
+		where: { id },
+		data: { [atributo]: valorAtualizado },
+	  });
+  
+	  return NextResponse.json(projetoAtualizado, { status: 200 });
+  
+	} catch (error) {
+	  console.error(error);
+	  return NextResponse.json({ error: "Erro ao atualizar projeto" }, { status: 500 });
+	}
+  }
