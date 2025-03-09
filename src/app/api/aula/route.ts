@@ -6,6 +6,8 @@ import { Prisma } from '@prisma/client';
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const titulo = searchParams.get('titulo');
+	const idCurso = searchParams.get('idCurso');
+	const id = searchParams.get('id');// id aula
 	//const categoria = searchParams.get('categoria');
 	try {
 		// === Buscando aulas com título ===
@@ -14,19 +16,49 @@ export async function GET(request: Request) {
 			// Buscar aulas que tenham o título especificado
 			const aulas = await prisma.aula.findMany({
 				where: { titulo },
+				include: {
+					curso: true
+				}
 			});
 		
 			return NextResponse.json(aulas);
 		}
+		// === Buscando aula especifica pelo id==
+		else if (id) {
+			console.log('Buscando aula com id:', id);
+			// Buscar aula que tenha o id especificado
+			const aula = await prisma.aula.findUnique({
+				where: { id: Number(id) },
+				include: {
+					curso: true
+				}
+			});
+		
+			return NextResponse.json(aula);
+		}
 		// === Buscando aulas pelo curso ===
-		else if (false) {
+		else if (idCurso) {
+			console.log('Buscando aulas com idCurso:', idCurso);
+			// Buscar aulas que tenham o idCurso especificado
+			const aulas = await prisma.aula.findMany({
+				where: { idCurso: Number(idCurso) },
+				include: {
+					curso: true
+				}
+			});
+		
+			return NextResponse.json(aulas);
 
 		}
 		// === Buscando todos os aulas === 
 		else {
 			console.log('Buscando todos os aulas'); 
 			// Retorna todos os aulas se não houver título na URL
-			const aulas = await prisma.aula.findMany();
+			const aulas = await prisma.aula.findMany({
+				include: {
+					curso: true
+				}
+			});
 			return NextResponse.json(aulas);
 		}
 	  } catch (error) {
@@ -38,24 +70,29 @@ export async function GET(request: Request) {
 
 // Método Delete para deletar aula com base no id
 export async function DELETE(request: Request) {
-	const { searchParams } = new URL(request.url);
-	const id = searchParams.get('id');
-	try {
-		if (id) {
-			console.log('Deletando aula com id:', id);
-			// Deletar aula com base no id
-			const aula = await prisma.aula.delete({
-				where: { id: Number(id) },
-			});
-			return NextResponse.json(aula);
-		} else {
-			console.log('aula não encontrado');
-			return new NextResponse('aula não encontrado', { status: 404 });
-		}
-	} catch (error) {
-		console.error('Erro ao deletar aula:', error);
-		return new NextResponse('Erro interno', { status: 500 });
-	}
+  const { searchParams } = new URL(request.url);
+  const idAula = searchParams.get('id'); // ID da aula a ser excluída
+
+  if (!idAula) {
+    return NextResponse.error();
+  }
+
+  try {
+    // Excluindo a aula e todas as suas relações
+    const aulaDeletada = await prisma.aula.delete({
+      where: {
+        id: Number(idAula), // Utiliza o ID da aula para exclusão
+      },
+      include: {
+        curso: true, // Exemplo para incluir o curso relacionado (se necessário)
+      },
+    });
+
+    return NextResponse.json(aulaDeletada); // Retorna a aula excluída
+  } catch (error) {
+    console.error('Erro ao excluir a aula:', error);
+    return NextResponse.error(); // Retorna um erro em caso de falha
+  }
 }
 
 // Método para criar uma nova Aula. É preciso ter um Curso
