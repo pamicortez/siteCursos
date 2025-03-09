@@ -8,6 +8,8 @@ export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const titulo = searchParams.get('titulo');
 	const categoria = searchParams.get('categoria');
+	const idUsuario = searchParams.get('idUsuario'); // ID do usuário
+	const idCurso = searchParams.get('id'); // ID do curso
 	try {
 		// === Buscando cursos com título ===
 		if (titulo) {
@@ -15,9 +17,42 @@ export async function GET(request: Request) {
 			// Buscar cursos que tenham o título especificado
 			const cursos = await prisma.curso.findMany({
 				where: { titulo },
+				include: {
+				projeto: true, // Inclui o projeto relacionado
+				usuario: true, // Inclui o usuário que criou o curso
+				aula: true, // Inclui as aulas relacionadas
+				},
 			});
 		
 			return NextResponse.json(cursos);
+		}
+		// === Buscando cursos com idUsuario ===
+		else if (idUsuario) {
+			console.log('Buscando cursos com idUsuario:', idUsuario);
+			// Buscar cursos que tenham o usuário especificado
+			const cursos = await prisma.curso.findMany({
+				where: { idUsuario: Number(idUsuario) },
+				include: {
+				projeto: true, // Inclui o projeto relacionado
+				usuario: true, // Inclui o usuário que criou o curso
+				aula: true, // Inclui as aulas relacionadas
+				},
+			});
+			return NextResponse.json(cursos);
+		}
+		// === Buscando cursos com idCurso ===
+		else if (idCurso){
+			// Pega um curso específico pelo ID
+			const curso = await prisma.curso.findUnique({
+				where: {
+				id: Number(idCurso), // Utiliza o ID do curso
+				},
+				include: {
+				projeto: true, // Inclui o projeto relacionado
+				usuario: true, // Inclui o usuário que criou o curso
+				aula: true, // Inclui as aulas relacionadas
+				},
+			});
 		}
 		// === Buscando cursos com categoria ===
 		else if (categoria) {
@@ -25,15 +60,24 @@ export async function GET(request: Request) {
 			// Buscar cursos que tenham a categoria especificada
 			const cursos = await prisma.curso.findMany({
 				where: { categoria },
+				include: {
+				projeto: true, // Inclui o projeto relacionado
+				usuario: true, // Inclui o usuário que criou o curso
+				aula: true, // Inclui as aulas relacionadas
+				},
 			});
 			return NextResponse.json(cursos);
 		}
 		// === Buscando todos os cursos === 
 		else {
-			console.log('Buscando todos os cursos'); 
-			// Retorna todos os cursos se não houver título na URL
-			const cursos = await prisma.curso.findMany();
-			return NextResponse.json(cursos);
+			const cursos = await prisma.curso.findMany({
+				include: {
+				  projeto: true, // Inclui o projeto relacionado
+				  usuario: true, // Inclui o usuário que criou o curso
+				  aula: true, // Inclui as aulas relacionadas
+				},
+			  });
+			  return NextResponse.json(cursos); // Retorna todos os cursos
 		}
 	  } catch (error) {
 		console.error('Erro ao buscar cursos:', error);
@@ -63,6 +107,7 @@ export async function DELETE(request: Request) {
 		return new NextResponse('Erro interno', { status: 500 });
 	}
 }
+
 
 // Método para criar um novo Curso. É preciso ter um Projeto e um Usuário
 export async function POST(request: Request) {

@@ -18,6 +18,10 @@ export async function GET(request: Request) {
 			// Buscar eventos que tenham o título especificado
 			const eventos = await prisma.evento.findMany({
 				where: { titulo },
+				include: {
+					eventoUsuario: true,
+					imagemEvento: true,
+				}
 			});
 		
 			return NextResponse.json(eventos);
@@ -33,7 +37,11 @@ export async function GET(request: Request) {
                         gte: new Date(data_inicio),
                         lte: new Date(data_fim)
                     }
-                }
+                },
+				include: {
+					eventoUsuario: true,
+					imagemEvento: true,
+				}
             });
             return NextResponse.json(eventos);
 		}
@@ -41,7 +49,12 @@ export async function GET(request: Request) {
 		else {
 			console.log('Buscando todos os eventos'); 
 			// Retorna todos os eventos se não houver título na URL
-			const eventos = await prisma.evento.findMany();
+			const eventos = await prisma.evento.findMany({
+				include: {
+					eventoUsuario: true,
+					imagemEvento: true,
+				}
+			});
 			return NextResponse.json(eventos);
 		}
 	  } catch (error) {

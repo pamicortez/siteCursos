@@ -21,6 +21,10 @@ export async function GET(request: Request) {
 			// Buscar projetos que tenham o título especificado
 			const projetos = await prisma.projeto.findMany({
 				where: { titulo },
+				include: {
+					projetoUsuario: true,
+					curso: true,
+				}
 			});
 		
 			return NextResponse.json(projetos);
@@ -31,6 +35,10 @@ export async function GET(request: Request) {
 			// Buscar projetos que tenham a categoria especificada
 			const projetos = await prisma.projeto.findMany({
 				where: { categoria },
+				include: {
+					projetoUsuario: true,
+					curso: true,
+				}
 			});
 			return NextResponse.json(projetos);
 		}
@@ -38,7 +46,12 @@ export async function GET(request: Request) {
 		else {
 			console.log('Buscando todos os projetos'); // http://localhost:3000/api/projeto
 			// Retorna todos os projetos se não houver título na URL
-			const projetos = await prisma.projeto.findMany();
+			const projetos = await prisma.projeto.findMany({
+				include: {
+					projetoUsuario: true,
+					curso: true,
+				}
+			});
 			return NextResponse.json(projetos);
 		}
 	  } catch (error) {
