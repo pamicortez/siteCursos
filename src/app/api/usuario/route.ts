@@ -4,10 +4,37 @@ import { Prisma } from '@prisma/client';
 import bcrypt from "bcryptjs";
 
 // Método GET para retornar todos os usuários
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+	const id = searchParams.get('id');
   try {
-    const usuarios = await prisma.usuario.findMany(); // Busca todos os usuários no banco
-    return NextResponse.json(usuarios); // Retorna a resposta em formato JSON
+    // ====== obtem um usuário específico
+    if (id) {
+      const usuario = await prisma.usuario.findUnique({
+        where: { id: Number(id) },
+        include: {
+          link: true,
+          publicacao: true,
+          eventoUsuario: { include: { evento: true } },
+          cursoUsuario: { include: { curso: true } },
+          projetoUsuario: { include: { projeto: true } },
+        },
+      });
+      return NextResponse.json(usuario); // Retorna a resposta em formato JSON
+    }
+    // ====== Obtem todos os usuários
+    else{
+      const usuarios = await prisma.usuario.findMany({        
+        include: {
+        link: true,
+        publicacao: true,
+        eventoUsuario: { include: { evento: true } },
+        cursoUsuario: { include: { curso: true } },
+        projetoUsuario: { include: { projeto: true } },
+      },
+    });
+      return NextResponse.json(usuarios); // Retorna a resposta em formato JSON
+    }
   } catch (error) {
     console.error('Erro ao buscar usuários:', error);
     return NextResponse.error(); // Retorna um erro em caso de falha
@@ -86,5 +113,44 @@ export async function PATCH(request: Request) {
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Erro ao atualizar usuário" }, { status: 500 });
+  }
+}
+
+
+// Método DELETE para deletar um usuário e suas relações
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  if (!id || isNaN(Number(id))) {
+    return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+  }
+
+  try {
+    // Verifica se o usuário existe antes de tentar deletá-lo
+    const usuario = await prisma.usuario.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!usuario) {
+      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
+    }
+
+    // Deleta todas as relações do usuário
+    await prisma.$transaction([
+      prisma.eventoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
+      prisma.cursoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
+      prisma.projetoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
+      prisma.publicacao.deleteMany({ where: { idUsuario: Number(id) } }),
+      prisma.link.deleteMany({ where: { idUsuario: Number(id) } }),
+    ]);
+
+    // Deleta o usuário
+    await prisma.usuario.delete({ where: { id: Number(id) } });
+
+    return NextResponse.json({ message: 'Usuário e suas relações deletados com sucesso' }, { status: 200 });
+  } catch (error) {
+    console.error('Erro ao deletar usuário:', error);
+    return NextResponse.json({ error: 'Erro ao deletar usuário' }, { status: 500 });
   }
 }

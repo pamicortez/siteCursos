@@ -50,7 +50,9 @@ VALUES
 INSERT INTO "Publicacao" (descricao, link, "idUsuario", "createdAt", "updatedAt")
 VALUES
 ('Artigo sobre redes neurais', 'https://arxiv.org/ai', 1, NOW(), NOW()),
-('Pesquisa sobre genômica', 'https://arxiv.org/bio', 2, NOW(), NOW());
+('Pesquisa sobre genômica', 'https://arxiv.org/bio', 2, NOW(), NOW()),
+('Projeto de IA', 'link', 1, NOW(), NOW()),
+('Projeto de Biotecnologia', 'link', 2, NOW(), NOW());
 
 -- Relacionando usuários com cursos
 INSERT INTO "cursoUsuario" ("idCurso", "idUsuario", "createdAt", "updatedAt")
