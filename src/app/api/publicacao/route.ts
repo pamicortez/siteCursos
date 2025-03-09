@@ -2,6 +2,36 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
 
+
+export async function GET(request: Request) {
+	const { searchParams } = new URL(request.url);
+	const idUsuario = searchParams.get('idUsuario'); // Busca pelo ID do usuário, caso fornecido
+  
+	try {
+	  // Se um ID de usuário for fornecido, retorna as publicações desse usuário
+	  if (idUsuario) {
+		const publicacoes = await prisma.publicacao.findMany({
+		  where: { idUsuario: Number(idUsuario) }, // Filtra pelo ID do usuário
+		  include: {
+			usuario: true, // Inclui os detalhes do usuário que fez a publicação
+		  },
+		});
+		return NextResponse.json(publicacoes); // Retorna as publicações do usuário
+	  }
+	  
+	  // Se nenhum ID for fornecido, retorna todas as publicações
+	  const publicacoes = await prisma.publicacao.findMany({
+		include: {
+		  usuario: true, // Inclui os detalhes do usuário que fez a publicação
+		},
+	  });
+	  return NextResponse.json(publicacoes); // Retorna todas as publicações
+	} catch (error) {
+	  console.error('Erro ao buscar publicações:', error);
+	  return NextResponse.error(); // Retorna um erro em caso de falha
+	}
+  }
+
 // Método para criar um novo publicacao. É preciso ter um usuário
 export async function POST(request: Request) {
 	try {
@@ -63,5 +93,28 @@ export async function PATCH(request: Request) {
 	} catch (error) {
 	  console.error(error);
 	  return NextResponse.json({ error: "Erro ao atualizar publicacao" }, { status: 500 });
+	}
+  }
+
+
+  export async function DELETE(request: Request) {
+	const { searchParams } = new URL(request.url);
+	const idPublicacao = searchParams.get('idPublicacao'); // ID da publicação a ser excluída
+  
+	try {
+	  // Excluindo a publicação e todas as suas relações
+	  const publicacaoDeletada = await prisma.publicacao.delete({
+		where: {
+		  id: Number(idPublicacao), // Utiliza o ID da publicação para exclusão
+		},
+		include: {
+		  usuario: true, // Exemplo para incluir a relação com o usuário (se necessário para algum motivo)
+		},
+	  });
+  
+	  return NextResponse.json(publicacaoDeletada); // Retorna a publicação excluída
+	} catch (error) {
+	  console.error('Erro ao excluir a publicação:', error);
+	  return NextResponse.error(); // Retorna um erro em caso de falha
 	}
   }
