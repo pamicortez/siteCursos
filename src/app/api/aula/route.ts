@@ -82,10 +82,7 @@ export async function DELETE(request: Request) {
     const aulaDeletada = await prisma.aula.delete({
       where: {
         id: Number(idAula), // Utiliza o ID da aula para exclusão
-      },
-      include: {
-        curso: true, // Exemplo para incluir o curso relacionado (se necessário)
-      },
+      }
     });
 
     return NextResponse.json(aulaDeletada); // Retorna a aula excluída

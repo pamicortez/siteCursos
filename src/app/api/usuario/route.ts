@@ -136,14 +136,14 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
     }
 
-    // Deleta todas as relações do usuário
-    await prisma.$transaction([
-      prisma.eventoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
-      prisma.cursoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
-      prisma.projetoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
-      prisma.publicacao.deleteMany({ where: { idUsuario: Number(id) } }),
-      prisma.link.deleteMany({ where: { idUsuario: Number(id) } }),
-    ]);
+    // // Deleta todas as relações do usuário
+    // await prisma.$transaction([
+    //   prisma.eventoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
+    //   prisma.cursoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
+    //   prisma.projetoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
+    //   prisma.publicacao.deleteMany({ where: { idUsuario: Number(id) } }),
+    //   prisma.link.deleteMany({ where: { idUsuario: Number(id) } }),
+    // ]);
 
     // Deleta o usuário
     await prisma.usuario.delete({ where: { id: Number(id) } });

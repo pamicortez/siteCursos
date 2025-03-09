@@ -106,10 +106,7 @@ export async function PATCH(request: Request) {
 	  const publicacaoDeletada = await prisma.publicacao.delete({
 		where: {
 		  id: Number(idPublicacao), // Utiliza o ID da publicação para exclusão
-		},
-		include: {
-		  usuario: true, // Exemplo para incluir a relação com o usuário (se necessário para algum motivo)
-		},
+		}
 	  });
   
 	  return NextResponse.json(publicacaoDeletada); // Retorna a publicação excluída
