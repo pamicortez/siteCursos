@@ -14,7 +14,7 @@ const Navbar = () => {
   const [categoryTimeout, setCategoryTimeout] = useState<NodeJS.Timeout | null>(null);
   const isMobile = useIsMobile();
   
-  const [hasUser, setHasUser] = useState(true);
+  const [hasUser, setHasUser] = useState(false);
   const [currentPath, setCurrentPath] = useState('/');
   const categories = ["Informática", "Português", "Ciências"];
   
@@ -89,7 +89,7 @@ const Navbar = () => {
 
   return (
     <>
-      {hasUser && (
+      {!hasUser && (
         <div className="bg-black text-white py-2 text-center text-sm w-full fixed top-0 z-50">
           Deseja cadastrar seus cursos? Entre em contato através de{" "}
           <a href="mailto:email01@gmail.com" className="underline hover:text-gray-200">
@@ -101,7 +101,7 @@ const Navbar = () => {
       <nav
         className={cn(
           "fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md",
-          hasUser ? "top-10" : "top-0",
+          hasUser ? "top-0" : "top-6",
           scrolled
             ? "backdrop-blur-xl bg-white/80 border-b border-gray-100 py-4"
             : "bg-white py-6"
@@ -160,6 +160,7 @@ const Navbar = () => {
             </div>
 
             {/* Desktop Navigation - User Profile */}
+            {hasUser && (
             <div className="hidden md:flex items-center justify-end w-1/4">
               <div id="user-menu-container" className="relative">
                 <button 
@@ -186,7 +187,7 @@ const Navbar = () => {
                   <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</button>
                 </div>
               </div>
-            </div>
+            </div>)}
 
             {/* Mobile Menu Button */}
             <button
@@ -268,6 +269,12 @@ const Navbar = () => {
           </div>
         </div>
       </nav>
+      <div
+        className={cn(
+          "w-full",
+          hasUser ? (scrolled ? "h-28" : "h-32") : (scrolled ? "h-24" : "h-32")
+        )}
+      ></div>
     </>
   );
 };
