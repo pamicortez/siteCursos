@@ -43,6 +43,13 @@ enum tipoParticipacao {
   Organizador  // Organizador do evento
 }
 
+enum colaboradorCategoria {
+  Coordenador @map("Cordenador(a)")
+  Colaborador @map("Colaborador(a)")
+  Bolsista
+  Voluntário
+}
+
 // Model para o Projeto, contendo as informações relacionadas a um projeto
 model Projeto {
   id          Int      @id @default(autoincrement()) // ID único para cada projeto
@@ -56,6 +63,7 @@ model Projeto {
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
 
   projetoUsuario projetoUsuario[]
+  projetoColaborador projetoColaborador[]
   curso Curso[]
 }
 
@@ -139,6 +147,14 @@ model Publicacao {
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
 }
 
+model Colaborador{
+  id          Int      @id @default(autoincrement()) // ID único para cada colaborador
+  nome        String
+  categoria   colaboradorCategoria
+
+  projetoColaborador projetoColaborador[]
+}
+
 // Model para Eventos, onde são armazenados detalhes de cada evento
 model Evento {
   id          Int      @id @default(autoincrement()) // ID único para cada evento
@@ -194,6 +210,16 @@ model projetoUsuario {
   idUsuario   Int      // Relacionamento com o usuário
   usuario     Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
   funcao funcaoProjeto @default(Colaborador)// Funcao do usuario no projeto
+  createdAt   DateTime @default(now()) // Data de criação (automática)
+  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+}
+
+model projetoColaborador {
+  id          Int      @id @default(autoincrement()) // ID único para cada associação
+  idProjeto   Int      // Relacionamento com o projeto
+  projeto     Projeto @relation(fields: [idProjeto], references: [id], onDelete: Cascade)// Relacionamento com o colaborador
+  idColaborador   Int      // Relacionamento com o colaborador
+  colaborador     Colaborador @relation(fields: [idColaborador], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
 }
