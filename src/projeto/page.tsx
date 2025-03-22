@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2 } from 'lucide-react'; // Ícone para o botão de remover
+import { Trash2 } from 'lucide-react'; 
 
 type Collaborator = {
   name: string;
