@@ -75,7 +75,7 @@ export default function Projeto() {
       ...projectData,
       collaborators,
     });
-    // Aqui você pode adicionar a lógica para salvar os dados
+    // Aqui lógica para salvar os dados
   };
 
   const handleCancel = () => {
