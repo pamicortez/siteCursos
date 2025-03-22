@@ -12,6 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Trash2 } from 'lucide-react'; // Ícone para o botão de remover
+
+type Collaborator = {
+  name: string;
+  role: string;
+};
 
 export default function Projeto() {
   const [projectData, setProjectData] = useState({
@@ -22,6 +28,10 @@ export default function Projeto() {
     category: '',
     image: '',
   });
+
+  const [collaborators, setCollaborators] = useState<Collaborator[]>([
+    { name: '', role: '' }, // Inicia com um colaborador vazio
+  ]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -41,9 +51,30 @@ export default function Projeto() {
     }
   };
 
+  const handleCollaboratorChange = (index: number, field: string, value: string) => {
+    const updatedCollaborators = [...collaborators];
+    updatedCollaborators[index] = {
+      ...updatedCollaborators[index],
+      [field]: value,
+    };
+    setCollaborators(updatedCollaborators);
+  };
+
+  const addCollaborator = React.useCallback(() => {
+    setCollaborators([...collaborators, { name: '', role: '' }]);
+  }, [collaborators]);
+
+  const removeCollaborator = (index: number) => {
+    const updatedCollaborators = collaborators.filter((_, i) => i !== index);
+    setCollaborators(updatedCollaborators);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(projectData);
+    console.log({
+      ...projectData,
+      collaborators,
+    });
     // Aqui você pode adicionar a lógica para salvar os dados
   };
 
@@ -57,17 +88,18 @@ export default function Projeto() {
       category: '',
       image: '',
     });
+    setCollaborators([{ name: '', role: '' }]);
     console.log("Formulário cancelado");
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <div className="px-28 py-12">
+    <div className="flex justify-center">
+      <form onSubmit={handleSubmit} className="w-full max-w-4xl px-4">
+        <div className="py-12">
           <h1 className="text-3xl font-bold mb-12 text-center">Criar Projeto</h1>
 
           {/* Linha 1: Título do projeto */}
-          <div className="grid gap-6 mb-6">
+          <div className="grid gap-8 mb-8"> {/* Aumentei o gap para 8 */}
             <div className="grid items-center gap-1.5">
               <Label htmlFor="title">Título do projeto*</Label>
               <Input
@@ -82,7 +114,7 @@ export default function Projeto() {
           </div>
 
           {/* Linha 2: Descrição do projeto */}
-          <div className="grid gap-6 mb-6">
+          <div className="grid gap-8 mb-8"> {/* Aumentei o gap para 8 */}
             <div className="grid items-center gap-1.5">
               <Label htmlFor="description">Descrição do projeto*</Label>
               <textarea
@@ -97,7 +129,7 @@ export default function Projeto() {
           </div>
 
           {/* Linha 3: Datas de início e finalização */}
-          <div className="grid gap-6 mb-6 md:grid-cols-2">
+          <div className="grid gap-8 mb-8 md:grid-cols-2"> {/* Aumentei o gap para 8 */}
             <div className="grid items-center gap-1.5">
               <Label htmlFor="startDate">Data de início do projeto*</Label>
               <Input
@@ -123,7 +155,7 @@ export default function Projeto() {
           </div>
 
           {/* Linha 4: Categoria e Imagem */}
-          <div className="grid gap-6 mb-6 md:grid-cols-2">
+          <div className="grid gap-8 mb-8 md:grid-cols-2"> {/* Aumentei o gap para 8 */}
             <div className="grid items-center gap-1.5">
               <Label htmlFor="category">Categoria do projeto*</Label>
               <Select
@@ -156,8 +188,56 @@ export default function Projeto() {
             </div>
           </div>
 
-          {/* Linha 5: Botões Cancelar (esquerda) e Salvar (direita) */}
-          <div className="flex justify-between">
+          {/* Linha 5: Colaboradores */}
+          <div className="grid gap-8 mb-8"> {/* Aumentei o gap para 8 */}
+            <div className="flex justify-between items-center">
+              <Label>Colaboradores</Label>
+              <Button type="button" onClick={addCollaborator} className="w-fit">
+                + Adicionar colaborador
+              </Button>
+            </div>
+            {collaborators.map((collaborator, index) => (
+              <div key={index} className="grid gap-6 md:grid-cols-2 items-end">
+                <div className="grid items-center gap-1.5">
+                  <Input
+                    type="text"
+                    placeholder="Nome do colaborador"
+                    value={collaborator.name}
+                    onChange={(e) => handleCollaboratorChange(index, 'name', e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Select
+                    value={collaborator.role}
+                    onValueChange={(value) => handleCollaboratorChange(index, 'role', value)}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Selecione o cargo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="coordenador">Coordenador(a)</SelectItem>
+                        <SelectItem value="colaborador">Colaborador(a)</SelectItem>
+                        <SelectItem value="bolsista">Bolsista</SelectItem>
+                        <SelectItem value="voluntario">Voluntário</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => removeCollaborator(index)}
+                    className="text-black hover:text-black hover:bg-gray-100 p-2"
+                  >
+                    <Trash2 className="h-4 w-4" /> {/* Ícone de lixeira */}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Linha 6: Botões Cancelar (esquerda) e Salvar (direita) */}
+          <div className="flex justify-between mt-8"> {/* Adicionei margem superior */}
             <Button type="button" variant="outline" onClick={handleCancel}>
               Cancelar
             </Button>
