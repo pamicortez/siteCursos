@@ -5,24 +5,24 @@ import CardCursoWithButton from "../components/CardCursoWithButton";
 import { Button } from "@/components/ui/button";
 
 const ProjetoHome: React.FC = () => {
+  const isOwner = false; 
   const cursos = [
-    { imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas", isOwner: true },
-    { imagem: "/prof2.jpg", nome: "React", descricao: "Curso prático de desenvolvimento com React para aplicações web.", cargahoraria: "50 horas", isOwner: true },
-    { imagem: "/prof3.jpg", nome: "Inglês", descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.", cargahoraria: "60 horas", isOwner: true },
-    { imagem: "/prof4.jpg", nome: "Sistemas Embarcados", descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.", cargahoraria: "80 horas", isOwner: true },
-    { imagem: "/prof5.jpg", nome: "C/C++", descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.", cargahoraria: "70 horas", isOwner: true },
-    { imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas", isOwner: true },
-    { imagem: "/prof2.jpg", nome: "React", descricao: "Curso prático de desenvolvimento com React para aplicações web.", cargahoraria: "50 horas", isOwner: true },
-    { imagem: "/prof3.jpg", nome: "Inglês", descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.", cargahoraria: "60 horas", isOwner: true },
-    { imagem: "/prof4.jpg", nome: "Sistemas Embarcados", descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.", cargahoraria: "80 horas", isOwner: true },
-    { imagem: "/prof5.jpg", nome: "C/C++", descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.", cargahoraria: "70 horas", isOwner: true }
+    { imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas", isOwner: isOwner },
+    { imagem: "/prof2.jpg", nome: "React", descricao: "Curso prático de desenvolvimento com React para aplicações web.", cargahoraria: "50 horas", isOwner: isOwner },
+    { imagem: "/prof3.jpg", nome: "Inglês", descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.", cargahoraria: "60 horas", isOwner: isOwner },
+    { imagem: "/prof4.jpg", nome: "Sistemas Embarcados", descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.", cargahoraria: "80 horas", isOwner: isOwner },
+    { imagem: "/prof5.jpg", nome: "C/C++", descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.", cargahoraria: "70 horas", isOwner: isOwner },
+    { imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas", isOwner: isOwner },
+    { imagem: "/prof2.jpg", nome: "React", descricao: "Curso prático de desenvolvimento com React para aplicações web.", cargahoraria: "50 horas", isOwner: isOwner },
+    { imagem: "/prof3.jpg", nome: "Inglês", descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.", cargahoraria: "60 horas", isOwner: isOwner },
+    { imagem: "/prof4.jpg", nome: "Sistemas Embarcados", descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.", cargahoraria: "80 horas", isOwner: isOwner },
+    { imagem: "/prof5.jpg", nome: "C/C++", descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.", cargahoraria: "70 horas", isOwner: isOwner }
   ];
 
   const handleAdicionarCurso = () => {
     alert("Botão 'Adicionar Curso' clicado!");
   };
 
-  const isOwner = true; 
 
   return (
     <>
