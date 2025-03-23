@@ -10,9 +10,25 @@ export async function GET(request: Request) {
 	const categoria = searchParams.get('categoria');
 	const idUsuario = searchParams.get('idUsuario'); // ID do usuário
 	const idCurso = searchParams.get('id'); // ID do curso
+	const ordem = searchParams.get('ordem');
 	try {
+		// === Buscando cursos por titulo e categoria ===
+		if (titulo && categoria) {
+			console.log('Buscando cursos com título e categoria:', titulo, categoria);
+			// Buscar cursos que tenham o título e categoria especificados
+			const cursos = await prisma.curso.findMany({
+				where: { titulo, categoria },
+				include: {
+				projeto: true, // Inclui o projeto relacionado
+				usuario: true, // Inclui o usuário que criou o curso
+				aula: true, // Inclui as aulas relacionadas
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
+			});
+			return NextResponse.json(cursos);
+		}
 		// === Buscando cursos com título ===
-		if (titulo) {
+		else if (titulo) {
 			console.log('Buscando cursos com título:', titulo);
 			// Buscar cursos que tenham o título especificado
 			const cursos = await prisma.curso.findMany({
@@ -22,6 +38,7 @@ export async function GET(request: Request) {
 				usuario: true, // Inclui o usuário que criou o curso
 				aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
 			return NextResponse.json(cursos);
@@ -37,6 +54,7 @@ export async function GET(request: Request) {
 				usuario: true, // Inclui o usuário que criou o curso
 				aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(cursos);
 		}
@@ -65,6 +83,7 @@ export async function GET(request: Request) {
 				usuario: true, // Inclui o usuário que criou o curso
 				aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(cursos);
 		}
@@ -76,6 +95,7 @@ export async function GET(request: Request) {
 				  usuario: true, // Inclui o usuário que criou o curso
 				  aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			  });
 			  return NextResponse.json(cursos); // Retorna todos os cursos
 		}

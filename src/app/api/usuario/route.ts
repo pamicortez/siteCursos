@@ -7,6 +7,8 @@ import bcrypt from "bcryptjs";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
 	const id = searchParams.get('id');
+  const nome = searchParams.get('nome');
+  const ordem = searchParams.get('ordem');
   try {
     // ====== obtem um usuário específico
     if (id) {
@@ -19,8 +21,24 @@ export async function GET(request: Request) {
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
         },
+        
       });
       return NextResponse.json(usuario); // Retorna a resposta em formato JSON
+    }
+    else if (nome) {
+      const usuario = await prisma.usuario.findMany({
+        where: { Nome: nome },
+        include: {
+          link: true,
+          publicacao: true,
+          eventoUsuario: { include: { evento: true } },
+          cursoUsuario: { include: { curso: true } },
+          projetoUsuario: { include: { projeto: true } },
+        },
+        orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
+      });
+      return NextResponse.json(usuario); // Retorna a resposta em formato
+
     }
     // ====== Obtem todos os usuários
     else{
@@ -32,6 +50,7 @@ export async function GET(request: Request) {
         cursoUsuario: { include: { curso: true } },
         projetoUsuario: { include: { projeto: true } },
       },
+      orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
     });
       return NextResponse.json(usuarios); // Retorna a resposta em formato JSON
     }
