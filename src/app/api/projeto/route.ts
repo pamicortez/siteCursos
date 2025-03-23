@@ -21,7 +21,13 @@ export async function GET(request: Request) {
 			console.log('Buscando projetos com título e categoria:', titulo, categoria); // http://localhost:3000/api/projeto?titulo=Projeto%20AI&categoria=IA
 			// Buscar projetos que tenham o título e categoria especificados
 			const projetos = await prisma.projeto.findMany({
-				where: { titulo, categoria },
+				where: { titulo:
+					{
+						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					}
+					, categoria 
+				},
 				include: {
 					projetoUsuario: true,
 					curso: true,
@@ -35,7 +41,12 @@ export async function GET(request: Request) {
 			console.log('Buscando projetos com título:', titulo);// http://localhost:3000/api/projeto?titulo=Projeto%20AI
 			// Buscar projetos que tenham o título especificado
 			const projetos = await prisma.projeto.findMany({
-				where: { titulo },
+				where: { titulo:
+					{
+						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+				},
 				include: {
 					projetoUsuario: true,
 					curso: true,

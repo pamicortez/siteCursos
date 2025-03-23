@@ -17,7 +17,13 @@ export async function GET(request: Request) {
 			console.log('Buscando cursos com título e categoria:', titulo, categoria);
 			// Buscar cursos que tenham o título e categoria especificados
 			const cursos = await prisma.curso.findMany({
-				where: { titulo, categoria },
+				where: { titulo:
+					{
+					contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+					mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+				 	categoria 
+				},
 				include: {
 				projeto: true, // Inclui o projeto relacionado
 				usuario: true, // Inclui o usuário que criou o curso
@@ -32,7 +38,12 @@ export async function GET(request: Request) {
 			console.log('Buscando cursos com título:', titulo);
 			// Buscar cursos que tenham o título especificado
 			const cursos = await prisma.curso.findMany({
-				where: { titulo },
+				where: { titulo:
+					{
+						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+				},
 				include: {
 				projeto: true, // Inclui o projeto relacionado
 				usuario: true, // Inclui o usuário que criou o curso

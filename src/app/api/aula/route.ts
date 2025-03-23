@@ -8,6 +8,7 @@ export async function GET(request: Request) {
 	const titulo = searchParams.get('titulo');
 	const idCurso = searchParams.get('idCurso');
 	const id = searchParams.get('id');// id aula
+	const ordem = searchParams.get('ordem');
 	//const categoria = searchParams.get('categoria');
 	try {
 		// === Buscando aulas com título ===
@@ -15,10 +16,16 @@ export async function GET(request: Request) {
 			console.log('Buscando aulas com título:', titulo);
 			// Buscar aulas que tenham o título especificado
 			const aulas = await prisma.aula.findMany({
-				where: { titulo },
+				where: { titulo:
+					{
+						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+				 },
 				include: {
 					curso: true
-				}
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
 			return NextResponse.json(aulas);
@@ -44,7 +51,8 @@ export async function GET(request: Request) {
 				where: { idCurso: Number(idCurso) },
 				include: {
 					curso: true
-				}
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
 			return NextResponse.json(aulas);
@@ -57,7 +65,8 @@ export async function GET(request: Request) {
 			const aulas = await prisma.aula.findMany({
 				include: {
 					curso: true
-				}
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(aulas);
 		}
