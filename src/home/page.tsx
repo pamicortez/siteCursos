@@ -70,27 +70,35 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="container my-5">
-      <h1 className="text-center mb-4">Professores</h1>
-      <Carrossel>
-        {professores.map((professor, index) => (
-          <CardProfessor key={index} {...professor} />
-        ))}
-      </Carrossel>
+    <div className="container space-y-4">
+      <div className="mt-12">
+        <h1 className="text-center text-3xl font-bold">Professores</h1>
+        <Carrossel>
+          {professores.map((professor, index) => (
+            <CardProfessor key={index} {...professor} />
+          ))}
+        </Carrossel>
+      </div>
 
-      <h1 className="text-left mb-4">Projetos</h1>
-      <Carrossel linhas={linhas}>
-        {projetos.map((projeto, index) => (
-          <CardProjeto key={index} {...projeto} />
-        ))}
-      </Carrossel>
+      <div className="mt-20">
+        <h1 className="px-8 text-left text-3xl font-bold">Projetos</h1>
+        <Carrossel linhas={linhas}>
+          {projetos.map((projeto, index) => (
+            <CardProjeto key={index} {...projeto} />
+          ))}
+        </Carrossel>
 
-      <h1 className="text-left mb-4">Cursos</h1>
-      <Carrossel linhas={linhas}>
-        {cursos.map((curso, index) => (
-          <CardCurso key={index} {...curso} />
-        ))}
-      </Carrossel>
+      </div>    
+
+      <div className="mt-20">
+        <h1 className="px-8 text-left text-3xl font-bold">Cursos</h1>
+        <Carrossel linhas={linhas}>
+          {cursos.map((curso, index) => (
+            <CardCurso key={index} {...curso} />
+          ))}
+        </Carrossel>
+      </div>    
+
     </div>
   );
 }
