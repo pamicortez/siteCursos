@@ -53,6 +53,7 @@ export async function GET(request: Request) {
 				aula: true, // Inclui as aulas relacionadas
 				},
 			});
+			return NextResponse.json(curso);
 		}
 		// === Buscando cursos com categoria ===
 		else if (categoria) {
