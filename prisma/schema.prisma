@@ -223,3 +223,28 @@ model projetoColaborador {
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
 }
+
+// Guarda as sessões ativas
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  expires      DateTime
+  sessionToken String   @unique
+  accessToken  String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// tokens das sessões
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, token])
+}
