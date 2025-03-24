@@ -31,6 +31,7 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: true,
 					curso: true,
+					projetoColaborador: true,
 				}, 
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'} 
 			});
@@ -50,6 +51,7 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: true,
 					curso: true,
+					projetoColaborador: true,
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
@@ -65,6 +67,7 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: true,
 					curso: true,
+					projetoColaborador: true,
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
@@ -78,6 +81,7 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: true,
 					curso: true,
+					projetoColaborador: true,
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
