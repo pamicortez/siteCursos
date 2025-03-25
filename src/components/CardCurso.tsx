@@ -1,5 +1,5 @@
 import React from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { cn } from "@/lib/utils";
 
 interface CardCursoProps {
   imagem: string;
@@ -10,12 +10,14 @@ interface CardCursoProps {
 
 const CardCurso: React.FC<CardCursoProps> = ({ imagem, nome, descricao, cargahoraria }) => {
   return (
-    <div className="card card-curso">
-      <img src={imagem} className="card-img-top" alt={nome} />
-      <div className="card-body">
-        <h5 className="card-title">{nome}</h5>
-        <p className="card-text">{descricao}</p>
-        <p className="card-text">{cargahoraria}</p>
+    <div className="bg-white rounded-lg shadow-md overflow-hidden" style={{ width: "17rem", margin: "0 auto" }}>
+      <img src={imagem} className="w-full h-[150px] object-cover" alt={nome} />
+      <div className="p-4">
+        <h5 className="text-xl font-semibold mb-2">{nome}</h5>
+        <p className="text-base text-gray-700 mb-2">{descricao}</p>
+        <p className="text-sm text-gray-500 mb-3">{cargahoraria}</p>
+        
+
       </div>
     </div>
   );

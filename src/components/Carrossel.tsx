@@ -1,8 +1,5 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from "react";
 import "@/styles/Carrossel.css"; 
-import "@/styles/CardProfessor.css"; 
-import "@/styles/CardProjeto.css";
-import "@/styles/CardCurso.css";
 
 interface CarrosselProps {
   children: React.ReactNode[];
@@ -50,6 +47,7 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
   const totalSlides = slides.length;
   // Se mobile, cada card terá a largura total do carrossel; senão, divide pela quantidade de colunas
   const cardWidth = isMobile ? carrosselWidth : carrosselWidth / actualColumns;
+  const cardHeight = isMobile ? 100 : 100 / linhas;
 
   const nextSlide = () => {
     setIndex((prevIndex) => (prevIndex + 1) % totalSlides);
@@ -84,7 +82,7 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
               }}
             >
               {slide.map((child, i) => (
-                <div key={i} className="carrossel-item" style={{ width: `${cardWidth}px` }}>
+                <div key={i} className="carrossel-item" style={{ width: `${cardWidth}px`, height: `${cardHeight}%` }}>
                   {child}
                 </div>
               ))}
