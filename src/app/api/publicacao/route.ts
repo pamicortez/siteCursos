@@ -37,9 +37,9 @@ export async function GET(request: Request) {
 // Método para criar um novo publicacao. É preciso ter um usuário
 export async function POST(request: Request) {
 	try {
-	  const data: Prisma.PublicacaoCreateInput = await request.json(); // Pega os dados do corpo da requisição
-	  
-	  const { idUsuario } = data;
+	  const body = await request.json();
+
+	  const {idUsuario, idProjeto, ...data} = body;
 
 	  // Verifica se o usuário existe
 	  const usuario = await prisma.usuario.findUnique({ where: { id: idUsuario } });
@@ -48,7 +48,10 @@ export async function POST(request: Request) {
 	  }
 
 	  const novopublicacao = await prisma.publicacao.create({
-		data,
+		data:{
+			...data,
+			usuario:{connect:{id:idUsuario}}
+		},
 	  });
 
 	  return NextResponse.json(novopublicacao, { status: 201 }); // Retorna o novo publicacao com status 201

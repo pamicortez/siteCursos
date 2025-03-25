@@ -104,18 +104,23 @@ export async function DELETE(request: Request) {
 // Método para criar uma nova Aula. É preciso ter um Curso
 export async function POST(request: Request) {
 	try {
-		const data: Prisma.AulaCreateInput = await request.json(); // Pega os dados do corpo da requisição
 
-		const {idCurso} = data;
+		const body = await request.json();
+		
+		const {idCurso, ...dados} = body;
 
-		// Verifica se o curso existe
 		const curso = await prisma.curso.findUnique({ where: { id: idCurso } });
 		if (!curso) {
 			return NextResponse.json({error: 'Curso não encontrado'}, {status: 404})
 		}
-
+		
 		const novaAula = await prisma.aula.create({
-			data, // Dados da aula que será criada
+			data: {
+				...dados,
+				curso: {
+					connect: {id: idCurso}
+				}
+			}
 		});
 
 		return NextResponse.json(novaAula, { status: 201 }); // Retorna a nova aula com status 201

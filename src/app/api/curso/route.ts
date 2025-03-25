@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
+import { connect } from 'http2';
 
 
 // Método GET para retornar todos os cursos
@@ -143,9 +144,9 @@ export async function DELETE(request: Request) {
 // Método para criar um novo Curso. É preciso ter um Projeto e um Usuário
 export async function POST(request: Request) {
 	try {
-		const data: Prisma.CursoCreateInput = await request.json(); // Pega os dados do corpo da requisição
+		const body = await request.json();
 
-		const {idUsuario, idProjeto} = data;
+		const {idUsuario, idProjeto, ...data} = body;
 
 		// Verifica se o usuário existe
 		const usuario = await prisma.usuario.findUnique({ where: { id: idUsuario } });
@@ -157,13 +158,21 @@ export async function POST(request: Request) {
 		}
 
 		const novoCurso = await prisma.curso.create({
-			data, // Dados do Curso que será criado
+			data:{
+				...data,
+				usuario: {
+					connect: {id: idUsuario}
+				},
+				projeto: {
+					connect: {id: idProjeto}
+				}
+			}
 		});
 
 		const cursoUsuario = await prisma.cursoUsuario.create({
 			data:{
-				idUsuario: idUsuario,
-				idCurso: novoCurso.id
+				usuario: {connect: {id: idUsuario}},
+				curso: {connect: {id: novoCurso.id}}
 			}
 		})
 		return NextResponse.json(novoCurso, { status: 201 }); // Retorna o novo Curso com status 201
