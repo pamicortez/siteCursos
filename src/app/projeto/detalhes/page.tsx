@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react";
-import CardCursoWithButton from "../components/CardCursoWithButton"; 
+import CardCursoWithButton from "@/components/CardCursoWithButton"; 
 import { Button } from "@/components/ui/button";
 
 const ProjetoHome: React.FC = () => {
