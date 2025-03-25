@@ -14,17 +14,46 @@ export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const titulo = searchParams.get('titulo');
 	const categoria = searchParams.get('categoria');
+	const ordem = searchParams.get('ordem');
 	try {
-		// === Buscando projetos com título ===
-		if (titulo) {
-			console.log('Buscando projetos com título:', titulo);// http://localhost:3000/api/projeto?titulo=Projeto%20AI
-			// Buscar projetos que tenham o título especificado
+		// === Buscando projetos por titulo e categoria ===
+		if (titulo && categoria) {
+			console.log('Buscando projetos com título e categoria:', titulo, categoria); // http://localhost:3000/api/projeto?titulo=Projeto%20AI&categoria=IA
+			// Buscar projetos que tenham o título e categoria especificados
 			const projetos = await prisma.projeto.findMany({
-				where: { titulo },
+				where: { titulo:
+					{
+						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					}
+					, categoria 
+				},
 				include: {
 					projetoUsuario: true,
 					curso: true,
-				}
+					projetoColaborador: true,
+				}, 
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'} 
+			});
+			return NextResponse.json(projetos);
+		}
+		// === Buscando projetos com título ===
+		else if (titulo) {
+			console.log('Buscando projetos com título:', titulo);// http://localhost:3000/api/projeto?titulo=Projeto%20AI
+			// Buscar projetos que tenham o título especificado
+			const projetos = await prisma.projeto.findMany({
+				where: { titulo:
+					{
+						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+				},
+				include: {
+					projetoUsuario: true,
+					curso: true,
+					projetoColaborador: true,
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
 			return NextResponse.json(projetos);
@@ -38,7 +67,9 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: true,
 					curso: true,
-				}
+					projetoColaborador: true,
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(projetos);
 		}
@@ -50,7 +81,9 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: true,
 					curso: true,
-				}
+					projetoColaborador: true,
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(projetos);
 		}
