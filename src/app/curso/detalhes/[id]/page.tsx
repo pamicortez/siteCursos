@@ -95,6 +95,3 @@ export default async function DetalhesCurso({params}: any) {
     </div>
   );
 }
-
-// precisa botar link apostila e link pra podcast
-//precisa do formato da requisiçao pra fazer o post
