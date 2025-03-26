@@ -14,7 +14,7 @@ const Navbar = () => {
   const [categoryTimeout, setCategoryTimeout] = useState<NodeJS.Timeout | null>(null);
   const isMobile = useIsMobile();
   
-  const [hasUser, setHasUser] = useState(false);
+  const [hasUser, setHasUser] = useState(true);
   const [currentPath, setCurrentPath] = useState('/');
   const categories = ["Informática", "Português", "Ciências"];
   
