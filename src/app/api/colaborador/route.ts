@@ -1,6 +1,56 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
+import { PrismaClient, colaboradorCategoria } from '@prisma/client';
+
+// Método GET para retornar todos os Colaboradores
+export async function GET(request: Request) {
+	const { searchParams } = new URL(request.url);
+	const id = searchParams.get('id');
+	const nome = searchParams.get('nome');
+	//const ordem = searchParams.get('ordem');
+	const categoria = searchParams.get('categoria');
+
+	try {
+		if (id){
+			const Colaborador = await prisma.colaborador.findUnique({
+				where: { id: Number(id) },
+				include: {
+					projetoColaborador: true,
+				},
+			});
+			return NextResponse.json(Colaborador); // Retorna a resposta em formato JSON
+		}
+		else if (nome){
+			const Colaborador = await prisma.colaborador.findMany({
+				where: { nome: 
+					{
+					contains: nome, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+					mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+				},
+				include: {
+					projetoColaborador: true,
+				},
+				//orderBy: ordem==='recente' ? {createdAt: 'desc'}: {nome: 'asc'}
+			});
+			return NextResponse.json(Colaborador); // Retorna a resposta em formato JSON
+		}
+		else if (categoria){
+			const colaboradores = await prisma.colaborador.findMany({
+				where: { categoria: categoria as colaboradorCategoria }, // Conversão segura
+				include: { projetoColaborador: true },
+			  });
+			  return NextResponse.json(colaboradores);
+		}
+
+		const colaboradores = await prisma.colaborador.findMany();
+		return NextResponse.json(colaboradores); // Retorna a resposta em formato JSON
+	} catch (error) {
+		console.error('Erro ao buscar os Colaboradores:', error);
+		return NextResponse.error(); // Retorna um erro em caso de falha
+	}
+}
 
 // Método para criar um novo Colaborador. É preciso ter um projeto
 export async function POST(request: Request) {
