@@ -146,7 +146,7 @@ export async function POST(request: Request) {
 	try {
 		const body = await request.json();
 
-		const {idUsuario, idProjeto, ...data} = body;
+		const {idUsuario, idProjeto, aulas, ...data} = body;
 
 		// Verifica se o usuário existe
 		const usuario = await prisma.usuario.findUnique({ where: { id: idUsuario } });
@@ -165,8 +165,16 @@ export async function POST(request: Request) {
 				},
 				projeto: {
 					connect: {id: idProjeto}
-				}
-			}
+				},
+                aula: aulas ? {
+                    create: aulas.map((aula: { titulo: string, linkPdf: string, linkVideo: string }) => ({ 
+						titulo: aula.titulo, 
+						linkPdf: aula.linkPdf, 
+						linkVideo: aula.linkVideo
+					}))
+                } : undefined,
+            },
+            include: { aula: true },
 		});
 
 		const cursoUsuario = await prisma.cursoUsuario.create({
