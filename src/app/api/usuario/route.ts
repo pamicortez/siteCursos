@@ -9,6 +9,8 @@ export async function GET(request: Request) {
 	const id = searchParams.get('id');
   const nome = searchParams.get('nome');
   const ordem = searchParams.get('ordem');
+  const formacaoAcademica = searchParams.get('formacaoAcademica');
+
   try {
     // ====== obtem um usuário específico
     if (id) {
@@ -24,6 +26,25 @@ export async function GET(request: Request) {
         
       });
       return NextResponse.json(usuario); // Retorna a resposta em formato JSON
+    }
+    else if (formacaoAcademica){
+      const usuario = await prisma.usuario.findMany({
+        where: { formacaoAcademica: 
+          {
+          contains: formacaoAcademica, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+          mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+          },
+        },
+        include: {
+          link: true,
+          publicacao: true,
+          eventoUsuario: { include: { evento: true } },
+          cursoUsuario: { include: { curso: true } },
+          projetoUsuario: { include: { projeto: true } },
+        },
+        orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
+      });
+      return NextResponse.json(usuario); // Retorna a resposta em formato
     }
     else if (nome) {
       const usuario = await prisma.usuario.findMany({
