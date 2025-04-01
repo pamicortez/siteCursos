@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Footer2 } from "@/components/ui/footer";
 
 export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [filter, setFilter] = useState("cursos");
+  const [filter, setFilter] = useState("curso");
   const [categoria, setCategoria] = useState("");
   const [searchTerm, setSearchTerm] = useState(""); // Estado para a pesquisa
   const [ordem, setOrdem] = useState("alfabetica"); // Estado para a ordenação
@@ -52,16 +53,16 @@ export default function Home() {
     };
 
     fetchData();
-  }, [filter, categoria, searchTerm, ordem]); // Atualiza ao modificar qualquer um dos filtros ou a ordenação
+  }, [filter, categoria, searchTerm, ordem]);
 
   const totalPages = Math.ceil(items.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = items.slice(startIndex, startIndex + itemsPerPage);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-8 space-y-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100  space-y-6">
       {/* Barra de Filtros */}
-      <div className="w-full max-w-4xl bg-white p-6 shadow-lg rounded-lg">
+      <div className="w-full max-w-4xl bg-white p-6 mt-8 shadow-lg rounded-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Select onValueChange={(value) => setFilter(value)}>
@@ -159,6 +160,9 @@ export default function Home() {
           </PaginationItem>
         </PaginationContent>
       </Pagination>
+
+      {/* Rodapé */}
+      <Footer2 />
     </div>
   );
 }
