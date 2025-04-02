@@ -36,6 +36,12 @@ enum Titulacao {
   Doutor       // Doutor
 }
 
+enum tipoUser {
+  Pendente
+  Normal
+  Super
+}
+
 // Enum para definir o tipo de participação nos eventos
 enum tipoParticipacao {
   Ouvinte      // Participante como ouvinte
@@ -61,6 +67,7 @@ model Projeto {
   dataFim    DateTime  // Data de término do projeto
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 
   projetoUsuario projetoUsuario[]
   projetoColaborador projetoColaborador[]
@@ -86,6 +93,7 @@ model Curso {
   usuario Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)// Relacionamento com o usuário que criou o curso
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 
   aula  Aula[]
   cursoUsuario cursoUsuario[]
@@ -101,6 +109,7 @@ model Aula {
   curso     Curso @relation(fields: [idCurso], references: [id], onDelete: Cascade) // Relacionamento com o curso ao qual a aula pertence
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 }
 
 // Model para os Usuários, contendo dados sobre cada usuário no sistema
@@ -114,8 +123,10 @@ model Usuario {
   instituicaoEnsino String // Instituição de ensino do usuário
   formacaoAcademica String // Formação acadêmica do usuário
   resumoPessoal   String // Resumo pessoal do usuário
+  tipo            tipoUser @default(Pendente)
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 
   link Link[]
   publicacao Publicacao[]
@@ -134,6 +145,7 @@ model Link {
   tipo  tipoLink @default(Genérico)// Tipo de link, instagram, facebook etc
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 }
 
 // Model para as Publicações feitas pelos usuários, como artigos, pesquisas, etc.
@@ -145,6 +157,7 @@ model Publicacao {
   usuario  Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 }
 
 model Colaborador{
@@ -164,6 +177,7 @@ model Evento {
   linkParticipacao String // Link para participar do evento
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 
   imagemEvento imagemEvento[]
   eventoUsuario eventoUsuario[]
@@ -177,6 +191,7 @@ model imagemEvento {
   evento Evento @relation(fields: [idEvento], references: [id], onDelete: Cascade) // Relacionamento com o evento a qual a imagem pertence
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 }
 
 // Model para associar os usuários aos eventos e definir o tipo de participação
@@ -189,6 +204,7 @@ model eventoUsuario {
   tipoParticipacao  tipoParticipacao @default(Ouvinte)// Tipo de participação do usuário no evento (enum tipoParticipacao)
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 }
 
 // Model para associar os usuários aos cursos em que se matricularam
@@ -200,6 +216,7 @@ model cursoUsuario {
   usuario  Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade) // Relacionamento com o usuário
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 }
 
 // Model para associar os usuários aos projetos em que estão envolvidos
@@ -212,6 +229,7 @@ model projetoUsuario {
   funcao funcaoProjeto @default(Colaborador)// Funcao do usuario no projeto
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 }
 
 model projetoColaborador {
@@ -222,4 +240,5 @@ model projetoColaborador {
   colaborador     Colaborador @relation(fields: [idColaborador], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 }
