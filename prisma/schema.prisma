@@ -87,6 +87,7 @@ model Curso {
   bibliografia String // Bibliografia do curso
   metodologia String  // Metodologia utilizada no curso
   metodoAvaliacao String // Método de avaliação do curso
+  linkApostila String?  // Link para apostila
   idProjeto  Int // Relacionamento com o projeto ao qual o curso pertence
   projeto Projeto @relation(fields: [idProjeto], references: [id], onDelete: Cascade)// Relacionamento com o projeto ao qual o curso pertence
   idUsuario Int // Relacionamento com o usuário que criou o curso
@@ -103,8 +104,9 @@ model Curso {
 model Aula {
   id          Int      @id @default(autoincrement()) // ID único para cada aula
   titulo      String   // Título da aula
-  linkPdf     String   // Link para o PDF da aula
-  linkVideo   String   // Link para o vídeo da aula
+  linkPdf     String?   // Link para o PDF da aula
+  linkVideo   String?   // Link para o vídeo da aula
+  linkPodcast String?  // Link para podcast
   idCurso     Int  // Relacionamento com o curso ao qual a aula pertence
   curso     Curso @relation(fields: [idCurso], references: [id], onDelete: Cascade) // Relacionamento com o curso ao qual a aula pertence
   createdAt DateTime @default(now()) // Data de criação (automática)
