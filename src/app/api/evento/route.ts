@@ -11,6 +11,7 @@ export async function GET(request: Request) {
 	const data_inicio = searchParams.get('data_inicio');// data de inicio do filtro
     const data_fim = searchParams.get('data_fim');// data de fim do filtro
 	const ordem = searchParams.get('ordem');
+	const id = searchParams.get('id');
 
 	try {
 		// === Buscando eventos com título ===
@@ -32,6 +33,20 @@ export async function GET(request: Request) {
 			});
 		
 			return NextResponse.json(eventos);
+		}
+		// === Buscando eventos com id ===
+		else if (id) {
+			console.log('Buscando evento com id:', id);
+			// Buscar evento que tenha o id especificado
+			const evento = await prisma.evento.findUnique({
+				where: { id: Number(id) },
+				include: {
+					eventoUsuario: true,
+					imagemEvento: true,
+				}
+			});
+		
+			return NextResponse.json(evento);
 		}
 		// === Buscando eventos com data >= data_inicio e data <= data_fim ===
 		else if (data_fim && data_inicio) {
