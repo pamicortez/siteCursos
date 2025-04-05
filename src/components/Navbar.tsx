@@ -103,8 +103,8 @@ const Navbar = () => {
           "fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md",
           hasUser ? "top-0" : "top-6",
           scrolled
-            ? "backdrop-blur-xl bg-white/80 border-b border-gray-100 py-4"
-            : "bg-white py-6"
+            ? "backdrop-blur-xl bg-gray-900/80 border-b border-gray-700 py-4" // Alterado para fundo escuro
+            : "bg-gray-900 py-6" // Alterado para fundo escuro
         )}
       >
         <div className="container mx-auto px-6 md:px-8">
@@ -120,15 +120,15 @@ const Navbar = () => {
                 onMouseEnter={handleCategoryMouseEnter}
                 onMouseLeave={handleCategoryMouseLeave}
               >
-                <span className="text-gray-700">Categorias</span>
-                <button className="flex items-center justify-center w-9 h-9 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors cursor-pointer">
-                <ChevronDown className="w-5 h-5 text-gray-700" />
+                <span className="text-gray-200">Categorias</span> {/* Texto claro */}
+                <button className="flex items-center justify-center w-9 h-9 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors cursor-pointer">
+                  <ChevronDown className="w-5 h-5 text-gray-200" /> {/* Ícone claro */}
                 </button>
 
                 {/* Categories Dropdown Menu */}
                 <div 
                   className={cn(
-                    "absolute left-0 mt-2 w-48 top-full rounded-md bg-white py-2 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none transition-all duration-200 ease-in-out",
+                    "absolute left-0 mt-2 w-48 top-full rounded-md bg-gray-800 py-2 shadow-lg ring-1 ring-gray-700 focus:outline-none transition-all duration-200 ease-in-out", // Fundo escuro
                     categoryMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
                   )}
                 >
@@ -136,7 +136,7 @@ const Navbar = () => {
                     <a 
                       key={index}
                       href={`/category/${category.toLowerCase()}`}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700" // Texto claro
                     >
                       {category}
                     </a>
@@ -153,7 +153,7 @@ const Navbar = () => {
                 </div>
                 <input 
                   type="search" 
-                  className="block w-full p-2 pl-10 text-sm border border-gray-200 rounded-full bg-white/80 focus:outline-none focus:ring-1 focus:ring-gray-300"
+                  className="block w-full p-2 pl-10 text-sm border border-gray-700 rounded-full bg-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-600 text-gray-200 placeholder-gray-400" // Estilo escuro
                   placeholder="Pesquise aqui"
                 />
               </div>
@@ -165,33 +165,33 @@ const Navbar = () => {
               <div id="user-menu-container" className="relative">
                 <button 
                   onClick={toggleUserMenu}
-                  className="flex items-center justify-center w-9 h-9 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                  className="flex items-center justify-center w-9 h-9 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors" // Botão escuro
                   aria-expanded={userMenuOpen}
                   aria-haspopup="true"
                 >
-                  <User className="w-5 h-5 text-gray-700" />
+                  <User className="w-5 h-5 text-gray-200" /> {/* Ícone claro */}
                 </button>
 
                 <div 
                   className={cn(
-                    "absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none transition-all duration-200 ease-in-out",
+                    "absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-800 py-2 shadow-lg ring-1 ring-gray-700 focus:outline-none transition-all duration-200 ease-in-out", // Fundo escuro
                     userMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
                   )}
                 >
-                  <div className="px-4 py-2 text-sm text-gray-900 border-b border-gray-100">
+                  <div className="px-4 py-2 text-sm text-gray-200 border-b border-gray-700"> {/* Texto claro */}
                     <div className="font-medium">User Account</div>
-                    <div className="text-xs text-gray-500">user@example.com</div>
+                    <div className="text-xs text-gray-400">user@example.com</div> {/* Texto mais claro */}
                   </div>
-                  <a href="/profile" onClick={(e) => handleNavigation('/profile', e)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</a>
-                  <a href="/settings" onClick={(e) => handleNavigation('/settings', e)} className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
-                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Sign out</button>
+                  <a href="/profile" onClick={(e) => handleNavigation('/profile', e)} className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">Your Profile</a>
+                  <a href="/settings" onClick={(e) => handleNavigation('/settings', e)} className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">Settings</a>
+                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">Sign out</button>
                 </div>
               </div>
             </div>)}
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden text-gray-800 focus:outline-none transition-all duration-200 ease-in-out ml-auto"
+              className="md:hidden text-gray-200 focus:outline-none transition-all duration-200 ease-in-out ml-auto" // Ícone claro
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? "Close Menu" : "Open Menu"}
             >
@@ -207,7 +207,7 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         <div
           className={cn(
-            "fixed inset-0 bg-white z-40 flex flex-col justify-center items-center transition-all duration-500 ease-in-out md:hidden",
+            "fixed inset-0 bg-gray-900 z-40 flex flex-col justify-center items-center transition-all duration-500 ease-in-out md:hidden", // Fundo escuro
             isOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
           )}
         >
@@ -219,7 +219,7 @@ const Navbar = () => {
               </div>
               <input 
                 type="search" 
-                className="block w-full p-2 pl-10 text-sm border border-gray-200 rounded-full"
+                className="block w-full p-2 pl-10 text-sm border border-gray-700 rounded-full bg-gray-800 text-gray-200 placeholder-gray-400" // Estilo escuro
                 placeholder="Pesquise aqui"
               />
             </div>
@@ -227,12 +227,12 @@ const Navbar = () => {
           
           {/* Mobile Categories */}
           <div className="w-full px-6 mb-6">
-            <div className="font-medium mb-2">Categorias</div>
+            <div className="font-medium mb-2 text-gray-200">Categorias</div> {/* Texto claro */}
             {categories.map((category, index) => (
               <a 
                 key={index}
                 href={`/category/${category.toLowerCase()}`}
-                className="block py-2 text-gray-600 hover:text-black"
+                className="block py-2 text-gray-400 hover:text-white" // Texto claro
                 onClick={() => setIsOpen(false)}
               >
                 {category}
@@ -243,7 +243,7 @@ const Navbar = () => {
           <div className="flex flex-col space-y-6 items-center">
             <a
               href="/profile"
-              className="text-xl font-medium transition-all duration-200 transform hover:scale-105 text-gray-600 hover:text-black"
+              className="text-xl font-medium transition-all duration-200 transform hover:scale-105 text-gray-400 hover:text-white" // Texto claro
               onClick={(e) => {
                 handleNavigation('/profile', e);
                 setIsOpen(false);
@@ -253,7 +253,7 @@ const Navbar = () => {
             </a>
             <a
               href="/settings"
-              className="text-xl font-medium transition-all duration-200 transform hover:scale-105 text-gray-600 hover:text-black"
+              className="text-xl font-medium transition-all duration-200 transform hover:scale-105 text-gray-400 hover:text-white" // Texto claro
               onClick={(e) => {
                 handleNavigation('/settings', e);
                 setIsOpen(false);
@@ -262,7 +262,7 @@ const Navbar = () => {
               Settings
             </a>
             <button 
-              className="text-xl font-medium transition-all duration-200 transform hover:scale-105 text-gray-600 hover:text-black"
+              className="text-xl font-medium transition-all duration-200 transform hover:scale-105 text-gray-400 hover:text-white" // Texto claro
             >
               Sign out
             </button>

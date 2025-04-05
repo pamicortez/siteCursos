@@ -12,14 +12,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2 } from 'lucide-react'; 
+import { Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 type Collaborator = {
   name: string;
   role: string;
 };
 
+function ConfirmationModal({ 
+  isOpen, 
+  onClose, 
+  onConfirm 
+}: { 
+  isOpen: boolean; 
+  onClose: () => void; 
+  onConfirm: () => void 
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200">
+        <h2 className="text-xl font-bold mb-4">Tem certeza que deseja cancelar?</h2>
+        <p className="mb-6">Todas as alterações não salvas serão perdidas.</p>
+        <div className="flex justify-end gap-4">
+          <Button 
+            variant="outline"
+            onClick={onClose}
+          >
+            Continuar editando
+          </Button>
+          <Button 
+            variant="destructive"
+            onClick={onConfirm}
+          >
+            Sim, cancelar
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Projeto() {
+  const router = useRouter();
   const [projectData, setProjectData] = useState({
     title: '',
     description: '',
@@ -30,8 +67,10 @@ export default function Projeto() {
   });
 
   const [collaborators, setCollaborators] = useState<Collaborator[]>([
-    { name: '', role: '' }, // Inicia com um colaborador vazio
+    { name: '', role: '' },
   ]);
+
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -69,17 +108,64 @@ export default function Projeto() {
     setCollaborators(updatedCollaborators);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({
-      ...projectData,
-      collaborators,
-    });
-    // Aqui lógica para salvar os dados
+
+    const requestBody = {
+      titulo: projectData.title,
+      imagem: projectData.image,
+      descricao: projectData.description,
+      categoria: projectData.category,
+      dataInicio: new Date(projectData.startDate).toISOString(),
+      dataFim: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
+      usuarioId: 1,
+      projetoColaborador: {
+        create: collaborators.map(collab => ({
+          nome: collab.name,
+          cargo: collab.role
+        }))
+      }
+    };
+  
+    try {
+      console.log(JSON.stringify(requestBody))
+      const response = await fetch("/api/projeto", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Erro da API:", errorData);
+        throw new Error("Erro ao salvar o projeto.");
+      }
+  
+      console.log("Projeto salvo com sucesso!");
+    } catch (error) {
+      console.error(error);
+    }
   };
 
-  const handleCancel = () => {
-    // Lógica para cancelar (limpar o formulário ou redirecionar)
+  const handleCancelClick = () => {
+    const hasData = projectData.title || 
+                   projectData.description || 
+                   projectData.startDate || 
+                   projectData.endDate || 
+                   projectData.category || 
+                   projectData.image || 
+                   collaborators.some(c => c.name || c.role);
+    
+    if (hasData) {
+      setShowCancelDialog(true);
+    } else {
+      router.push('/home');
+    }
+  };
+
+  const handleConfirmCancel = () => {
     setProjectData({
       title: '',
       description: '',
@@ -89,7 +175,12 @@ export default function Projeto() {
       image: '',
     });
     setCollaborators([{ name: '', role: '' }]);
-    console.log("Formulário cancelado");
+    setShowCancelDialog(false);
+    router.push('/home');
+  };
+
+  const handleContinueEditing = () => {
+    setShowCancelDialog(false);
   };
 
   return (
@@ -98,8 +189,7 @@ export default function Projeto() {
         <div className="py-12">
           <h1 className="text-3xl font-bold mb-12 text-center">Criar Projeto</h1>
 
-          {/* Linha 1: Título do projeto */}
-          <div className="grid gap-8 mb-8"> {/* Aumentei o gap para 8 */}
+          <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="title">Título do projeto*</Label>
               <Input
@@ -113,8 +203,7 @@ export default function Projeto() {
             </div>
           </div>
 
-          {/* Linha 2: Descrição do projeto */}
-          <div className="grid gap-8 mb-8"> {/* Aumentei o gap para 8 */}
+          <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="description">Descrição do projeto*</Label>
               <textarea
@@ -128,8 +217,7 @@ export default function Projeto() {
             </div>
           </div>
 
-          {/* Linha 3: Datas de início e finalização */}
-          <div className="grid gap-8 mb-8 md:grid-cols-2"> {/* Aumentei o gap para 8 */}
+          <div className="grid gap-8 mb-8 md:grid-cols-2">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="startDate">Data de início do projeto*</Label>
               <Input
@@ -154,8 +242,7 @@ export default function Projeto() {
             </div>
           </div>
 
-          {/* Linha 4: Categoria e Imagem */}
-          <div className="grid gap-8 mb-8 md:grid-cols-2"> {/* Aumentei o gap para 8 */}
+          <div className="grid gap-8 mb-8 md:grid-cols-2">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="category">Categoria do projeto*</Label>
               <Select
@@ -188,8 +275,7 @@ export default function Projeto() {
             </div>
           </div>
 
-          {/* Linha 5: Colaboradores */}
-          <div className="grid gap-8 mb-8"> {/* Aumentei o gap para 8 */}
+          <div className="grid gap-8 mb-8">
             <div className="flex justify-between items-center">
               <Label>Colaboradores</Label>
               <Button type="button" onClick={addCollaborator} className="w-fit">
@@ -229,22 +315,27 @@ export default function Projeto() {
                     onClick={() => removeCollaborator(index)}
                     className="text-black hover:text-black hover:bg-gray-100 p-2"
                   >
-                    <Trash2 className="h-4 w-4" /> {/* Ícone de lixeira */}
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Linha 6: Botões Cancelar (esquerda) e Salvar (direita) */}
-          <div className="flex justify-between mt-8"> {/* Adicionei margem superior */}
-            <Button type="button" variant="outline" onClick={handleCancel}>
+          <div className="flex justify-between mt-8">
+            <Button type="button" variant="outline" onClick={handleCancelClick}>
               Cancelar
             </Button>
             <Button type="submit">Salvar</Button>
           </div>
         </div>
       </form>
+
+      <ConfirmationModal
+        isOpen={showCancelDialog}
+        onClose={handleContinueEditing}
+        onConfirm={handleConfirmCancel}
+      />
     </div>
   );
 }

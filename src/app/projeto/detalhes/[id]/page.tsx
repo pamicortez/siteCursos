@@ -1,11 +1,21 @@
 "use client"
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import CardCursoWithButton from "@/components/CardCursoWithButton"; 
 import { Button } from "@/components/ui/button";
+import { useParams } from "next/navigation";
+
 
 const ProjetoHome: React.FC = () => {
-  const isOwner = true; 
+  const [isOwner, setIsOwner] = useState(false);
+    const { id } = useParams();
+    
+  
+
+  useEffect(() => {
+    // Simulação de lógica para determinar se o usuário é dono do projeto
+    setIsOwner(true); 
+  }, []);
   const cursos = [
     { imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas", isOwner: isOwner },
     { imagem: "/prof3.jpg", nome: "Inglês", descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.", cargahoraria: "60 horas", isOwner: isOwner },
