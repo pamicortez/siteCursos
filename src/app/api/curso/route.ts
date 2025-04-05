@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
+import { connect } from 'http2';
 
 
 // Método GET para retornar todos os cursos
@@ -10,18 +11,46 @@ export async function GET(request: Request) {
 	const categoria = searchParams.get('categoria');
 	const idUsuario = searchParams.get('idUsuario'); // ID do usuário
 	const idCurso = searchParams.get('id'); // ID do curso
+	const ordem = searchParams.get('ordem');
 	try {
-		// === Buscando cursos com título ===
-		if (titulo) {
-			console.log('Buscando cursos com título:', titulo);
-			// Buscar cursos que tenham o título especificado
+		// === Buscando cursos por titulo e categoria ===
+		if (titulo && categoria) {
+			console.log('Buscando cursos com título e categoria:', titulo, categoria);
+			// Buscar cursos que tenham o título e categoria especificados
 			const cursos = await prisma.curso.findMany({
-				where: { titulo },
+				where: { titulo:
+					{
+					contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+					mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+				 	categoria 
+				},
 				include: {
 				projeto: true, // Inclui o projeto relacionado
 				usuario: true, // Inclui o usuário que criou o curso
 				aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
+			});
+			return NextResponse.json(cursos);
+		}
+		// === Buscando cursos com título ===
+		else if (titulo) {
+			console.log('Buscando cursos com título:', titulo);
+			// Buscar cursos que tenham o título especificado
+			const cursos = await prisma.curso.findMany({
+				where: { titulo:
+					{
+						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+				},
+				include: {
+				projeto: true, // Inclui o projeto relacionado
+				usuario: true, // Inclui o usuário que criou o curso
+				aula: true, // Inclui as aulas relacionadas
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
 			return NextResponse.json(cursos);
@@ -37,6 +66,7 @@ export async function GET(request: Request) {
 				usuario: true, // Inclui o usuário que criou o curso
 				aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(cursos);
 		}
@@ -65,6 +95,7 @@ export async function GET(request: Request) {
 				usuario: true, // Inclui o usuário que criou o curso
 				aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(cursos);
 		}
@@ -76,6 +107,7 @@ export async function GET(request: Request) {
 				  usuario: true, // Inclui o usuário que criou o curso
 				  aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			  });
 			  return NextResponse.json(cursos); // Retorna todos os cursos
 		}
@@ -112,9 +144,9 @@ export async function DELETE(request: Request) {
 // Método para criar um novo Curso. É preciso ter um Projeto e um Usuário
 export async function POST(request: Request) {
 	try {
-		const data: Prisma.CursoCreateInput = await request.json(); // Pega os dados do corpo da requisição
+		const body = await request.json();
 
-		const {idUsuario, idProjeto} = data;
+		const {idUsuario, idProjeto, aulas, ...data} = body;
 
 		// Verifica se o usuário existe
 		const usuario = await prisma.usuario.findUnique({ where: { id: idUsuario } });
@@ -126,13 +158,30 @@ export async function POST(request: Request) {
 		}
 
 		const novoCurso = await prisma.curso.create({
-			data, // Dados do Curso que será criado
+			data:{
+				...data,
+				usuario: {
+					connect: {id: idUsuario}
+				},
+				projeto: {
+					connect: {id: idProjeto}
+				},
+                aula: aulas ? {
+                    create: aulas.map((aula: { titulo: string, linkPdf: string, linkVideo: string, linkPodcast: string }) => ({ 
+						titulo: aula.titulo, 
+						linkPdf: aula.linkPdf, 
+						linkVideo: aula.linkVideo,
+						linkPodcast: aula.linkPodcast
+					}))
+                } : undefined,
+            },
+            include: { aula: true },
 		});
 
 		const cursoUsuario = await prisma.cursoUsuario.create({
 			data:{
-				idUsuario: idUsuario,
-				idCurso: novoCurso.id
+				usuario: {connect: {id: idUsuario}},
+				curso: {connect: {id: novoCurso.id}}
 			}
 		})
 		return NextResponse.json(novoCurso, { status: 201 }); // Retorna o novo Curso com status 201

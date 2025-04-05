@@ -5,9 +5,9 @@ import { Prisma } from '@prisma/client';
 // Método para criar um novo Link. É preciso ter um usuário
 export async function POST(request: Request) {
 	try {
-	  const data: Prisma.LinkCreateInput = await request.json(); // Pega os dados do corpo da requisição
-	  
-	  const { idUsuario } = data;
+	  const body = await request.json();
+
+	  const {idUsuario, ...data} = body;
 
 	  // Verifica se o usuário existe
 	  const usuario = await prisma.usuario.findUnique({ where: { id: idUsuario } });
@@ -16,7 +16,10 @@ export async function POST(request: Request) {
 	  }
 
 	  const novolink = await prisma.link.create({
-		data,
+		data:{
+			...data,
+			usuario: {connect: {id: idUsuario}}
+		},
 	  });
 
 	  return NextResponse.json(novolink, { status: 201 }); // Retorna o novo link com status 201
