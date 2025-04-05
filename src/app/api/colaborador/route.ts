@@ -44,7 +44,9 @@ export async function GET(request: Request) {
 			  return NextResponse.json(colaboradores);
 		}
 
-		const colaboradores = await prisma.colaborador.findMany();
+		const colaboradores = await prisma.colaborador.findMany({
+			include: { projetoColaborador: true }, // Inclui os projetos relacionados
+		});
 		return NextResponse.json(colaboradores); // Retorna a resposta em formato JSON
 	} catch (error) {
 		console.error('Erro ao buscar os Colaboradores:', error);
