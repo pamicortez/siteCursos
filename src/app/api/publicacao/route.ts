@@ -6,7 +6,8 @@ import { Prisma } from '@prisma/client';
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const idUsuario = searchParams.get('idUsuario'); // Busca pelo ID do usuário, caso fornecido
-  
+	const ordem = searchParams.get('ordem'); // Busca pela ordem das publicações, caso fornecido
+
 	try {
 	  // Se um ID de usuário for fornecido, retorna as publicações desse usuário
 	  if (idUsuario) {
@@ -24,6 +25,7 @@ export async function GET(request: Request) {
 		include: {
 		  usuario: true, // Inclui os detalhes do usuário que fez a publicação
 		},
+		orderBy: ordem==='recente' ? {createdAt: 'desc'}: {descricao: 'asc'}
 	  });
 	  return NextResponse.json(publicacoes); // Retorna todas as publicações
 	} catch (error) {
@@ -35,9 +37,9 @@ export async function GET(request: Request) {
 // Método para criar um novo publicacao. É preciso ter um usuário
 export async function POST(request: Request) {
 	try {
-	  const data: Prisma.PublicacaoCreateInput = await request.json(); // Pega os dados do corpo da requisição
-	  
-	  const { idUsuario } = data;
+	  const body = await request.json();
+
+	  const {idUsuario, idProjeto, ...data} = body;
 
 	  // Verifica se o usuário existe
 	  const usuario = await prisma.usuario.findUnique({ where: { id: idUsuario } });
@@ -46,7 +48,10 @@ export async function POST(request: Request) {
 	  }
 
 	  const novopublicacao = await prisma.publicacao.create({
-		data,
+		data:{
+			...data,
+			usuario:{connect:{id:idUsuario}}
+		},
 	  });
 
 	  return NextResponse.json(novopublicacao, { status: 201 }); // Retorna o novo publicacao com status 201
