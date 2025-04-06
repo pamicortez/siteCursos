@@ -83,6 +83,7 @@ export async function GET(request: Request) {
 				aula: true, // Inclui as aulas relacionadas
 				},
 			});
+			return NextResponse.json(curso);
 		}
 		// === Buscando cursos com categoria ===
 		else if (categoria) {
@@ -156,6 +157,7 @@ export async function POST(request: Request) {
 		} else if (!projeto){
 			return NextResponse.json({error: 'Projeto não encontrado'}, {status: 404})
 		}
+		console.log(body)
 
 		const novoCurso = await prisma.curso.create({
 			data:{
@@ -178,6 +180,7 @@ export async function POST(request: Request) {
             include: { aula: true },
 		});
 
+
 		const cursoUsuario = await prisma.cursoUsuario.create({
 			data:{
 				usuario: {connect: {id: idUsuario}},
@@ -187,7 +190,7 @@ export async function POST(request: Request) {
 		return NextResponse.json(novoCurso, { status: 201 }); // Retorna o novo Curso com status 201
 	} catch (error ) {
 		if (error instanceof Prisma.PrismaClientValidationError){
-			return NextResponse.json({error: 'Tipos dos dados incorretos'}, {status: 400})
+			return NextResponse.json({error: error.message}, {status: 400})
 		} 
 
 		console.error('Erro ao criar o Curso:', error);

@@ -25,6 +25,8 @@ type AulaType = {
   podcast: string;
 };
 
+
+
 export default function Curso() {
 
   const [options, setOptions] = useState<OptionType[]>([
@@ -32,7 +34,8 @@ export default function Curso() {
     { value: "op2", label: "Opção 2" },
   ]);
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
-
+  const [imagemBase64, setImagemBase64] = useState<string | null>(null);
+  const [linkApostila, setLinkApostila] = useState<string | null>(null);
 
   const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", video: "", slide: null, podcast: "" }]);
 
@@ -94,21 +97,58 @@ export default function Curso() {
     }),
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
-     const data = {
-    //   titulo: e.target.titulo.value,
-    //   metodologia: e.target.categoria,
-    //   categoria: selectedOption?.value, // Seleção feita com react-select
-    //   descricao: e.target.descricao.value,
-    //   bibliografia: e.target.bibliografia.value,
-      // aulas: aulas.map((aula) => ({
-      //   titulo: aula.titulo,
-      //   video: aula.video,
-      //   slide: aula.slide, 
-      //   podcast: aula.podcast,
-      // })),
+
+     // Função auxiliar para transformar um File em base64
+    const fileToBase64 = (file: File | null) => {
+      return new Promise<string | null>((resolve, reject) => {
+        if (!file) return resolve(null);
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = error => reject(error);
+      });
+    };
+
+    const aulasConvertidas = await Promise.all(
+    aulas.map(async (aula) => {
+      const slideBase64 = await fileToBase64(aula.slide);
+      return {
+        titulo: aula.titulo,
+        linkVideo: aula.video,
+        linkPdf: slideBase64,
+        linkPodcast: aula.podcast
+        };
+      })
+    );
+
+    // Pega os arquivos
+    const slideFile = formData.get("slide") as File | null;
+    const apostilaFile = formData.get("apostila") as File | null;
+
+    // Converte pra string base64
+    const slideBase64 = await fileToBase64(slideFile);
+    const apostilaBase64 = await fileToBase64(apostilaFile)
+
+    const data = {
+      titulo: formData.get("titulo"),
+      metodologia: formData.get("metodologia"),
+      categoria: selectedOption?.value, // Seleção feita com react-select
+      descricao: formData.get('descricao'),
+      bibliografia: formData.get('bibliografia'),
+      imagem: imagemBase64,
+      aulas: aulasConvertidas,
+      idProjeto: 1, // como pegar
+      idUsuario: 1, // como pegar
+      linkInscricao: "teste", // ? o q é esse campo
+      vagas: Number(formData.get('vagas')),
+      metodoAvaliacao: formData.get('avaliacao'),
+      linkApostila: apostilaBase64,
+      cargaHoraria: Number(formData.get('cargaHoraria'))
     };
 
     try {
@@ -128,7 +168,7 @@ export default function Curso() {
     } catch (error) {
       alert('Erro ao enviar os dados para a API');
     }
-  };
+}
 
   
   return (
@@ -144,8 +184,8 @@ export default function Curso() {
             </div>
 
             <div className="grid items-center gap-1.5">
-                <Label htmlFor="avaliação">Metodologia</Label>
-                <Select>
+                <Label htmlFor="metodologia">Metodologia</Label>
+                <Select name="metodologia">
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Escolha..." />
                   </SelectTrigger>
@@ -174,17 +214,30 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="imagem">Imagem</Label>
-              <Input type="file"></Input>
+              <Input 
+                type="file" 
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      setImagemBase64(reader.result as string); // base64 com prefixo data:image/...
+                    };
+                    reader.readAsDataURL(file); // Converte para base64
+                  }
+                }} 
+              />
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="Carga horaria">Carga Horária</Label>
-              <Input type="number"></Input>
+              <Input type="number" name="cargaHoraria"></Input>
             </div>
 
             <div>
                 <label className="block mb-2 text-sm font-medium text-gray-900">Categoria</label>
-                <CreatableSelect
+                <CreatableSelect name="categoria"
                 isClearable
                 styles={customStyles}
                 options={options}
@@ -200,18 +253,18 @@ export default function Curso() {
           <div className="grid gap-6 mb-6 md:grid-cols-3">
 
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="imagem">Apostila</Label>
-              <Input type="file"></Input>
+              <Label htmlFor="apostila">Apostila</Label>
+              <Input type="file" name="apostila"></Input>
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="Vagas">Número de Vagas</Label>
-              <Input type="number"></Input>
+              <Input type="number" name="vagas"></Input>
             </div>
 
             <div className="grid items-center gap-1.5">
                 <Label htmlFor="avaliação">Método de Avaliação</Label>
-                <Select>
+                <Select name="avaliacao">
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="" />
                   </SelectTrigger>
@@ -245,7 +298,7 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5 w-xs">
               <Label htmlFor="slide">Slide</Label>
-              <Input type="file" onChange={(e) => handleInputChange(index, 'slide', e.target.value)}></Input>
+              <Input type="file" onChange={(e) => handleInputChange(index, 'slide', e.target.files?.[0] || null)}></Input>
             </div>
 
             <div className="grid items-center gap-1.5 w-xs">
