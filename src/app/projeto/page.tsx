@@ -119,12 +119,13 @@ export default function Projeto() {
       dataInicio: new Date(projectData.startDate).toISOString(),
       dataFim: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
       usuarioId: 1,
-      projetoColaborador: {
+      funcao: "Coordenador"
+/*      projetoColaborador: {
         create: collaborators.map(collab => ({
           nome: collab.name,
           cargo: collab.role
         }))
-      }
+      }*/
     };
   
     try {
