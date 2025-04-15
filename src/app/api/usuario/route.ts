@@ -12,7 +12,7 @@ export async function GET(request: Request) {
   const ordem = searchParams.get('ordem');
   const formacaoAcademica = searchParams.get('formacaoAcademica');
   const tipo = searchParams.get('tipo');
-  const tipoUserEnum = tipo as tipoUser; // Conversão segura para o enum tipoUser
+  //const tipoUserEnum = tipo as tipoUser; // Conversão segura para o enum tipoUser
 
   try {
     // ====== obtem um usuário específico
@@ -31,9 +31,9 @@ export async function GET(request: Request) {
       return NextResponse.json(usuario); // Retorna a resposta em formato JSON
     }
     // ===== Obtem usuários por tipo
-    else if (tipoUserEnum) {
+    else if (tipo) {
       const usuario = await prisma.usuario.findMany({
-        where: { tipo: tipoUserEnum, deletedAt: null },
+        where: { tipo: tipo as tipoUser, deletedAt: null },
         include: {
           link: true,
           publicacao: true,
