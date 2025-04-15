@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -70,7 +70,28 @@ export default function Projeto() {
     { name: '', role: '' },
   ]);
 
+  const [cargosColaborador, setCargosColaborador] = useState<string[]>([]);
+  const [loadingCargos, setLoadingCargos] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+
+  useEffect(() => {
+    const fetchCargosColaborador = async () => {
+      try {
+        const response = await fetch("/api/enums/categoriaColaborador");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar cargos de colaborador");
+        }
+        const data = await response.json();
+        setCargosColaborador(data);
+      } catch (error) {
+        console.error("Erro:", error);
+      } finally {
+        setLoadingCargos(false);
+      }
+    };
+
+    fetchCargosColaborador();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -120,12 +141,6 @@ export default function Projeto() {
       dataFim: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
       usuarioId: 1,
       funcao: "Coordenador"
-/*      projetoColaborador: {
-        create: collaborators.map(collab => ({
-          nome: collab.name,
-          cargo: collab.role
-        }))
-      }*/
     };
   
     try {
@@ -303,10 +318,15 @@ export default function Projeto() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectItem value="coordenador">Coordenador(a)</SelectItem>
-                        <SelectItem value="colaborador">Colaborador(a)</SelectItem>
-                        <SelectItem value="bolsista">Bolsista</SelectItem>
-                        <SelectItem value="voluntario">Voluntário</SelectItem>
+                        {loadingCargos ? (
+                          <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                        ) : (
+                          cargosColaborador.map((cargo) => (
+                            <SelectItem key={cargo} value={cargo}>
+                              {cargo}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
