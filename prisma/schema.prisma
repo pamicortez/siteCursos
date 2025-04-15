@@ -9,7 +9,7 @@ generator client {
 // Definição da fonte de dados (o banco de dados PostgreSQL)
 datasource db {
   provider = "postgresql" // Tipo de banco de dados que estamos usando
-  url      = "postgresql://postgres:1234@localhost:5432/meu_banco " // URL de conexão ao banco de dados, que está definida em um arquivo .env
+  url      = env("DATABASE_URL") // URL de conexão ao banco de dados, que está definida em um arquivo .env
 }
 
 enum tipoLink {
