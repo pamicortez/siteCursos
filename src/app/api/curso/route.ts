@@ -167,10 +167,11 @@ export async function POST(request: Request) {
 					connect: {id: idProjeto}
 				},
                 aula: aulas ? {
-                    create: aulas.map((aula: { titulo: string, linkPdf: string, linkVideo: string }) => ({ 
+                    create: aulas.map((aula: { titulo: string, linkPdf: string, linkVideo: string, linkPodcast: string }) => ({ 
 						titulo: aula.titulo, 
 						linkPdf: aula.linkPdf, 
-						linkVideo: aula.linkVideo
+						linkVideo: aula.linkVideo,
+						linkPodcast: aula.linkPodcast
 					}))
                 } : undefined,
             },

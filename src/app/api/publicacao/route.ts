@@ -7,6 +7,7 @@ export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const idUsuario = searchParams.get('idUsuario'); // Busca pelo ID do usuário, caso fornecido
 	const ordem = searchParams.get('ordem'); // Busca pela ordem das publicações, caso fornecido
+	const id = searchParams.get('id'); // Busca pelo ID da publicação, caso fornecido
 
 	try {
 	  // Se um ID de usuário for fornecido, retorna as publicações desse usuário
@@ -19,6 +20,16 @@ export async function GET(request: Request) {
 		});
 		return NextResponse.json(publicacoes); // Retorna as publicações do usuário
 	  }
+	  // Se um ID de publicação for fornecido, retorna a publicação correspondente
+	  if (id) {
+		const publicacao = await prisma.publicacao.findUnique({
+			where: { id: Number(id) }, // Filtra pela ID da publicação
+			include: {
+			  usuario: true, // Inclui os detalhes do usuário que fez a publicação
+			},
+		  });
+		return NextResponse.json(publicacao); // Retorna a publicação correspondente
+		}
 	  
 	  // Se nenhum ID for fornecido, retorna todas as publicações
 	  const publicacoes = await prisma.publicacao.findMany({

@@ -12,6 +12,7 @@ import { Prisma } from '@prisma/client';
 // Método GET para retornar todos os projetos
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
+	const id = searchParams.get('id'); // ID do projeto
 	const titulo = searchParams.get('titulo');
 	const categoria = searchParams.get('categoria');
 	const ordem = searchParams.get('ordem');
@@ -36,6 +37,19 @@ export async function GET(request: Request) {
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'} 
 			});
 			return NextResponse.json(projetos);
+		}
+		// === Buscando projetos com id ===
+		else if (id) {
+			console.log('Buscando projeto com id:', id); // http://localhost:3000/api/projeto?id=1
+			const projeto = await prisma.projeto.findUnique({
+				where: { id: Number(id) },
+				include: {
+					projetoUsuario: true,
+					curso: true,
+					projetoColaborador: true,
+				},
+			});
+			return NextResponse.json(projeto); // Retorna a resposta em formato JSON
 		}
 		// === Buscando projetos com título ===
 		else if (titulo) {
