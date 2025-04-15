@@ -23,31 +23,41 @@ type Collaborator = {
 function ConfirmationModal({ 
   isOpen, 
   onClose, 
-  onConfirm 
+  onConfirm,
+  title,
+  message,
+  confirmText,
+  variant = 'default'
 }: { 
   isOpen: boolean; 
-  onClose: () => void; 
-  onConfirm: () => void 
+  onClose?: () => void; 
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText: string;
+  variant?: 'default' | 'destructive';
 }) {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200">
-        <h2 className="text-xl font-bold mb-4">Tem certeza que deseja cancelar?</h2>
-        <p className="mb-6">Todas as alterações não salvas serão perdidas.</p>
+        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        <p className="mb-6">{message}</p>
         <div className="flex justify-end gap-4">
+          {onClose && (
+            <Button 
+              variant="outline"
+              onClick={onClose}
+            >
+              Continuar editando
+            </Button>
+          )}
           <Button 
-            variant="outline"
-            onClick={onClose}
-          >
-            Continuar editando
-          </Button>
-          <Button 
-            variant="destructive"
+            variant={variant}
             onClick={onConfirm}
           >
-            Sim, cancelar
+            {confirmText}
           </Button>
         </div>
       </div>
@@ -73,6 +83,13 @@ export default function Projeto() {
   const [cargosColaborador, setCargosColaborador] = useState<string[]>([]);
   const [loadingCargos, setLoadingCargos] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showResultDialog, setShowResultDialog] = useState(false);
+  const [resultDialog, setResultDialog] = useState({
+    title: '',
+    message: '',
+    isError: false,
+    projectId: null as string | null,
+  });
 
   useEffect(() => {
     const fetchCargosColaborador = async () => {
@@ -144,7 +161,6 @@ export default function Projeto() {
     };
   
     try {
-      console.log(JSON.stringify(requestBody))
       const response = await fetch("/api/projeto", {
         method: "POST",
         headers: {
@@ -153,15 +169,42 @@ export default function Projeto() {
         body: JSON.stringify(requestBody),
       });
   
-      if (!response.ok) {
+      if (response.ok) {
+        const data = await response.json();
+        setResultDialog({
+          title: 'Sucesso!',
+          message: 'Projeto criado com sucesso.',
+          isError: false,
+          projectId: data.id 
+        });
+      } else {
         const errorData = await response.json();
         console.error("Erro da API:", errorData);
-        throw new Error("Erro ao salvar o projeto.");
+        setResultDialog({
+          title: 'Erro',
+          message: 'Erro ao salvar o projeto, tente novamente mais tarde.',
+          isError: true,
+          projectId: null
+        });
       }
-  
-      console.log("Projeto salvo com sucesso!");
     } catch (error) {
       console.error(error);
+      setResultDialog({
+        title: 'Erro',
+        message: 'Erro ao salvar o projeto, tente novamente mais tarde.',
+        isError: true,
+        projectId: null
+      });
+    } finally {
+      setShowResultDialog(true);
+    }
+  };
+
+  const handleSuccessConfirm = () => {
+    if (resultDialog.projectId) {
+      router.push(`/projeto/detalhes/${resultDialog.projectId}`);
+    } else {
+      setShowResultDialog(false);
     }
   };
 
@@ -198,7 +241,6 @@ export default function Projeto() {
   const handleContinueEditing = () => {
     setShowCancelDialog(false);
   };
-
   return (
     <div className="flex justify-center">
       <form onSubmit={handleSubmit} className="w-full max-w-4xl px-4">
@@ -356,7 +398,21 @@ export default function Projeto() {
         isOpen={showCancelDialog}
         onClose={handleContinueEditing}
         onConfirm={handleConfirmCancel}
+        title="Tem certeza que deseja cancelar?"
+        message="Todas as alterações não salvas serão perdidas."
+        confirmText="Sim, cancelar"
+        variant="destructive"
       />
+
+      <ConfirmationModal
+        isOpen={showResultDialog}
+        onConfirm={handleSuccessConfirm}
+        title={resultDialog.title}
+        message={resultDialog.message}
+        confirmText="OK"
+        variant={resultDialog.isError ? 'destructive' : 'default'}
+      />
+
     </div>
   );
 }
