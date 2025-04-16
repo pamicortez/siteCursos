@@ -40,6 +40,7 @@ enum tipoUser {
   Pendente
   Normal
   Super
+  Bloqueado
 }
 
 // Enum para definir o tipo de participação nos eventos
