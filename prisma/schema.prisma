@@ -42,6 +42,11 @@ enum tipoUser {
   Super
 }
 
+enum categoriaCarreira {
+  acadêmica @map("Formação acadêmica")
+  profissional @map("Experiencia profissional")
+}
+
 // Enum para definir o tipo de participação nos eventos
 enum tipoParticipacao {
   Ouvinte      // Participante como ouvinte
@@ -136,6 +141,22 @@ model Usuario {
   cursoUsuario cursoUsuario[]
   projetoUsuario projetoUsuario[]
   curso Curso[]
+  carreira Carreira[]
+}
+
+model Carreira {
+  id          Int      @id @default(autoincrement()) // ID único para cada carreira
+  nome        String   // Nome da carreira
+  descricao   String   // Descrição da carreira
+  categoria   categoriaCarreira   // Categoria da carreira
+  dataInicio DateTime  // Data de início do projeto
+  dataFim    DateTime  // Data de término do projeto
+  idUsuario Int // Relacionamento com o usuário que criou o curso
+  usuario Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)// Relacionamento com o usuário que criou o curso
+  createdAt DateTime @default(now()) // Data de criação (automática)
+  updatedAt DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
+
 }
 
 // Model para os Links associados aos usuários, como links externos ou redes sociais
