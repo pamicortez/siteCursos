@@ -187,7 +187,6 @@ model Publicacao {
 model Colaborador{
   id          Int      @id @default(autoincrement()) // ID único para cada colaborador
   nome        String
-  categoria   colaboradorCategoria
 
   projetoColaborador projetoColaborador[]
 }
@@ -258,6 +257,7 @@ model projetoUsuario {
 
 model projetoColaborador {
   id          Int      @id @default(autoincrement()) // ID único para cada associação
+  categoria   colaboradorCategoria
   idProjeto   Int      // Relacionamento com o projeto
   projeto     Projeto @relation(fields: [idProjeto], references: [id], onDelete: Cascade)// Relacionamento com o colaborador
   idColaborador   Int      // Relacionamento com o colaborador
