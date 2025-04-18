@@ -59,7 +59,7 @@ export default function Curso() {
   const addAula = () => {
     setAulas((prev) => [
       ...prev,
-      {titulo: "", video: "", slide: null, podcast: "" },
+      {titulo: "", video: "", slide: null, podcast: "" }
     ]);
   };
 
@@ -115,15 +115,15 @@ export default function Curso() {
     };
 
     const aulasConvertidas = await Promise.all(
-    aulas.map(async (aula) => {
-      const slideBase64 = await fileToBase64(aula.slide);
-      return {
-        titulo: aula.titulo,
-        linkVideo: aula.video,
-        linkPdf: slideBase64,
-        linkPodcast: aula.podcast
-        };
-      })
+      aulas.map(async (aula) => {
+        const slideBase64 = await fileToBase64(aula.slide);
+        return {
+          titulo: aula.titulo,
+          linkVideo: aula.video,
+          linkPdf: slideBase64,
+          linkPodcast: aula.podcast
+          };
+        })
     );
 
     // Pega os arquivos
@@ -144,7 +144,7 @@ export default function Curso() {
       aulas: aulasConvertidas,
       idProjeto: 1, // como pegar
       idUsuario: 1, // como pegar
-      linkInscricao: "teste", // ? o q é esse campo
+      linkInscricao: formData.get('inscricao'),
       vagas: Number(formData.get('vagas')),
       metodoAvaliacao: formData.get('avaliacao'),
       linkApostila: apostilaBase64,
@@ -176,7 +176,7 @@ export default function Curso() {
       <form onSubmit={handleSubmit}>
       <div className="px-20 py-12">
         <h1 className="text-3xl font-bold mb-12 text-center">Criar Curso</h1>
-          <div className="grid gap-6 mb-6 md:grid-cols-2">
+          <div className="grid gap-6 mb-6 md:grid-cols-3">
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="titulo">Título</Label>
@@ -191,22 +191,31 @@ export default function Curso() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="apple">Apple</SelectItem>
-                      <SelectItem value="banana">Banana</SelectItem>
+                      <SelectItem value="Opção 1">Opção 1</SelectItem>
+                      <SelectItem value="Opção 2">Opção 2</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
             </div>
 
-            <div className="grid w-full gap-1.5">
-              <Label htmlFor="message">Descrição</Label>
-              <Textarea placeholder="" name="descricao" />
+            <div className="grid items-center gap-1.5">
+              <Label htmlFor="inscricao">Link de Inscrição</Label>
+              <Input type="text" name="inscricao"/>
             </div>
 
-            <div className="grid w-full gap-1.5">
-              <Label htmlFor="bibliografia">Bibliografia</Label>
-              <Textarea placeholder="" name="bibliografia" />
-            </div>
+          </div>
+
+          <div className="grid gap-6 mb-6 md:grid-cols-2">
+
+              <div className="grid w-full gap-1.5">
+                <Label htmlFor="message">Descrição</Label>
+                <Textarea placeholder="" name="descricao" />
+              </div>
+
+              <div className="grid w-full gap-1.5">
+                <Label htmlFor="bibliografia">Bibliografia</Label>
+                <Textarea placeholder="" name="bibliografia" />
+              </div>
 
           </div>
 
@@ -280,8 +289,8 @@ export default function Curso() {
 
 
           <h1 className="text-3xl font-bold mb-3 mt-20 text-center">Aulas</h1>
-          <div className="mb-5 flex justify-end">
-            <Button onClick={addAula}>+ Adicionar aula</Button>
+          <div className="mb-5 flex justify-end"> 
+            <Button type="button" onClick={addAula}>+ Adicionar aula</Button>
           </div>
          
          {aulas.map((aula, index) => (
@@ -307,6 +316,7 @@ export default function Curso() {
             </div>
             <div className="grid items-center mt-6 w-10">
               <Button
+                type="button"
                 onClick={() => removeAula(index)}
                 className="hover:cursor-pointer p-2"
               >
@@ -325,3 +335,5 @@ export default function Curso() {
     
   );
 }
+// add link inscrição como um campo, pegar o idprojeto e idusuario (se der), corrigir o bug nos campos de aula
+// quando eu clico p add aula depois de ja ter preenchido tudo, tá dando post pra api
