@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 				where: { id: Number(id) },
 				include: {
 					// Se tiver recebido o param categoria, filtra os projetos de colaborador pela categoria. Se não tiver recebido, não filtra
-					projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum } } : true, 
+					projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum }, include:{projeto: true} } : {include:{projeto: true}}, 
 				},
 			});
 
@@ -35,15 +35,19 @@ export async function GET(request: Request) {
 					},
 				},
 				include: {
-					projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum } } : true, 
+					projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum }, include:{projeto: true} } : {include:{projeto: true}}, 
 				},
 				orderBy:{nome: 'asc'}
 			});
 			return NextResponse.json(Colaborador); // Retorna a resposta em formato JSON
 		}
 		else{
+			// inclui os dados do projeto também e não só os ids
 			const colaboradores = await prisma.colaborador.findMany({
-				include: { projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum } } : true, }, // Inclui os projetos relacionados
+				include: {
+					projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum }, include:{projeto: true} } : {include:{projeto: true}}, 
+				
+				},
 				orderBy:{nome: 'asc'}
 			});
 			return NextResponse.json(colaboradores); // Retorna a resposta em formato JSON

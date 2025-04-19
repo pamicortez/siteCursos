@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 			const Colaborador = await prisma.colaborador.findUnique({
 				where: { id: Number(id) },
 				include: {
-					projetoColaborador: true,
+					projetoColaborador: { include: { projeto: true } },
 				},
 			});
             // Pego o nome do colaboraro e busco o usuario com mesmo nome
