@@ -9,15 +9,21 @@ export async function GET(request: Request) {
 	const id = searchParams.get('id');
 	const nome = searchParams.get('nome');
 	const ordem = searchParams.get('ordem');
+	const categoria = searchParams.get('categoria');
+	const  categoriaEnum = categoria as colaboradorCategoria; // Conversão segura para o enum colaboradorCategoria
 
 	try {
 		if (id){
+			// obtem um colaborador com base no id. Seleciona só os projetos de colaborador da categoria especifica
 			const Colaborador = await prisma.colaborador.findUnique({
 				where: { id: Number(id) },
 				include: {
-					projetoColaborador: true,
+					// Se tiver recebido o param categoria, filtra os projetos de colaborador pela categoria. Se não tiver recebido, não filtra
+					projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum } } : true, 
 				},
 			});
+
+
 			return NextResponse.json(Colaborador); // Retorna a resposta em formato JSON
 		}
 		else if (nome){
