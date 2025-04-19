@@ -8,8 +8,7 @@ export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const id = searchParams.get('id');
 	const nome = searchParams.get('nome');
-	//const ordem = searchParams.get('ordem');
-	const categoria = searchParams.get('categoria');
+	const ordem = searchParams.get('ordem');
 
 	try {
 		if (id){
@@ -32,22 +31,17 @@ export async function GET(request: Request) {
 				include: {
 					projetoColaborador: true,
 				},
-				//orderBy: ordem==='recente' ? {createdAt: 'desc'}: {nome: 'asc'}
+				orderBy:{nome: 'asc'}
 			});
 			return NextResponse.json(Colaborador); // Retorna a resposta em formato JSON
 		}
-		else if (categoria){
+		else{
 			const colaboradores = await prisma.colaborador.findMany({
-				where: { categoria: categoria as colaboradorCategoria }, // Conversão segura
-				include: { projetoColaborador: true },
-			  });
-			  return NextResponse.json(colaboradores);
+				include: { projetoColaborador: true }, // Inclui os projetos relacionados
+				orderBy:{nome: 'asc'}
+			});
+			return NextResponse.json(colaboradores); // Retorna a resposta em formato JSON
 		}
-
-		const colaboradores = await prisma.colaborador.findMany({
-			include: { projetoColaborador: true }, // Inclui os projetos relacionados
-		});
-		return NextResponse.json(colaboradores); // Retorna a resposta em formato JSON
 	} catch (error) {
 		console.error('Erro ao buscar os Colaboradores:', error);
 		return NextResponse.error(); // Retorna um erro em caso de falha
