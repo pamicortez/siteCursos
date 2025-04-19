@@ -35,7 +35,7 @@ export async function GET(request: Request) {
 					},
 				},
 				include: {
-					projetoColaborador: true,
+					projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum } } : true, 
 				},
 				orderBy:{nome: 'asc'}
 			});
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
 		}
 		else{
 			const colaboradores = await prisma.colaborador.findMany({
-				include: { projetoColaborador: true }, // Inclui os projetos relacionados
+				include: { projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum } } : true, }, // Inclui os projetos relacionados
 				orderBy:{nome: 'asc'}
 			});
 			return NextResponse.json(colaboradores); // Retorna a resposta em formato JSON

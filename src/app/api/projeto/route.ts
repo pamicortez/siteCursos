@@ -42,9 +42,9 @@ export async function GET(request: Request) {
 		else if (id) {
 			console.log('Buscando projeto com id:', id); // http://localhost:3000/api/projeto?id=1
 			const projeto = await prisma.projeto.findUnique({
-				where: { id: Number(id) },
+				where: { id: Number(id)},
 				include: {
-					projetoUsuario: true,
+					projetoUsuario: {},
 					curso: true,
 					projetoColaborador: true,
 				},
