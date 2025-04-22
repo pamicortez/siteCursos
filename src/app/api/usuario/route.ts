@@ -25,6 +25,7 @@ export async function GET(request: Request) {
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         
       });
@@ -40,6 +41,7 @@ export async function GET(request: Request) {
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
       });
@@ -61,6 +63,7 @@ export async function GET(request: Request) {
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
       });
@@ -81,6 +84,7 @@ export async function GET(request: Request) {
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
       });
@@ -97,6 +101,7 @@ export async function GET(request: Request) {
         eventoUsuario: { include: { evento: true } },
         cursoUsuario: { include: { curso: true } },
         projetoUsuario: { include: { projeto: true } },
+        carreira: true
       },
       orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
     });
