@@ -64,7 +64,7 @@ export async function POST(request: Request) {
 
 		const body = await request.json();
 		
-		const {idProjeto, ...dados} = body;
+		const {idProjeto, categoria, ...dados} = body;
 
 		const projeto = await prisma.projeto.findUnique({ where: { id: idProjeto } });
 		if (!projeto) {
@@ -82,6 +82,7 @@ export async function POST(request: Request) {
                 projeto: {
                     connect: {id: idProjeto}
                 },
+				categoria: categoria,
                 colaborador: {
                     connect: {id: novoColaborador.id}
                 } 
