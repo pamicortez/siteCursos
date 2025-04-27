@@ -8,17 +8,22 @@ export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const id = searchParams.get('id');
 	const nome = searchParams.get('nome');
-	//const ordem = searchParams.get('ordem');
+	const ordem = searchParams.get('ordem');
 	const categoria = searchParams.get('categoria');
+	const  categoriaEnum = categoria as colaboradorCategoria; // Conversão segura para o enum colaboradorCategoria
 
 	try {
 		if (id){
+			// obtem um colaborador com base no id. Seleciona só os projetos de colaborador da categoria especifica
 			const Colaborador = await prisma.colaborador.findUnique({
 				where: { id: Number(id) },
 				include: {
-					projetoColaborador: true,
+					// Se tiver recebido o param categoria, filtra os projetos de colaborador pela categoria. Se não tiver recebido, não filtra
+					projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum }, include:{projeto: true} } : {include:{projeto: true}}, 
 				},
 			});
+
+
 			return NextResponse.json(Colaborador); // Retorna a resposta em formato JSON
 		}
 		else if (nome){
@@ -30,24 +35,23 @@ export async function GET(request: Request) {
 					},
 				},
 				include: {
-					projetoColaborador: true,
+					projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum }, include:{projeto: true} } : {include:{projeto: true}}, 
 				},
-				//orderBy: ordem==='recente' ? {createdAt: 'desc'}: {nome: 'asc'}
+				orderBy:{nome: 'asc'}
 			});
 			return NextResponse.json(Colaborador); // Retorna a resposta em formato JSON
 		}
-		else if (categoria){
+		else{
+			// inclui os dados do projeto também e não só os ids
 			const colaboradores = await prisma.colaborador.findMany({
-				where: { categoria: categoria as colaboradorCategoria }, // Conversão segura
-				include: { projetoColaborador: true },
-			  });
-			  return NextResponse.json(colaboradores);
+				include: {
+					projetoColaborador: categoriaEnum ? { where: { categoria: categoriaEnum }, include:{projeto: true} } : {include:{projeto: true}}, 
+				
+				},
+				orderBy:{nome: 'asc'}
+			});
+			return NextResponse.json(colaboradores); // Retorna a resposta em formato JSON
 		}
-
-		const colaboradores = await prisma.colaborador.findMany({
-			include: { projetoColaborador: true }, // Inclui os projetos relacionados
-		});
-		return NextResponse.json(colaboradores); // Retorna a resposta em formato JSON
 	} catch (error) {
 		console.error('Erro ao buscar os Colaboradores:', error);
 		return NextResponse.error(); // Retorna um erro em caso de falha
@@ -60,7 +64,7 @@ export async function POST(request: Request) {
 
 		const body = await request.json();
 		
-		const {idProjeto, ...dados} = body;
+		const {idProjeto, categoria, ...dados} = body;
 
 		const projeto = await prisma.projeto.findUnique({ where: { id: idProjeto } });
 		if (!projeto) {
@@ -78,6 +82,7 @@ export async function POST(request: Request) {
                 projeto: {
                     connect: {id: idProjeto}
                 },
+				categoria: categoria,
                 colaborador: {
                     connect: {id: novoColaborador.id}
                 } 

@@ -13,29 +13,8 @@ export async function GET(request: Request) {
 	const idCurso = searchParams.get('id'); // ID do curso
 	const ordem = searchParams.get('ordem');
 	try {
-		// === Buscando cursos por titulo e categoria ===
-		if (titulo && categoria) {
-			console.log('Buscando cursos com título e categoria:', titulo, categoria);
-			// Buscar cursos que tenham o título e categoria especificados
-			const cursos = await prisma.curso.findMany({
-				where: { titulo:
-					{
-					contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
-					mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
-					},
-				 	categoria 
-				},
-				include: {
-				projeto: true, // Inclui o projeto relacionado
-				usuario: true, // Inclui o usuário que criou o curso
-				aula: true, // Inclui as aulas relacionadas
-				},
-				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
-			});
-			return NextResponse.json(cursos);
-		}
 		// === Buscando cursos com título ===
-		else if (titulo) {
+		if (titulo) {
 			console.log('Buscando cursos com título:', titulo);
 			// Buscar cursos que tenham o título especificado
 			const cursos = await prisma.curso.findMany({
@@ -44,6 +23,7 @@ export async function GET(request: Request) {
 						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
 						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
 					},
+					categoria: categoria? categoria : undefined // Se categoria não for passada, não filtra por categoria 
 				},
 				include: {
 				projeto: true, // Inclui o projeto relacionado
@@ -102,6 +82,9 @@ export async function GET(request: Request) {
 		// === Buscando todos os cursos === 
 		else {
 			const cursos = await prisma.curso.findMany({
+				where: { 				 	
+					categoria: categoria? categoria : undefined // Se categoria não for passada, não filtra por categoria 
+				}, // Verifica se o curso não foi deletado
 				include: {
 				  projeto: true, // Inclui o projeto relacionado
 				  usuario: true, // Inclui o usuário que criou o curso

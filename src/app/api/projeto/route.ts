@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
-import { Prisma } from '@prisma/client';
+import { Prisma, funcaoProjeto} from '@prisma/client';
 
 
 /*
@@ -42,9 +42,9 @@ export async function GET(request: Request) {
 		else if (id) {
 			console.log('Buscando projeto com id:', id); // http://localhost:3000/api/projeto?id=1
 			const projeto = await prisma.projeto.findUnique({
-				where: { id: Number(id) },
+				where: { id: Number(id)},
 				include: {
-					projetoUsuario: true,
+					projetoUsuario: {},
 					curso: true,
 					projetoColaborador: true,
 				},
@@ -136,11 +136,11 @@ export async function POST(request: Request) {
 	  const data: Prisma.ProjetoCreateInput = await request.json(); // Pega os dados do corpo da requisição
 	  
 	  const { dataInicio, dataFim } = data;
-	  const { usuarioId, funcao, ...projetoData } = data as any;
+	  const { usuarioId, colaboradores, ...projetoData } = data as any;
 
-	  // Validação: usuárioId e funcao são obrigatórios
-	  if (!usuarioId || !funcao) {
-		return NextResponse.json({error: 'Usuário e funcao são obrigatórios'}, {status: 400})
+	  // Validação: usuárioId  são obrigatórios
+	  if (!usuarioId) {
+		return NextResponse.json({error: 'Usuário é obrigatório'}, {status: 400})
 	  }
   
 	  // Verifica se o usuário existe
@@ -157,7 +157,22 @@ export async function POST(request: Request) {
 	  const novoProjeto = await prisma.projeto.create({
 		data:{
 			...projetoData, // Dados do projeto que será criado
-		}
+			projetoColaborador: {
+				create: colaboradores.map((colaborador: {categoria: funcaoProjeto, nome: string}) => ({
+					categoria: colaborador.categoria,
+					colaborador: {
+						create: {
+							nome: colaborador.nome,
+						},
+					},
+				})),
+			},
+		},
+		include: {
+			projetoColaborador: {
+				include: {colaborador: true},
+			},
+		},
 	  });
 
 	  // Relação entre o usuário e o projeto
@@ -165,20 +180,21 @@ export async function POST(request: Request) {
 		data:{
 			idProjeto: novoProjeto.id,
 			idUsuario: usuarioId,
-			funcao: funcao
+
 		}
 	  })
 
 	  return NextResponse.json(novoProjeto, { status: 201 }); // Retorna o novo projeto com status 201
 	} catch (error) {
 	  if (error instanceof Prisma.PrismaClientValidationError){
+		console.error('Erro ao criar o Projeto:', error);
 		return NextResponse.json({error: 'Tipos dos dados incorretos'}, {status: 400})
 	  } 
 	  console.error('Erro ao criar o Projeto:', error);
 	  return NextResponse.error(); // Retorna um erro em caso de falha
 	}
   }
-
+  
     // Método para atualização de um atributo do projeto
 export async function PATCH(request: Request) {
 	try {

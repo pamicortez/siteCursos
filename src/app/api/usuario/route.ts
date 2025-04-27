@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
+import { tipoUser } from '@prisma/client';
 import bcrypt from "bcryptjs";
 
 // Método GET para retornar todos os usuários
@@ -10,6 +11,8 @@ export async function GET(request: Request) {
   const nome = searchParams.get('nome');
   const ordem = searchParams.get('ordem');
   const formacaoAcademica = searchParams.get('formacaoAcademica');
+  const tipo = searchParams.get('tipo');
+  //const tipoUserEnum = tipo as tipoUser; // Conversão segura para o enum tipoUser
 
   try {
     // ====== obtem um usuário específico
@@ -22,11 +25,29 @@ export async function GET(request: Request) {
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         
       });
       return NextResponse.json(usuario); // Retorna a resposta em formato JSON
     }
+    // ===== Obtem usuários por tipo
+    else if (tipo) {
+      const usuario = await prisma.usuario.findMany({
+        where: { tipo: tipo as tipoUser, deletedAt: null },
+        include: {
+          link: true,
+          publicacao: true,
+          eventoUsuario: { include: { evento: true } },
+          cursoUsuario: { include: { curso: true } },
+          projetoUsuario: { include: { projeto: true } },
+          carreira: true
+        },
+        orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
+      });
+      return NextResponse.json(usuario); // Retorna a resposta em formato JSON
+    }
+    // ====== Obtem usuários por formacaoAcademica
     else if (formacaoAcademica){
       const usuario = await prisma.usuario.findMany({
         where: { formacaoAcademica: 
@@ -42,6 +63,7 @@ export async function GET(request: Request) {
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
       });
@@ -62,6 +84,7 @@ export async function GET(request: Request) {
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
       });
@@ -78,6 +101,7 @@ export async function GET(request: Request) {
         eventoUsuario: { include: { evento: true } },
         cursoUsuario: { include: { curso: true } },
         projetoUsuario: { include: { projeto: true } },
+        carreira: true
       },
       orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
     });
