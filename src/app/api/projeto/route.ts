@@ -136,11 +136,11 @@ export async function POST(request: Request) {
 	  const data: Prisma.ProjetoCreateInput = await request.json(); // Pega os dados do corpo da requisição
 	  
 	  const { dataInicio, dataFim } = data;
-	  const { usuarioId, colaboradores, ...projetoData } = data as any;
+	  const { usuarioId, funcao, colaboradores, ...projetoData } = data as any;
 
 	  // Validação: usuárioId  são obrigatórios
-	  if (!usuarioId) {
-		return NextResponse.json({error: 'Usuário é obrigatório'}, {status: 400})
+	  if (!usuarioId || !funcao) {
+		return NextResponse.json({error: 'Usuário e funcao são obrigatórios'}, {status: 400})
 	  }
   
 	  // Verifica se o usuário existe
@@ -180,7 +180,7 @@ export async function POST(request: Request) {
 		data:{
 			idProjeto: novoProjeto.id,
 			idUsuario: usuarioId,
-
+			funcao: funcao
 		}
 	  })
 
