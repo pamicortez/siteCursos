@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 type Collaborator = {
   name: string;
@@ -67,6 +67,10 @@ function ConfirmationModal({
 
 export default function Projeto() {
   const router = useRouter();
+  const params = useParams();
+  const projectId = params?.id as string | undefined;
+
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [projectData, setProjectData] = useState({
     title: '',
     description: '',
@@ -109,6 +113,37 @@ export default function Projeto() {
 
     fetchCargosColaborador();
   }, []);
+
+  useEffect(() => {
+    if (projectId) {
+      setIsEditMode(true);
+      fetchProjectData(projectId);
+    }
+  }, [projectId]);
+
+  const fetchProjectData = async (id: string) => {
+    try {
+      const response = await fetch(`/api/projeto?id=${id}`);
+      if (!response.ok) throw new Error('Projeto não encontrado');
+
+      const data = await response.json();
+      setProjectData({
+        title: data.titulo,
+        description: data.descricao,
+        startDate: data.dataInicio.split('T')[0],
+        endDate: data.dataFim ? data.dataFim.split('T')[0] : '',
+        category: data.categoria,
+        image: data.imagem,
+      });
+
+      if (data.colaboradores) {
+        setCollaborators(data.colaboradores);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar projeto:", error);
+    }
+  };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -245,7 +280,7 @@ export default function Projeto() {
     <div className="flex justify-center">
       <form onSubmit={handleSubmit} className="w-full max-w-4xl px-4">
         <div className="py-12">
-          <h1 className="text-3xl font-bold mb-12 text-center">Criar Projeto</h1>
+          <h1 className="text-3xl font-bold mb-12 text-center">  {isEditMode ? 'Editar Projeto' : 'Criar Projeto'}</h1>
 
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
