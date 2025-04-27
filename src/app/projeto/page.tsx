@@ -85,6 +85,7 @@ export default function Projeto() {
   ]);
 
   const [cargosColaborador, setCargosColaborador] = useState<string[]>([]);
+  const [cargo, setCargo] = useState<string>("Coordenador");
   const [loadingCargos, setLoadingCargos] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showResultDialog, setShowResultDialog] = useState(false);
@@ -192,7 +193,7 @@ export default function Projeto() {
       dataInicio: new Date(projectData.startDate).toISOString(),
       dataFim: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
       usuarioId: 1,
-      funcao: "Coordenador"
+      funcao: cargo
     };
   
     try {
@@ -307,6 +308,36 @@ export default function Projeto() {
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                 required
               />
+            </div>
+          </div>
+          
+          <div className="grid gap-8 mb-8">
+            <div className="grid items-center gap-1.5">
+              <Label className="text-sm font-medium text-gray-700">Meu cargo no projeto*</Label>
+              <div className="flex items-center space-x-6 mt-2">
+                <label className="inline-flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    className="h-4 w-4 accent-black border-gray-300 focus:ring-black cursor-pointer"
+                    name="cargo"
+                    value="Coordenador"
+                    checked={cargo === "Coordenador"}
+                    onChange={() => setCargo("Coordenador")}
+                  />
+                  <span className="text-sm text-gray-700">Coordenador</span>
+                </label>
+                <label className="inline-flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    className="h-4 w-4 accent-black border-gray-300 focus:ring-black cursor-pointer"
+                    name="cargo"
+                    value="Colaborador"
+                    checked={cargo === "Colaborador"}
+                    onChange={() => setCargo("Colaborador")}
+                  />
+                  <span className="text-sm text-gray-700">Colaborador</span>
+                </label>
+              </div>
             </div>
           </div>
 
