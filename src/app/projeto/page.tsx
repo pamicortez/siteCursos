@@ -95,11 +95,13 @@ export default function Projeto() {
     isError: false,
     projectId: null as string | null,
   });
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   useEffect(() => {
     const fetchCargosColaborador = async () => {
       try {
-        const response = await fetch("/api/enums/categoriaColaborador");
+        const response = await fetch("/api/enums/colaboradorCategoria");
         if (!response.ok) {
           throw new Error("Erro ao buscar cargos de colaborador");
         }
@@ -144,6 +146,24 @@ export default function Projeto() {
       console.error("Erro ao carregar projeto:", error);
     }
   };
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/enums/categoriaProjeto");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar categorias de projeto");
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Erro:", error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+  
+    fetchCategories();
+  }, []);
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -157,10 +177,17 @@ export default function Projeto() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setProjectData(prevState => ({
-        ...prevState,
-        image: URL.createObjectURL(file),
-      }));
+      const reader = new FileReader();
+      
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setProjectData(prevState => ({
+          ...prevState,
+          image: base64String // Agora armazenamos a string Base64
+        }));
+      };
+      
+      reader.readAsDataURL(file);
     }
   };
 
@@ -193,7 +220,11 @@ export default function Projeto() {
       dataInicio: new Date(projectData.startDate).toISOString(),
       dataFim: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
       usuarioId: 1,
-      funcao: cargo
+      funcao: cargo,
+      colaboradores: collaborators.map(colaborador => ({
+        categoria: colaborador.role,  
+        nome: colaborador.name        
+      }))
     };
   
     try {
@@ -238,7 +269,7 @@ export default function Projeto() {
 
   const handleSuccessConfirm = () => {
     if (resultDialog.projectId) {
-      router.push(`/projeto/detalhes/${resultDialog.projectId}`);
+      router.push(`/projeto/${resultDialog.projectId}`);
     } else {
       setShowResultDialog(false);
     }
@@ -375,17 +406,23 @@ export default function Projeto() {
                   category: value,
                 }))}
               >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="informatica">Informática</SelectItem>
-                    <SelectItem value="design">Design</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione uma categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {loadingCategories ? (
+                    <SelectItem value="loading" disabled>Carregando categorias...</SelectItem>
+                  ) : (
+                    categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
             </div>
 
             <div className="grid items-center gap-1.5">
@@ -395,6 +432,7 @@ export default function Projeto() {
                 id="image"
                 name="image"
                 onChange={handleImageChange}
+                accept="image/png, image/jpeg, image/jpg, image/webp"
               />
             </div>
           </div>
