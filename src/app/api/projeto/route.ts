@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
-import { Prisma } from '@prisma/client';
+import { Prisma, funcaoProjeto} from '@prisma/client';
 
 
 /*
@@ -12,6 +12,7 @@ import { Prisma } from '@prisma/client';
 // Método GET para retornar todos os projetos
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
+	const id = searchParams.get('id'); // ID do projeto
 	const titulo = searchParams.get('titulo');
 	const categoria = searchParams.get('categoria');
 	const ordem = searchParams.get('ordem');
@@ -36,6 +37,19 @@ export async function GET(request: Request) {
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'} 
 			});
 			return NextResponse.json(projetos);
+		}
+		// === Buscando projetos com id ===
+		else if (id) {
+			console.log('Buscando projeto com id:', id); // http://localhost:3000/api/projeto?id=1
+			const projeto = await prisma.projeto.findUnique({
+				where: { id: Number(id)},
+				include: {
+					projetoUsuario: {},
+					curso: true,
+					projetoColaborador: true,
+				},
+			});
+			return NextResponse.json(projeto); // Retorna a resposta em formato JSON
 		}
 		// === Buscando projetos com título ===
 		else if (titulo) {
@@ -122,9 +136,9 @@ export async function POST(request: Request) {
 	  const data: Prisma.ProjetoCreateInput = await request.json(); // Pega os dados do corpo da requisição
 	  
 	  const { dataInicio, dataFim } = data;
-	  const { usuarioId, funcao, ...projetoData } = data as any;
+	  const { usuarioId, funcao, colaboradores, ...projetoData } = data as any;
 
-	  // Validação: usuárioId e funcao são obrigatórios
+	  // Validação: usuárioId  são obrigatórios
 	  if (!usuarioId || !funcao) {
 		return NextResponse.json({error: 'Usuário e funcao são obrigatórios'}, {status: 400})
 	  }
@@ -143,7 +157,22 @@ export async function POST(request: Request) {
 	  const novoProjeto = await prisma.projeto.create({
 		data:{
 			...projetoData, // Dados do projeto que será criado
-		}
+			projetoColaborador: {
+				create: colaboradores.map((colaborador: {categoria: funcaoProjeto, nome: string}) => ({
+					categoria: colaborador.categoria,
+					colaborador: {
+						create: {
+							nome: colaborador.nome,
+						},
+					},
+				})),
+			},
+		},
+		include: {
+			projetoColaborador: {
+				include: {colaborador: true},
+			},
+		},
 	  });
 
 	  // Relação entre o usuário e o projeto
@@ -158,6 +187,7 @@ export async function POST(request: Request) {
 	  return NextResponse.json(novoProjeto, { status: 201 }); // Retorna o novo projeto com status 201
 	} catch (error) {
 	  if (error instanceof Prisma.PrismaClientValidationError){
+		console.error('Erro ao criar o Projeto:', error);
 		return NextResponse.json({error: 'Tipos dos dados incorretos'}, {status: 400})
 	  } 
 	  console.error('Erro ao criar o Projeto:', error);
@@ -165,15 +195,13 @@ export async function POST(request: Request) {
 	}
   }
 
-    // Método para atualização de um atributo do projeto
+    // Método para atualização dos atributos do projeto
 export async function PATCH(request: Request) {
 	try {
-	  const { id, atributo, novoValor } = await request.json();
-  
-	  // Certificar que todos os dados foram passados
-	  if (!id || !atributo || novoValor === undefined) {
-		return NextResponse.json({ error: "Todos os campos são obrigatórios" }, { status: 400 });
-	  }
+	  const { searchParams } = new URL(request.url);
+	  const id = Number(searchParams.get('id')); // ID do projeto
+
+	  const { atualizacoes } = await request.json();
   
 	  // Verifica se o projeto existe
 		const projeto = await prisma.projeto.findUnique({ where: { id: id } });
@@ -182,16 +210,22 @@ export async function PATCH(request: Request) {
 		}
 	  // Atributos que NÃO podem ser alterados
 	  const atributosFixos = ["id", "usuarioId"];
-	  
-	  if (atributosFixos.includes(atributo)) {
-		return NextResponse.json({ error: "Atributo não pode ser atualizaddo" }, { status: 400 });
-	  }
-  
-	  let valorAtualizado = novoValor;
-  
+
+	  // Verifica se há algum campo proibido na requisição
+	  const camposInvalidos = Object.keys(atualizacoes).filter((chave) =>
+		atributosFixos.includes(chave)
+  	  );
+
+	  if (camposInvalidos.length > 0) {
+		return NextResponse.json(
+			{ error: `Campos não permitidos: ${camposInvalidos.join(", ")}` },
+			{ status: 400 }
+		);
+		}
+		
 	  const projetoAtualizado = await prisma.projeto.update({
 		where: { id },
-		data: { [atributo]: valorAtualizado },
+		data: atualizacoes,
 	  });
   
 	  return NextResponse.json(projetoAtualizado, { status: 200 });

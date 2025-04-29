@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
+import { tipoUser } from '@prisma/client';
 import bcrypt from "bcryptjs";
 
 // Método GET para retornar todos os usuários
@@ -10,23 +11,43 @@ export async function GET(request: Request) {
   const nome = searchParams.get('nome');
   const ordem = searchParams.get('ordem');
   const formacaoAcademica = searchParams.get('formacaoAcademica');
+  const tipo = searchParams.get('tipo');
+  //const tipoUserEnum = tipo as tipoUser; // Conversão segura para o enum tipoUser
 
   try {
     // ====== obtem um usuário específico
     if (id) {
       const usuario = await prisma.usuario.findUnique({
-        where: { id: Number(id) },
+        where: { id: Number(id), deletedAt: null },
         include: {
           link: true,
           publicacao: true,
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         
       });
       return NextResponse.json(usuario); // Retorna a resposta em formato JSON
     }
+    // ===== Obtem usuários por tipo
+    else if (tipo) {
+      const usuario = await prisma.usuario.findMany({
+        where: { tipo: tipo as tipoUser, deletedAt: null },
+        include: {
+          link: true,
+          publicacao: true,
+          eventoUsuario: { include: { evento: true } },
+          cursoUsuario: { include: { curso: true } },
+          projetoUsuario: { include: { projeto: true } },
+          carreira: true
+        },
+        orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
+      });
+      return NextResponse.json(usuario); // Retorna a resposta em formato JSON
+    }
+    // ====== Obtem usuários por formacaoAcademica
     else if (formacaoAcademica){
       const usuario = await prisma.usuario.findMany({
         where: { formacaoAcademica: 
@@ -34,6 +55,7 @@ export async function GET(request: Request) {
           contains: formacaoAcademica, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
           mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
           },
+          deletedAt: null
         },
         include: {
           link: true,
@@ -41,6 +63,7 @@ export async function GET(request: Request) {
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
       });
@@ -53,6 +76,7 @@ export async function GET(request: Request) {
           contains: nome, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
           mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
           },
+          deletedAt: null
         },
         include: {
           link: true,
@@ -60,6 +84,7 @@ export async function GET(request: Request) {
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
           projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
       });
@@ -68,13 +93,15 @@ export async function GET(request: Request) {
     }
     // ====== Obtem todos os usuários
     else{
-      const usuarios = await prisma.usuario.findMany({        
+      const usuarios = await prisma.usuario.findMany({
+        where: { deletedAt: null },        
         include: {
         link: true,
         publicacao: true,
         eventoUsuario: { include: { evento: true } },
         cursoUsuario: { include: { curso: true } },
         projetoUsuario: { include: { projeto: true } },
+        carreira: true
       },
       orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
     });
@@ -162,40 +189,43 @@ export async function PATCH(request: Request) {
 }
 
 
-// Método DELETE para deletar um usuário e suas relações
+// Método DELETE para marcar um usuário como deletado
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
+  const id = searchParams.get("id");
 
   if (!id || isNaN(Number(id))) {
-    return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+    return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }
 
   try {
-    // Verifica se o usuário existe antes de tentar deletá-lo
+    // Verifica se o usuário existe antes de tentar atualizá-lo
     const usuario = await prisma.usuario.findUnique({
       where: { id: Number(id) },
     });
 
     if (!usuario) {
-      return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
+      return NextResponse.json(
+        { error: "Usuário não encontrado" },
+        { status: 404 }
+      );
     }
 
-    // // Deleta todas as relações do usuário
-    // await prisma.$transaction([
-    //   prisma.eventoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
-    //   prisma.cursoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
-    //   prisma.projetoUsuario.deleteMany({ where: { idUsuario: Number(id) } }),
-    //   prisma.publicacao.deleteMany({ where: { idUsuario: Number(id) } }),
-    //   prisma.link.deleteMany({ where: { idUsuario: Number(id) } }),
-    // ]);
+    // Atualiza o campo deletedAt com a data e hora atual
+    await prisma.usuario.update({
+      where: { id: Number(id) },
+      data: { deletedAt: new Date() },
+    });
 
-    // Deleta o usuário
-    await prisma.usuario.delete({ where: { id: Number(id) } });
-
-    return NextResponse.json({ message: 'Usuário e suas relações deletados com sucesso' }, { status: 200 });
+    return NextResponse.json(
+      { message: "Usuário marcado como deletado com sucesso" },
+      { status: 200 }
+    );
   } catch (error) {
-    console.error('Erro ao deletar usuário:', error);
-    return NextResponse.json({ error: 'Erro ao deletar usuário' }, { status: 500 });
+    console.error("Erro ao marcar usuário como deletado:", error);
+    return NextResponse.json(
+      { error: "Erro ao marcar usuário como deletado" },
+      { status: 500 }
+    );
   }
 }
