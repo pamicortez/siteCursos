@@ -201,7 +201,7 @@ export async function PATCH(request: Request) {
 	  const { searchParams } = new URL(request.url);
 	  const id = Number(searchParams.get('id')); // ID do projeto
 
-	  const { atualizacoes } = await request.json();
+	  const atualizacoes = await request.json();
   
 	  // Verifica se o projeto existe
 		const projeto = await prisma.projeto.findUnique({ where: { id: id } });
@@ -222,7 +222,7 @@ export async function PATCH(request: Request) {
 			{ status: 400 }
 		);
 		}
-		
+
 	  const projetoAtualizado = await prisma.projeto.update({
 		where: { id },
 		data: atualizacoes,
