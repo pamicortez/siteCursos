@@ -9,7 +9,7 @@ import { Search } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Footer2 } from "@/components/ui/footer";
 
-export default function Home() {
+export default function SearchPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [filter, setFilter] = useState("curso");
   const [categoria, setCategoria] = useState("");
