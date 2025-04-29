@@ -178,39 +178,43 @@ export async function POST(request: Request) {
 	}
   }
 
-  // Método para atualização de um atributo do curso
+    // Método para atualização dos atributos do projeto
 export async function PATCH(request: Request) {
-	try {
-	  const { id, atributo, novoValor } = await request.json();
-  
-	  // Certificar que todos os dados foram passados
-	  if (!id || !atributo || novoValor === undefined) {
-		return NextResponse.json({ error: "Todos os campos são obrigatórios" }, { status: 400 });
-	  }
-  
-	  // Verifica se o curso existe
-		const curso = await prisma.curso.findUnique({ where: { id: id } });
-		if (!curso) {
-			return NextResponse.json({error: 'Curso não encontrado'}, {status: 404})
-		}
-	  // Atributos que NÃO podem ser alterados
-	  const atributosFixos = ["id", "idProjeto", "idUsuario"];
+		try {
+		  	const { searchParams } = new URL(request.url);
+		  	const id = Number(searchParams.get('id')); // ID do projeto
+	
+		 	const { atualizacoes } = await request.json();
 	  
-	  if (atributosFixos.includes(atributo)) {
-		return NextResponse.json({ error: "Atributo não pode ser atualizaddo" }, { status: 400 });
+			// Verifica se o curso existe
+			const curso = await prisma.curso.findUnique({ where: { id: id } });
+			if (!curso) {
+				return NextResponse.json({error: 'Curso não encontrado'}, {status: 404})
+			}
+		  // Atributos que NÃO podem ser alterados
+			const atributosFixos = ["id", "idProjeto", "idUsuario"];
+		
+			// Verifica se há algum campo proibido na requisição
+			const camposInvalidos = Object.keys(atualizacoes).filter((chave) =>
+				atributosFixos.includes(chave)
+				);
+		
+			if (camposInvalidos.length > 0) {
+				return NextResponse.json(
+					{ error: `Campos não permitidos: ${camposInvalidos.join(", ")}` },
+					{ status: 400 }
+				);
+				}
+				
+			const cursoAtualizado = await prisma.curso.update({
+				where: { id },
+				data: atualizacoes,
+			});
+		
+			return NextResponse.json(cursoAtualizado, { status: 200 });
+	  
+		} catch (error) {
+		  console.error(error);
+		  return NextResponse.json({ error: "Erro ao atualizar curso" }, { status: 500 });
+		}
 	  }
-  
-	  let valorAtualizado = novoValor;
-  
-	  const cursoAtualizado = await prisma.curso.update({
-		where: { id },
-		data: { [atributo]: valorAtualizado },
-	  });
-  
-	  return NextResponse.json(cursoAtualizado, { status: 200 });
-  
-	} catch (error) {
-	  console.error(error);
-	  return NextResponse.json({ error: "Erro ao atualizar curso" }, { status: 500 });
-	}
-  }
