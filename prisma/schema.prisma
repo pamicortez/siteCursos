@@ -1,15 +1,168 @@
-// Este é o arquivo do seu schema Prisma, usado para definir a estrutura do banco de dados
-// Consulte a documentação para mais informações: https://pris.ly/d/prisma-schema
-
-// Definição do gerador do cliente Prisma para JS
 generator client {
-  provider = "prisma-client-js" // Gera o Prisma Client para acesso ao banco de dados
+  provider = "prisma-client-js"
 }
 
-// Definição da fonte de dados (o banco de dados PostgreSQL)
 datasource db {
-  provider = "postgresql" // Tipo de banco de dados que estamos usando
-  url      = env("DATABASE_URL") // URL de conexão ao banco de dados, que está definida em um arquivo .env
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Projeto {
+  id                 Int                  @id @default(autoincrement())
+  titulo             String
+  imagem             String
+  descricao          String
+  categoria          String
+  dataInicio         DateTime
+  dataFim            DateTime
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  curso              Curso[]
+  projetoColaborador projetoColaborador[]
+  projetoUsuario     projetoUsuario[]
+}
+
+model Curso {
+  id              Int            @id @default(autoincrement())
+  titulo          String
+  imagem          String
+  descricao       String
+  categoria       String
+  cargaHoraria    Float
+  linkInscricao   String
+  vagas           Int
+  bibliografia    String
+  metodologia     String
+  metodoAvaliacao String
+  idProjeto       Int
+  idUsuario       Int
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  aula            Aula[]
+  projeto         Projeto        @relation(fields: [idProjeto], references: [id], onDelete: Cascade)
+  usuario         Usuario        @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+  cursoUsuario    cursoUsuario[]
+}
+
+model Aula {
+  id        Int      @id @default(autoincrement())
+  titulo    String
+  linkPdf   String
+  linkVideo String
+  idCurso   Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  curso     Curso    @relation(fields: [idCurso], references: [id], onDelete: Cascade)
+}
+
+model Usuario {
+  id                Int              @id @default(autoincrement())
+  email             String           @unique
+  fotoPerfil        String
+  senha             String
+  Nome              String
+  Titulacao         Titulacao        @default(Bacharel)
+  instituicaoEnsino String
+  formacaoAcademica String
+  resumoPessoal     String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  curso             Curso[]
+  link              Link[]
+  publicacao        Publicacao[]
+  cursoUsuario      cursoUsuario[]
+  eventoUsuario     eventoUsuario[]
+  projetoUsuario    projetoUsuario[]
+}
+
+model Link {
+  id        Int      @id @default(autoincrement())
+  link      String
+  idUsuario Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tipo      tipoLink @default(Generico)
+  usuario   Usuario  @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+}
+
+model Publicacao {
+  id        Int      @id @default(autoincrement())
+  descricao String
+  link      String
+  idUsuario Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  usuario   Usuario  @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+}
+
+model Colaborador {
+  id                 Int                  @id @default(autoincrement())
+  nome               String
+  categoria          colaboradorCategoria
+  projetoColaborador projetoColaborador[]
+}
+
+model Evento {
+  id               Int             @id @default(autoincrement())
+  titulo           String
+  descricao        String
+  data             DateTime
+  linkParticipacao String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  eventoUsuario    eventoUsuario[]
+  imagemEvento     imagemEvento[]
+}
+
+model imagemEvento {
+  id        Int      @id @default(autoincrement())
+  link      String
+  idEvento  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  evento    Evento   @relation(fields: [idEvento], references: [id], onDelete: Cascade)
+}
+
+model eventoUsuario {
+  id               Int              @id @default(autoincrement())
+  idUsuario        Int
+  idEvento         Int
+  tipoParticipacao tipoParticipacao @default(Ouvinte)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  evento           Evento           @relation(fields: [idEvento], references: [id], onDelete: Cascade)
+  usuario          Usuario          @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+}
+
+model cursoUsuario {
+  id        Int      @id @default(autoincrement())
+  idCurso   Int
+  idUsuario Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  curso     Curso    @relation(fields: [idCurso], references: [id], onDelete: Cascade)
+  usuario   Usuario  @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+}
+
+model projetoUsuario {
+  id        Int           @id @default(autoincrement())
+  idProjeto Int
+  idUsuario Int
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  funcao    funcaoProjeto @default(Colaborador)
+  projeto   Projeto       @relation(fields: [idProjeto], references: [id], onDelete: Cascade)
+  usuario   Usuario       @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
+}
+
+model projetoColaborador {
+  id            Int         @id @default(autoincrement())
+  idProjeto     Int
+  idColaborador Int
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  colaborador   Colaborador @relation(fields: [idColaborador], references: [id], onDelete: Cascade)
+  projeto       Projeto     @relation(fields: [idProjeto], references: [id], onDelete: Cascade)
 }
 
 enum tipoLink {
@@ -17,183 +170,33 @@ enum tipoLink {
   Whatsapp
   Linkedin
   Facebook
-  Genérico
+  Generico @map("Genérico")
 }
 
 enum funcaoProjeto {
   Coordenador
   Colaborador
   Bolsista
-  Voluntário
+  // Voluntário
 }
 
-// Enum de Titulação para os usuários, que define os tipos de titulação acadêmica
 enum Titulacao {
-  Bacharel      // Bacharel
-  Licenciado    // Licenciado
-  Especialista // Especialista
-  Mestre        // Mestre
-  Doutor       // Doutor
+  Bacharel
+  Licenciado
+  Especialista
+  Mestre
+  Doutor
 }
 
-// Enum para definir o tipo de participação nos eventos
 enum tipoParticipacao {
-  Ouvinte      // Participante como ouvinte
-  Palestrante  // Participante como palestrante
-  Organizador  // Organizador do evento
+  Ouvinte
+  Palestrante
+  Organizador
 }
 
-// Model para o Projeto, contendo as informações relacionadas a um projeto
-model Projeto {
-  id          Int      @id @default(autoincrement()) // ID único para cada projeto
-  titulo      String   // Título do projeto
-  imagem      String   // URL da imagem do projeto
-  descricao   String   // Descrição do projeto
-  categoria   String   // Categoria do projeto
-  dataInicio DateTime  // Data de início do projeto
-  dataFim    DateTime  // Data de término do projeto
-  createdAt DateTime @default(now()) // Data de criação (automática)
-  updatedAt DateTime @updatedAt // Data de última atualização (automática)
-
-  projetoUsuario projetoUsuario[]
-  curso Curso[]
-}
-
-// Model para o Curso, que inclui os detalhes de cursos oferecidos
-model Curso {
-  id          Int      @id @default(autoincrement()) // ID único para cada curso
-  titulo      String   // Título do curso
-  imagem      String   // URL da imagem do curso
-  descricao   String   // Descrição do curso
-  categoria   String   // Categoria do curso
-  cargaHoraria Float   // Carga horária do curso
-  linkInscricao String // Link para inscrição no curso
-  vagas       Int      // Quantidade de vagas disponíveis
-  bibliografia String // Bibliografia do curso
-  metodologia String  // Metodologia utilizada no curso
-  metodoAvaliacao String // Método de avaliação do curso
-  idProjeto  Int // Relacionamento com o projeto ao qual o curso pertence
-  projeto Projeto @relation(fields: [idProjeto], references: [id], onDelete: Cascade)// Relacionamento com o projeto ao qual o curso pertence
-  idUsuario Int // Relacionamento com o usuário que criou o curso
-  usuario Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)// Relacionamento com o usuário que criou o curso
-  createdAt DateTime @default(now()) // Data de criação (automática)
-  updatedAt DateTime @updatedAt // Data de última atualização (automática)
-
-  aula  Aula[]
-  cursoUsuario cursoUsuario[]
-}
-
-// Model para as Aulas, contendo informações sobre cada aula oferecida
-model Aula {
-  id          Int      @id @default(autoincrement()) // ID único para cada aula
-  titulo      String   // Título da aula
-  linkPdf     String   // Link para o PDF da aula
-  linkVideo   String   // Link para o vídeo da aula
-  idCurso     Int  // Relacionamento com o curso ao qual a aula pertence
-  curso     Curso @relation(fields: [idCurso], references: [id], onDelete: Cascade) // Relacionamento com o curso ao qual a aula pertence
-  createdAt DateTime @default(now()) // Data de criação (automática)
-  updatedAt DateTime @updatedAt // Data de última atualização (automática)
-}
-
-// Model para os Usuários, contendo dados sobre cada usuário no sistema
-model Usuario {
-  id          Int      @id @default(autoincrement()) // ID único para cada usuário
-  email       String   @unique // Email único do usuário
-  fotoPerfil  String   // URL da foto de perfil do usuário
-  senha       String   // Senha do usuário
-  Nome        String   // Nome completo do usuário
-  Titulacao   Titulacao @default(Bacharel)// Titulação acadêmica do usuário (enum Titulacao)
-  instituicaoEnsino String // Instituição de ensino do usuário
-  formacaoAcademica String // Formação acadêmica do usuário
-  resumoPessoal   String // Resumo pessoal do usuário
-  createdAt DateTime @default(now()) // Data de criação (automática)
-  updatedAt DateTime @updatedAt // Data de última atualização (automática)
-
-  link Link[]
-  publicacao Publicacao[]
-  eventoUsuario eventoUsuario[]
-  cursoUsuario cursoUsuario[]
-  projetoUsuario projetoUsuario[]
-  curso Curso[]
-}
-
-// Model para os Links associados aos usuários, como links externos ou redes sociais
-model Link {
-  id      Int   @id @default(autoincrement()) // ID único para cada link
-  link    String // URL do link
-  idUsuario Int  // Relacionamento com o usuário dono do link
-  usuario  Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
-  tipo  tipoLink @default(Genérico)// Tipo de link, instagram, facebook etc
-  createdAt DateTime @default(now()) // Data de criação (automática)
-  updatedAt DateTime @updatedAt // Data de última atualização (automática)
-}
-
-// Model para as Publicações feitas pelos usuários, como artigos, pesquisas, etc.
-model Publicacao {
-  id          Int      @id @default(autoincrement()) // ID único para cada publicação
-  descricao   String   // Descrição da publicação
-  link        String   // Link para acessar a publicação
-  idUsuario   Int      // Relacionamento com o usuário que fez a publicação
-  usuario  Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now()) // Data de criação (automática)
-  updatedAt DateTime @updatedAt // Data de última atualização (automática)
-}
-
-// Model para Eventos, onde são armazenados detalhes de cada evento
-model Evento {
-  id          Int      @id @default(autoincrement()) // ID único para cada evento
-  titulo      String   // Título do evento
-  descricao   String   // Descrição do evento
-  data        DateTime // Data e hora do evento
-  linkParticipacao String // Link para participar do evento
-  createdAt   DateTime @default(now()) // Data de criação (automática)
-  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
-
-  imagemEvento imagemEvento[]
-  eventoUsuario eventoUsuario[]
-}
-
-// Model para as Imagens associadas aos Eventos, com links para as imagens
-model imagemEvento {
-  id          Int      @id @default(autoincrement()) // ID único para cada imagem
-  link        String   // URL da imagem
-  idEvento    Int      // Relacionamento com o evento a qual a imagem pertence
-  evento Evento @relation(fields: [idEvento], references: [id], onDelete: Cascade) // Relacionamento com o evento a qual a imagem pertence
-  createdAt   DateTime @default(now()) // Data de criação (automática)
-  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
-}
-
-// Model para associar os usuários aos eventos e definir o tipo de participação
-model eventoUsuario {
-  id          Int      @id @default(autoincrement()) // ID único para cada associação
-  idUsuario   Int      // Relacionamento com o usuário
-  usuario  Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade) // Relacionamento com o usuário
-  idEvento    Int      // Relacionamento com o evento
-  evento Evento @relation(fields: [idEvento], references: [id], onDelete: Cascade) // Relacionamento com o evento
-  tipoParticipacao  tipoParticipacao @default(Ouvinte)// Tipo de participação do usuário no evento (enum tipoParticipacao)
-  createdAt   DateTime @default(now()) // Data de criação (automática)
-  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
-}
-
-// Model para associar os usuários aos cursos em que se matricularam
-model cursoUsuario {
-  id          Int      @id @default(autoincrement()) // ID único para cada associação
-  idCurso     Int      // Relacionamento com o curso
-  curso       Curso @relation(fields: [idCurso], references: [id], onDelete: Cascade) // Relacionamento com o curso
-  idUsuario   Int      // Relacionamento com o usuário
-  usuario  Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade) // Relacionamento com o usuário
-  createdAt   DateTime @default(now()) // Data de criação (automática)
-  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
-}
-
-// Model para associar os usuários aos projetos em que estão envolvidos
-model projetoUsuario {
-  id          Int      @id @default(autoincrement()) // ID único para cada associação
-  idProjeto   Int      // Relacionamento com o projeto
-  projeto     Projeto @relation(fields: [idProjeto], references: [id], onDelete: Cascade)// Relacionamento com o projeto
-  idUsuario   Int      // Relacionamento com o usuário
-  usuario     Usuario @relation(fields: [idUsuario], references: [id], onDelete: Cascade)
-  funcao funcaoProjeto @default(Colaborador)// Funcao do usuario no projeto
-  createdAt   DateTime @default(now()) // Data de criação (automática)
-  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+enum colaboradorCategoria {
+  Coordenador @map("Cordenador(a)")
+  Colaborador @map("Colaborador(a)")
+  Bolsista
+  // Voluntário
 }
