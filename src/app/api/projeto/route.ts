@@ -224,68 +224,72 @@ export async function PATCH(request: Request) {
 		}
 	  
 	  const {colaboradores, ...dadosProjeto} = atualizacoes;
+
 	  const projetoAtualizado = await prisma.projeto.update({
 		where: { id },
 		data: dadosProjeto,
 	  });
-	  const colAtuais = await prisma.projetoColaborador.findMany({
-		where: {idProjeto: id},
-		include: {colaborador: true},
-	  });
 
-	  const nomesAtuais = colAtuais.map((projCol) => projCol.colaborador.nome);
-	  const nomesNovos = colNovos.map((col) => col.nome);
-
-	  const pRemover = colAtuais.filter(
-		(projCol) => !nomesNovos.includes(projCol.colaborador.nome)
-	  );
-
-	  await prisma.projetoColaborador.deleteMany({
-		where: {
-			idProjeto: id,
-			idColaborador: {
-				in: pRemover.map((projCol) => projCol.idColaborador),
-			},
-		},
-	  });
-
-	  for (const colab of colNovos){
-		const colExistente = await prisma.colaborador.findFirst({
-			where: {nome: colab.nome},
+	  if (colaboradores){
+		const colAtuais = await prisma.projetoColaborador.findMany({
+			where: {idProjeto: id},
+			include: {colaborador: true},
 		});
 
-		let colId: number;
-		if (colExistente){
-			colId = colExistente.id;
-		} else{
-			const novoCol = await prisma.colaborador.create({
-				data: {nome: colab.nome},
-			});
-			colId = novoCol.id;
-		}
+		const nomesAtuais = colAtuais.map((projCol) => projCol.colaborador.nome);
+		const nomesNovos = colNovos.map((col) => col.nome);
 
-		const assocExist = await prisma.projetoColaborador.findFirst({
+		const pRemover = colAtuais.filter(
+			(projCol) => !nomesNovos.includes(projCol.colaborador.nome)
+		);
+
+		await prisma.projetoColaborador.deleteMany({
 			where: {
 				idProjeto: id,
-				idColaborador: colId,
+				idColaborador: {
+					in: pRemover.map((projCol) => projCol.idColaborador),
+				},
 			},
 		});
 
-		if (!assocExist){
-			await prisma.projetoColaborador.create({
-				data:{
+		for (const colab of colNovos){
+			const colExistente = await prisma.colaborador.findFirst({
+				where: {nome: colab.nome},
+			});
+
+			let colId: number;
+			if (colExistente){
+				colId = colExistente.id;
+			} else{
+				const novoCol = await prisma.colaborador.create({
+					data: {nome: colab.nome},
+				});
+				colId = novoCol.id;
+			}
+
+			const assocExist = await prisma.projetoColaborador.findFirst({
+				where: {
 					idProjeto: id,
 					idColaborador: colId,
-					categoria: colab.categoria,
 				},
 			});
-		} else{
-			if (assocExist.categoria !== colab.categoria) {
-				await prisma.projetoColaborador.update({
-				  where: { id: assocExist.id },
-				  data: { categoria: colab.categoria },
+
+			if (!assocExist){
+				await prisma.projetoColaborador.create({
+					data:{
+						idProjeto: id,
+						idColaborador: colId,
+						categoria: colab.categoria,
+					},
 				});
-			  }
+			} else{
+				if (assocExist.categoria !== colab.categoria) {
+					await prisma.projetoColaborador.update({
+					where: { id: assocExist.id },
+					data: { categoria: colab.categoria },
+					});
+				}
+			}
 		}
 	  }
 
