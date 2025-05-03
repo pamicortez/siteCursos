@@ -149,7 +149,7 @@ export default function Projeto() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("/api/enums/categoriaProjeto");
+        const response = await fetch("/api/enums/categoriaCurso");
         if (!response.ok) {
           throw new Error("Erro ao buscar categorias de projeto");
         }
@@ -183,7 +183,7 @@ export default function Projeto() {
         const base64String = reader.result as string;
         setProjectData(prevState => ({
           ...prevState,
-          image: base64String // Agora armazenamos a string Base64
+          image: base64String 
         }));
       };
       
@@ -219,17 +219,20 @@ export default function Projeto() {
       categoria: projectData.category,
       dataInicio: new Date(projectData.startDate).toISOString(),
       dataFim: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
-      usuarioId: 1,
       funcao: cargo,
       colaboradores: collaborators.map(colaborador => ({
-        categoria: colaborador.role,  
-        nome: colaborador.name        
-      }))
+        categoria: colaborador.role,
+        nome: colaborador.name
+      })),
+      ...(isEditMode ? {} : { usuarioId: 1 })
     };
+    
+    console.log(requestBody)
   
     try {
-      const response = await fetch("/api/projeto", {
-        method: "POST",
+      const rout = isEditMode? `/api/projeto?id=${projectId}`: "/api/projeto"
+      const response = await fetch(rout, {
+        method: isEditMode ? "PATCH":"POST",
         headers: {
           "Content-Type": "application/json",
         },
