@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
 
-// Método para criar uma nova carreira. É preciso ter um Curso
+// Método para criar uma nova carreira.
 export async function POST(request: Request) {
 	try {
 

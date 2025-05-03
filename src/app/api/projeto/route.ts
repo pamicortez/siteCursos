@@ -136,11 +136,11 @@ export async function POST(request: Request) {
 	  const data: Prisma.ProjetoCreateInput = await request.json(); // Pega os dados do corpo da requisição
 	  
 	  const { dataInicio, dataFim } = data;
-	  const { usuarioId, colaboradores, ...projetoData } = data as any;
+	  const { usuarioId, funcao, colaboradores, ...projetoData } = data as any;
 
 	  // Validação: usuárioId  são obrigatórios
-	  if (!usuarioId) {
-		return NextResponse.json({error: 'Usuário é obrigatório'}, {status: 400})
+	  if (!usuarioId || !funcao) {
+		return NextResponse.json({error: 'Usuário e funcao são obrigatórios'}, {status: 400})
 	  }
   
 	  // Verifica se o usuário existe
@@ -180,7 +180,7 @@ export async function POST(request: Request) {
 		data:{
 			idProjeto: novoProjeto.id,
 			idUsuario: usuarioId,
-
+			funcao: funcao
 		}
 	  })
 
@@ -194,17 +194,15 @@ export async function POST(request: Request) {
 	  return NextResponse.error(); // Retorna um erro em caso de falha
 	}
   }
-  
-    // Método para atualização de um atributo do projeto
+
+    // Método para atualização dos atributos do projeto
 export async function PATCH(request: Request) {
 	try {
-	  const { id, atributo, novoValor } = await request.json();
-  
-	  // Certificar que todos os dados foram passados
-	  if (!id || !atributo || novoValor === undefined) {
-		return NextResponse.json({ error: "Todos os campos são obrigatórios" }, { status: 400 });
-	  }
-  
+	  const { searchParams } = new URL(request.url);
+	  const id = Number(searchParams.get('id')); // ID do projeto
+
+	  const atualizacoes = await request.json();
+	  const colNovos: {nome: string; categoria: funcaoProjeto}[] = atualizacoes.colaboradores || []; 
 	  // Verifica se o projeto existe
 		const projeto = await prisma.projeto.findUnique({ where: { id: id } });
 		if (!projeto) {
@@ -212,19 +210,98 @@ export async function PATCH(request: Request) {
 		}
 	  // Atributos que NÃO podem ser alterados
 	  const atributosFixos = ["id", "usuarioId"];
+
+	  // Verifica se há algum campo proibido na requisição
+	  const camposInvalidos = Object.keys(atualizacoes).filter((chave) =>
+		atributosFixos.includes(chave)
+  	  );
+
+	  if (camposInvalidos.length > 0) {
+		return NextResponse.json(
+			{ error: `Campos não permitidos: ${camposInvalidos.join(", ")}` },
+			{ status: 400 }
+		);
+		}
 	  
-	  if (atributosFixos.includes(atributo)) {
-		return NextResponse.json({ error: "Atributo não pode ser atualizaddo" }, { status: 400 });
-	  }
-  
-	  let valorAtualizado = novoValor;
-  
+	  const {colaboradores, ...dadosProjeto} = atualizacoes;
+
 	  const projetoAtualizado = await prisma.projeto.update({
 		where: { id },
-		data: { [atributo]: valorAtualizado },
+		data: dadosProjeto,
 	  });
-  
-	  return NextResponse.json(projetoAtualizado, { status: 200 });
+
+	  if (colaboradores){
+		const colAtuais = await prisma.projetoColaborador.findMany({
+			where: {idProjeto: id},
+			include: {colaborador: true},
+		});
+
+		const nomesAtuais = colAtuais.map((projCol) => projCol.colaborador.nome);
+		const nomesNovos = colNovos.map((col) => col.nome);
+
+		const pRemover = colAtuais.filter(
+			(projCol) => !nomesNovos.includes(projCol.colaborador.nome)
+		);
+
+		await prisma.projetoColaborador.deleteMany({
+			where: {
+				idProjeto: id,
+				idColaborador: {
+					in: pRemover.map((projCol) => projCol.idColaborador),
+				},
+			},
+		});
+
+		for (const colab of colNovos){
+			const colExistente = await prisma.colaborador.findFirst({
+				where: {nome: colab.nome},
+			});
+
+			let colId: number;
+			if (colExistente){
+				colId = colExistente.id;
+			} else{
+				const novoCol = await prisma.colaborador.create({
+					data: {nome: colab.nome},
+				});
+				colId = novoCol.id;
+			}
+
+			const assocExist = await prisma.projetoColaborador.findFirst({
+				where: {
+					idProjeto: id,
+					idColaborador: colId,
+				},
+			});
+
+			if (!assocExist){
+				await prisma.projetoColaborador.create({
+					data:{
+						idProjeto: id,
+						idColaborador: colId,
+						categoria: colab.categoria,
+					},
+				});
+			} else{
+				if (assocExist.categoria !== colab.categoria) {
+					await prisma.projetoColaborador.update({
+					where: { id: assocExist.id },
+					data: { categoria: colab.categoria },
+					});
+				}
+			}
+		}
+	  }
+
+	  const projAtua = await prisma.projeto.findUnique({
+		where: {id: id},
+		include: {
+			projetoColaborador: {
+				include: {colaborador: true}
+			}
+		}
+	  })
+	  return NextResponse.json(projAtua, { status: 200 });
   
 	} catch (error) {
 	  console.error(error);
