@@ -209,7 +209,7 @@ export async function PATCH(request: Request) {
 			return NextResponse.json({error: 'Projeto não encontrado'}, {status: 404})
 		}
 	  // Atributos que NÃO podem ser alterados
-	  const atributosFixos = ["id", "usuarioId"];
+	  const atributosFixos = ["id"];
 
 	  // Verifica se há algum campo proibido na requisição
 	  const camposInvalidos = Object.keys(atualizacoes).filter((chave) =>
@@ -223,12 +223,30 @@ export async function PATCH(request: Request) {
 		);
 		}
 	  
-	  const {colaboradores, ...dadosProjeto} = atualizacoes;
+	  const {colaboradores, funcao, usuarioId, ...dadosProjeto} = atualizacoes;
 
 	  const projetoAtualizado = await prisma.projeto.update({
 		where: { id },
 		data: dadosProjeto,
 	  });
+
+	  if (funcao){
+		const projetoUsu = await prisma.projetoUsuario.findFirst({
+			where: {
+				idProjeto: id,
+				idUsuario: usuarioId,
+			},
+		});
+
+		if (projetoUsu){
+			await prisma.projetoUsuario.update({
+				where: { id: projetoUsu.id },
+				data: {
+				  funcao: funcao,
+				},
+			  });
+		}
+	  }
 
 	  if (colaboradores){
 		const colAtuais = await prisma.projetoColaborador.findMany({
