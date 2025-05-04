@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from "react";
 import CardCursoWithButton from "@/components/CardCursoWithButton";
 import { Button } from "@/components/ui/button";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { notFound } from 'next/navigation';
 
 interface Projeto {
   id: number;
@@ -36,19 +37,21 @@ interface Projeto {
 }
 
 const ProjetoHome: React.FC = () => {
+  const router = useRouter(); 
   const [isOwner, setIsOwner] = useState(false);
   const [projeto, setProjeto] = useState<Projeto | null>(null);
   const { id } = useParams();
   const [refreshKey, setRefreshKey] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCursoDeleted = () => {
-    // Força o recarregamento dos dados
     setRefreshKey(prev => prev + 1);
   };
 
   useEffect(() => {
     const fetchProjeto = async () => {
       try {
+        setError(null);
         if (id === "TESTEINTERNO") {
           const projetoFalso: Projeto = {
             id: 999,
@@ -104,6 +107,10 @@ const ProjetoHome: React.FC = () => {
         const res = await fetch(`http://localhost:3000/api/projeto?id=${id}`);
         if (!res.ok) throw new Error("Erro na requisição");
         const data: Projeto = await res.json();
+
+        if (!data || !data.projetoUsuario || data.projetoUsuario.length === 0) {
+          router.push('/404'); 
+        }
         setProjeto(data);
   
         const usuarioLogadoId = 1; // <--- Ajusta 
@@ -113,6 +120,7 @@ const ProjetoHome: React.FC = () => {
         setIsOwner(!!coordenador);
       } catch (error) {
         console.error("Erro ao buscar projeto:", error);
+        setError("Erro interno, tente mais tarde"); 
       }
     };
   
@@ -121,12 +129,16 @@ const ProjetoHome: React.FC = () => {
   
 
   const handleAdicionarCurso = () => {
-    alert("Botão 'Adicionar Curso' clicado!");
+    router.push(`/curso/crtiar?idProjeto=${id}`);
   };
 
   return (
     <div className="container mx-auto px-4 py-2">
-      {projeto ? (
+      {error ? (
+        <div className="text-center py-10">
+          <p className="text-red-600 text-lg font-medium">{error}</p>
+        </div>
+      ) : projeto ? (
         <>
           <div className="flex justify-between items-center my-4">
             <h1 className="text-3xl font-bold">{projeto.titulo}</h1>

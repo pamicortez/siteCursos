@@ -59,7 +59,7 @@ export default async function DetalhesCurso({params}: any) {
               <p className="font-medium text-xl">{aula.titulo}</p>
               <div className="flex gap-1 hover:cursor-pointer">
                 <a href={aula.linkVideo} target="_blank"><TvMinimalPlay/></a>
-                <Headphones />
+                <a href={aula.linkPodcast} target="__blank"><Headphones /></a>
                 <a href={aula.linkPdf} target="_blank"><Images/></a>
               </div>
             </div>
@@ -95,6 +95,3 @@ export default async function DetalhesCurso({params}: any) {
     </div>
   );
 }
-
-// precisa botar link apostila e link pra podcast
-//precisa do formato da requisiçao pra fazer o post

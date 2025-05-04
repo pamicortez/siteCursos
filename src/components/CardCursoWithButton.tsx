@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ConfirmationModal } from "./ConfirmationModal"; 
-
+import { ConfirmationModal } from "./ConfirmationModal";
+import { useRouter } from "next/navigation"; 
 interface CardCursoWithButtonProps {
   idCurso: number;
   imagem: string;
@@ -21,6 +21,7 @@ const CardCursoWithButton: React.FC<CardCursoWithButtonProps> = ({
   isOwner,
   onCursoDeleted
 }) => {
+  const router = useRouter(); 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
@@ -32,15 +33,9 @@ const CardCursoWithButton: React.FC<CardCursoWithButtonProps> = ({
         method: 'DELETE',
       });
 
-      if (!response.ok) {
-        throw new Error('Falha ao excluir curso');
-      }
+      if (!response.ok) throw new Error('Falha ao excluir curso');
 
-      if (onCursoDeleted) {
-        onCursoDeleted();
-      } else {
-        window.location.reload();
-      }
+      onCursoDeleted?.() || window.location.reload();
     } catch (error) {
       console.error('Erro ao excluir curso:', error);
       alert('Ocorreu um erro ao excluir o curso');
@@ -48,6 +43,10 @@ const CardCursoWithButton: React.FC<CardCursoWithButtonProps> = ({
       setIsDeleting(false);
       setShowDeleteModal(false);
     }
+  };
+
+  const handleEdit = () => {
+    router.push(`/curso/editar/${idCurso}`);
   };
 
   return (
@@ -61,7 +60,10 @@ const CardCursoWithButton: React.FC<CardCursoWithButtonProps> = ({
           
           {isOwner && (
             <div className="flex justify-between">
-              <button className="p-0 border-none bg-transparent cursor-pointer">
+              <button 
+                className="p-0 border-none bg-transparent cursor-pointer"
+                onClick={handleEdit}
+              >
                 <img src="/pen.png" alt="Editar" className="w-6 h-6" />
               </button>
               <button 
@@ -80,7 +82,6 @@ const CardCursoWithButton: React.FC<CardCursoWithButtonProps> = ({
         </div>
       </div>
 
-      {/* Modal de Confirmação */}
       <ConfirmationModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}

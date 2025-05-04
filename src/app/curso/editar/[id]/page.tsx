@@ -1,6 +1,7 @@
 "use client"
 
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
+import { useParams } from 'next/navigation'
 import CreatableSelect from 'react-select/creatable';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,32 +21,50 @@ import { Trash2 } from 'lucide-react';
 type OptionType = { value: string; label: string };
 type AulaType = {
   titulo: string;
-  video: string;
-  slide: File | null;
-  podcast: string;
+  linkVideo: string;
+  linkPdf: File | null;
+  linkPodcast: string;
 };
-
 
 
 export default function Curso() {
 
+  const params = useParams()
+  const id = params.id
+
+  const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", linkVideo: "", linkPdf: null, linkPodcast: "" }]);
+  const [curso, setCurso] = useState([]);
+
+  useEffect(() => {
+    async function loadCurso() {
+      
+      const res = await fetch(`http://localhost:3000/api/curso?id=${id}`); 
+
+      const data = await res.json();
+      setCurso(data)
+      setAulas(data.aula);
+      console.log(data)
+    }
+    loadCurso()
+  }, [id])
+
   const [options, setOptions] = useState<OptionType[]>([
-    { value: "op1", label: "Opção 1" },
-    { value: "op2", label: "Opção 2" },
+    { value: "Opção 1", label: "Opção 1" },
+    { value: "Opção 2", label: "Opção 2" },
+    { value: "Tecnologia", label: "Tecnologia" },
   ]);
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [linkApostila, setLinkApostila] = useState<string | null>(null);
 
-  const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", video: "", slide: null, podcast: "" }]);
 
   const handleCreate = (inputValue: string) => {
-    const newOption = { value: inputValue.toLowerCase(), label: inputValue };
+    const newOption = { value: inputValue, label: inputValue };
     setOptions((prev) => [...prev, newOption]);
     setSelectedOption(newOption);
   };
 
-  const handleInputChange = (index: number, field: keyof AulaType, value: string | File | null) => {
+  const handleInputAulasChange = (index: number, field: keyof AulaType, value: string | File | null) => {
     const updatedAulas = [...aulas];
     updatedAulas[index] = {
       ...updatedAulas[index],
@@ -54,12 +73,28 @@ export default function Curso() {
     setAulas(updatedAulas);
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement> , setState: any, field: string) => {
+    const { value } = e.target;
+
+    setState((prev: any) => {
+      const newValue = typeof prev[field] === 'object' && prev[field] !== null
+        ? { label: value, value }
+        : value;
+
+      return {
+        ...prev,
+        [field]: newValue,
+      };
+    });
+  }
+
+
 
 
   const addAula = () => {
     setAulas((prev) => [
       ...prev,
-      {titulo: "", video: "", slide: null, podcast: "" }
+      {titulo: "", linkVideo: "", linkPdf: null, linkPodcast: "" }
     ]);
   };
 
@@ -92,12 +127,12 @@ export default function Curso() {
     }),
     placeholder: (provided: any) => ({
       ...provided,
-      color: "#9CA3AF", // Cinza do Tailwind
+      color: "#9CA3AF",
       fontSize: "14px",
     }),
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -114,24 +149,37 @@ export default function Curso() {
       });
     };
 
+    // remove aulas vazias (caso tenha clicado pra add uma nova e nao preencher)
+    function removerAulasVazias(aulas: AulaType[]) {
+      return aulas.filter((aula) => {
+        return Object.values(aula).some((valor) => {
+          if (typeof valor === "string") {
+            return valor.trim() !== "";
+          }
+          return valor !== null && valor !== undefined;
+        });
+      });
+    }
+
+
+    const aulasFiltradas = removerAulasVazias(aulas)
+
+  // conversão em base64
     const aulasConvertidas = await Promise.all(
-      aulas.map(async (aula) => {
-        const slideBase64 = await fileToBase64(aula.slide);
+      aulasFiltradas.map(async (aula) => {
+        const slideBase64 = await fileToBase64(aula.linkPdf);
         return {
           titulo: aula.titulo,
-          linkVideo: aula.video,
+          linkVideo: aula.linkVideo,
           linkPdf: slideBase64,
-          linkPodcast: aula.podcast
+          linkPodcast: aula.linkPodcast
           };
         })
     );
 
     // Pega os arquivos
-    const slideFile = formData.get("slide") as File | null;
     const apostilaFile = formData.get("apostila") as File | null;
 
-    // Converte pra string base64
-    const slideBase64 = await fileToBase64(slideFile);
     const apostilaBase64 = await fileToBase64(apostilaFile)
 
     const data = {
@@ -142,8 +190,8 @@ export default function Curso() {
       bibliografia: formData.get('bibliografia'),
       imagem: imagemBase64,
       aulas: aulasConvertidas,
-      idProjeto: 1, // como pegar
-      idUsuario: 1, // como pegar
+      idProjeto: curso.idProjeto, // como pegar
+      idUsuario: curso.idUsuario, // como pegar
       linkInscricao: formData.get('inscricao'),
       vagas: Number(formData.get('vagas')),
       metodoAvaliacao: formData.get('avaliacao'),
@@ -151,47 +199,51 @@ export default function Curso() {
       cargaHoraria: Number(formData.get('cargaHoraria'))
     };
 
-    try {
-      const response = await fetch('/api/curso', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
+    console.log(data)
 
-      if (response.ok) {
-        alert('Curso criado com sucesso!');
-      } else {
-        alert('Erro ao criar o curso');
-      }
-    } catch (error) {
-      alert('Erro ao enviar os dados para a API');
-    }
+    // try {
+    //   const response = await fetch('/api/curso', {
+    //     method: 'POST',
+    //     headers: {
+    //       'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify(data),
+    //   });
+
+    //   if (response.ok) {
+    //     alert('Curso criado com sucesso!');
+    //   } else {
+    //     alert('Erro ao criar o curso');
+    //   }
+    // } catch (error) {
+    //   alert('Erro ao enviar os dados para a API');
+    // }
 }
 
   
   return (
     <div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleUpdate}>
       <div className="px-20 py-12">
         <h1 className="text-3xl font-bold mb-12 text-center">Criar Curso</h1>
           <div className="grid gap-6 mb-6 md:grid-cols-3">
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="titulo">Título</Label>
-              <Input type="text" name="titulo"/>
+              <Input type="text" name="titulo" value={curso.titulo ?? ""} onChange={(e) => handleInputChange(e, setCurso, "titulo")}/>
             </div>
 
             <div className="grid items-center gap-1.5">
                 <Label htmlFor="metodologia">Metodologia</Label>
-                <Select name="metodologia">
+                <Select name="metodologia"
+                  value={curso.metodologia ?? ""}
+                  onValueChange={(value) => setCurso((prev) => ({ ...prev, metodologia: value }))}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Escolha..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="Opção 1">Opção 1</SelectItem>
+                      <SelectItem value="Metodologia prática">Metodologia prática</SelectItem>
                       <SelectItem value="Opção 2">Opção 2</SelectItem>
                     </SelectGroup>
                   </SelectContent>
@@ -200,7 +252,7 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="inscricao">Link de Inscrição</Label>
-              <Input type="text" name="inscricao"/>
+              <Input type="text" name="inscricao" value={curso.linkInscricao ?? ""} onChange={(e) => handleInputChange(e, setCurso, "linkInscricao")}/>
             </div>
 
           </div>
@@ -209,12 +261,12 @@ export default function Curso() {
 
               <div className="grid w-full gap-1.5">
                 <Label htmlFor="message">Descrição</Label>
-                <Textarea placeholder="" name="descricao" />
+                <Textarea placeholder="" name="descricao" value={curso.descricao ?? ""} onChange={(e) => handleInputChange(e, setCurso, "descricao")}/>
               </div>
 
               <div className="grid w-full gap-1.5">
                 <Label htmlFor="bibliografia">Bibliografia</Label>
-                <Textarea placeholder="" name="bibliografia" />
+                <Textarea placeholder="" name="bibliografia" value={curso.bibliografia ?? ""} onChange={(e) => handleInputChange(e, setCurso, "bibliografia")} />
               </div>
 
           </div>
@@ -241,7 +293,7 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="Carga horaria">Carga Horária</Label>
-              <Input type="number" name="cargaHoraria"></Input>
+              <Input type="number" name="cargaHoraria" value={curso.cargaHoraria ?? ""} onChange={(e) => handleInputChange(e, setCurso, "cargaHoraria")}/>
             </div>
 
             <div>
@@ -250,8 +302,15 @@ export default function Curso() {
                 isClearable
                 styles={customStyles}
                 options={options}
-                value={selectedOption}
-                onChange={setSelectedOption}
+                value={curso.categoria ? { label: curso.categoria, value: curso.categoria } : null}
+                onChange={(option) => {
+                  setSelectedOption(option);
+                  console.log(option)
+                  setCurso((prev) => ({
+                    ...prev,
+                    categoria: option ? option.value : "",
+                  }));
+                }}
                 onCreateOption={handleCreate}
                 placeholder="Selecione ou crie..."
                 required />
@@ -268,18 +327,19 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="Vagas">Número de Vagas</Label>
-              <Input type="number" name="vagas"></Input>
+              <Input type="number" name="vagas" value={curso.vagas ?? ""} onChange={(value) => setCurso((prev) => ({ ...prev, vagas: value }))}/>
             </div>
 
             <div className="grid items-center gap-1.5">
                 <Label htmlFor="avaliação">Método de Avaliação</Label>
-                <Select name="avaliacao">
+                <Select name="avaliacao"  value={curso.metodoAvaliacao ?? ""}
+                  onValueChange={(value) => setCurso((prev) => ({ ...prev, metodoAvaliacao: value }))}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="" />
+                    <SelectValue placeholder="Escolha..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="apple">Apple</SelectItem>
+                      <SelectItem value="Provas e projetos">Provas e projetos</SelectItem>
                       <SelectItem value="banana">Banana</SelectItem>
                     </SelectGroup>
                   </SelectContent>
@@ -297,22 +357,22 @@ export default function Curso() {
           <div key={index} className="flex justify-between gap-5 mb-6 md:grid-cols-5">
             <div className="grid items-center gap-1.5 w-xs">
               <Label htmlFor="titulo">Título</Label>
-              <Input type="text" value={aula.titulo} onChange={(e) => handleInputChange(index, 'titulo', e.target.value)}></Input>
+              <Input type="text" value={aula.titulo ?? ""} onChange={(e) => handleInputAulasChange(index, 'titulo', e.target.value)}></Input>
             </div>
 
             <div className="grid items-center gap-1.5 w-xs">
               <Label htmlFor="video">Link do Vídeo</Label>
-              <Input type="text" value={aula.video} onChange={(e) => handleInputChange(index, 'video', e.target.value)}></Input>
+              <Input type="text" value={aula.linkVideo ?? ""}  onChange={(e) => handleInputAulasChange(index, 'linkVideo', e.target.value)}></Input>
             </div>
 
             <div className="grid items-center gap-1.5 w-xs">
               <Label htmlFor="slide">Slide</Label>
-              <Input type="file" onChange={(e) => handleInputChange(index, 'slide', e.target.files?.[0] || null)}></Input>
+              <Input type="file" onChange={(e) => handleInputAulasChange(index, 'linkPdf', e.target.files?.[0] || null)}></Input>
             </div>
 
             <div className="grid items-center gap-1.5 w-xs">
               <Label htmlFor="podcast">Link do Podcast</Label>
-              <Input type="text" value={aula.podcast} onChange={(e) => handleInputChange(index, 'podcast', e.target.value)}></Input>
+              <Input type="text" value={aula.linkPodcast ?? ""} onChange={(e) => handleInputAulasChange(index, 'linkPodcast', e.target.value)}></Input>
             </div>
             <div className="grid items-center mt-6 w-10">
               <Button
@@ -335,5 +395,6 @@ export default function Curso() {
     
   );
 }
-// add link inscrição como um campo, pegar o idprojeto e idusuario (se der), corrigir o bug nos campos de aula
-// quando eu clico p add aula depois de ja ter preenchido tudo, tá dando post pra api
+
+// corrigir o setaulas
+// no select precisa ser um valor ja existente no selectitem
