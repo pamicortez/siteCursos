@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: true,
 					curso: true,
-					projetoColaborador: true,
+					projetoColaborador: { include: { colaborador: true } },
 				}, 
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'} 
 			});
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: {},
 					curso: true,
-					projetoColaborador: true,
+					projetoColaborador: { include: { colaborador: true } },
 				},
 			});
 			return NextResponse.json(projeto); // Retorna a resposta em formato JSON
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: true,
 					curso: true,
-					projetoColaborador: true,
+					projetoColaborador: { include: { colaborador: true } },
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: true,
 					curso: true,
-					projetoColaborador: true,
+					projetoColaborador: { include: { colaborador: true } },
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
@@ -95,7 +95,7 @@ export async function GET(request: Request) {
 				include: {
 					projetoUsuario: true,
 					curso: true,
-					projetoColaborador: true,
+					projetoColaborador: { include: { colaborador: true } },
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
