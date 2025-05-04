@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,11 @@ import { useRouter, useParams } from 'next/navigation';
 type Collaborator = {
   name: string;
   role: string;
+};
+
+type ColaboradorFromAPI = {
+  id: number;
+  nome: string;
 };
 
 function ConfirmationModal({ 
@@ -97,6 +102,8 @@ export default function Projeto() {
   });
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<ColaboradorFromAPI[]>([]);
+  const [suggestions, setSuggestions] = useState<{index: number, names: string[]} | null>(null);
 
   useEffect(() => {
     const fetchCargosColaborador = async () => {
@@ -114,7 +121,21 @@ export default function Projeto() {
       }
     };
 
+    const fetchColaboradores = async () => {
+      try {
+        const response = await fetch("/api/colaborador");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar colaboradores");
+        }
+        const data = await response.json();
+        setColaboradoresDisponiveis(data);
+      } catch (error) {
+        console.error("Erro ao buscar colaboradores:", error);
+      }
+    };
+
     fetchCargosColaborador();
+    fetchColaboradores();
   }, []);
 
   useEffect(() => {
@@ -146,6 +167,7 @@ export default function Projeto() {
       console.error("Erro ao carregar projeto:", error);
     }
   };
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -164,7 +186,6 @@ export default function Projeto() {
   
     fetchCategories();
   }, []);
-
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -191,26 +212,76 @@ export default function Projeto() {
     }
   };
 
-  const handleCollaboratorChange = (index: number, field: string, value: string) => {
+  const handleCollaboratorNameChange = (index: number, value: string) => {
+    // Permite espaços entre palavras, mas remove espaços extras no início/final
+    const trimmedValue = value.trimStart(); // Mantém espaços no meio, mas remove no início
+    
+    // Verifica se há múltiplos espaços consecutivos e substitui por um único
+    const normalizedValue = trimmedValue.replace(/\s+/g, ' ');
+    
+    // Verifica se há mais de duas palavras (nome + sobrenome)
+    const wordCount = normalizedValue.split(' ').filter(word => word.length > 0).length;
+    if (wordCount > 2) {
+      return; // Não permite mais de dois nomes
+    }
+  
     const updatedCollaborators = [...collaborators];
     updatedCollaborators[index] = {
       ...updatedCollaborators[index],
-      [field]: value,
+      name: normalizedValue,
+    };
+    setCollaborators(updatedCollaborators);
+  
+    // Mostrar sugestões se houver texto
+    if (normalizedValue.length > 0) {
+      const matchedNames = colaboradoresDisponiveis
+        .filter(colab => colab.nome.toLowerCase().includes(normalizedValue.toLowerCase()))
+        .map(colab => colab.nome)
+        .slice(0, 5); // Limita a 5 sugestões
+      
+      setSuggestions(matchedNames.length > 0 ? {index, names: matchedNames} : null);
+    } else {
+      setSuggestions(null);
+    }
+  };
+
+  const handleCollaboratorRoleChange = (index: number, value: string) => {
+    const updatedCollaborators = [...collaborators];
+    updatedCollaborators[index] = {
+      ...updatedCollaborators[index],
+      role: value,
     };
     setCollaborators(updatedCollaborators);
   };
 
-  const addCollaborator = React.useCallback(() => {
+  const addCollaborator = useCallback(() => {
     setCollaborators([...collaborators, { name: '', role: '' }]);
   }, [collaborators]);
 
   const removeCollaborator = (index: number) => {
     const updatedCollaborators = collaborators.filter((_, i) => i !== index);
     setCollaborators(updatedCollaborators);
+    setSuggestions(null);
+  };
+
+  const selectSuggestion = (index: number, name: string) => {
+    const updatedCollaborators = [...collaborators];
+    updatedCollaborators[index] = {
+      ...updatedCollaborators[index],
+      name: name,
+    };
+    setCollaborators(updatedCollaborators);
+    setSuggestions(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validação dos nomes dos colaboradores (remove espaços extras)
+    const validatedCollaborators = collaborators.map(colab => ({
+      ...colab,
+      name: colab.name.trim().replace(/\s+/g, ' '), 
+    }));
 
     const requestBody = {
       titulo: projectData.title,
@@ -220,9 +291,9 @@ export default function Projeto() {
       dataInicio: new Date(projectData.startDate).toISOString(),
       dataFim: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
       funcao: cargo,
-      colaboradores: collaborators.map(colaborador => ({
+      colaboradores: validatedCollaborators.map(colaborador => ({
         categoria: colaborador.role,
-        nome: colaborador.name
+        nome: colaborador.name.trim() // Garante que não há espaços extras
       })),
       ...(isEditMode ? {} : { usuarioId: 1 })
     };
@@ -230,9 +301,9 @@ export default function Projeto() {
     console.log(requestBody)
   
     try {
-      const rout = isEditMode? `/api/projeto?id=${projectId}`: "/api/projeto"
+      const rout = isEditMode ? `/api/projeto?id=${projectId}` : "/api/projeto";
       const response = await fetch(rout, {
-        method: isEditMode ? "PATCH":"POST",
+        method: isEditMode ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
         },
@@ -243,7 +314,7 @@ export default function Projeto() {
         const data = await response.json();
         setResultDialog({
           title: 'Sucesso!',
-          message: 'Projeto criado com sucesso.',
+          message: isEditMode ? 'Projeto atualizado com sucesso.' : 'Projeto criado com sucesso.',
           isError: false,
           projectId: data.id 
         });
@@ -311,11 +382,12 @@ export default function Projeto() {
   const handleContinueEditing = () => {
     setShowCancelDialog(false);
   };
+
   return (
     <div className="flex justify-center">
       <form onSubmit={handleSubmit} className="w-full max-w-4xl px-4">
         <div className="py-12">
-          <h1 className="text-3xl font-bold mb-12 text-center">  {isEditMode ? 'Editar Projeto' : 'Criar Projeto'}</h1>
+          <h1 className="text-3xl font-bold mb-12 text-center">{isEditMode ? 'Editar Projeto' : 'Criar Projeto'}</h1>
 
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
@@ -404,28 +476,29 @@ export default function Projeto() {
             <div className="grid items-center gap-1.5">
               <Label htmlFor="category">Categoria do projeto*</Label>
               <Select
+                value={projectData.category}
                 onValueChange={(value) => setProjectData(prevState => ({
                   ...prevState,
                   category: value,
                 }))}
               >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione uma categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {loadingCategories ? (
-                    <SelectItem value="loading" disabled>Carregando categorias...</SelectItem>
-                  ) : (
-                    categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {loadingCategories ? (
+                      <SelectItem value="loading" disabled>Carregando categorias...</SelectItem>
+                    ) : (
+                      categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid items-center gap-1.5">
@@ -449,18 +522,31 @@ export default function Projeto() {
             </div>
             {collaborators.map((collaborator, index) => (
               <div key={index} className="grid gap-6 md:grid-cols-2 items-end">
-                <div className="grid items-center gap-1.5">
+                <div className="grid items-center gap-1.5 relative">
                   <Input
                     type="text"
                     placeholder="Nome do colaborador"
                     value={collaborator.name}
-                    onChange={(e) => handleCollaboratorChange(index, 'name', e.target.value)}
+                    onChange={(e) => handleCollaboratorNameChange(index, e.target.value)}
                   />
+                  {suggestions?.index === index && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
+                      {suggestions.names.map((name, i) => (
+                        <div 
+                          key={i}
+                          className="p-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => selectSuggestion(index, name)}
+                        >
+                          {name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
                   <Select
                     value={collaborator.role}
-                    onValueChange={(value) => handleCollaboratorChange(index, 'role', value)}
+                    onValueChange={(value) => handleCollaboratorRoleChange(index, value)}
                   >
                     <SelectTrigger className="flex-1">
                       <SelectValue placeholder="Selecione o cargo" />
@@ -519,7 +605,6 @@ export default function Projeto() {
         confirmText="OK"
         variant={resultDialog.isError ? 'destructive' : 'default'}
       />
-
     </div>
   );
 }
