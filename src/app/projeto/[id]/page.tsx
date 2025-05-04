@@ -36,6 +36,12 @@ const ProjetoHome: React.FC = () => {
   const [isOwner, setIsOwner] = useState(false);
   const [projeto, setProjeto] = useState<Projeto | null>(null);
   const { id } = useParams();
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleCursoDeleted = () => {
+    // Força o recarregamento dos dados
+    setRefreshKey(prev => prev + 1);
+  };
 
   useEffect(() => {
     const fetchProjeto = async () => {
@@ -80,10 +86,10 @@ const ProjetoHome: React.FC = () => {
               }
             ],
             curso: [
-              { imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas" },
-              { imagem: "/prof3.jpg", nome: "Inglês", descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.", cargahoraria: "60 horas" },
-              { imagem: "/prof4.jpg", nome: "Sistemas Embarcados", descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.", cargahoraria: "80 horas" },
-              { imagem: "/prof5.jpg", nome: "C/C++", descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.", cargahoraria: "70 horas" }
+              { id:1, imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas" },
+              { id:2, imagem: "/prof3.jpg", nome: "Inglês", descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.", cargahoraria: "60 horas" },
+              { id:3, imagem: "/prof4.jpg", nome: "Sistemas Embarcados", descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.", cargahoraria: "80 horas" },
+              { id:4, imagem: "/prof5.jpg", nome: "C/C++", descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.", cargahoraria: "70 horas" }
             ]
           };;
           setProjeto(projetoFalso);
@@ -107,7 +113,7 @@ const ProjetoHome: React.FC = () => {
     };
   
     fetchProjeto();
-  }, [id]);
+  }, [id, refreshKey]);
   
 
   const handleAdicionarCurso = () => {
@@ -211,11 +217,14 @@ const ProjetoHome: React.FC = () => {
               projeto.curso.map((curso, index) => (
                 <div key={index} className="m-0 p-0 flex">
                   <CardCursoWithButton
+                    key={`${curso.nome}-${index}`}
+                    idCurso={curso.id} // Certifique-se de que cada curso tem um ID
                     imagem={curso.imagem}
                     nome={curso.nome}
                     descricao={curso.descricao}
                     cargahoraria={curso.cargahoraria}
                     isOwner={isOwner}
+                    onCursoDeleted={handleCursoDeleted}
                   />
                 </div>
               ))
