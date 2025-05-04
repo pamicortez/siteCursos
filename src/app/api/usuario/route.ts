@@ -24,7 +24,6 @@ export async function GET(request: Request) {
           publicacao: true,
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
-          usuarioUsuario: { include: { usuario: true } },
           carreira: true
         },
         
@@ -34,13 +33,12 @@ export async function GET(request: Request) {
     // ===== Obtem usuários por tipo
     else if (tipo) {
       const usuario = await prisma.usuario.findMany({
-        where: { tipo: tipo as tipoUser, deletedAt: null },
+        where: { tipo: tipo as tipoUser, deletedAt: null, Nome: nome? {contains: nome, mode: 'insensitive'} : undefined },
         include: {
           link: true,
           publicacao: true,
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
-          usuarioUsuario: { include: { usuario: true } },
           carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
@@ -55,14 +53,14 @@ export async function GET(request: Request) {
           contains: formacaoAcademica, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
           mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
           },
-          deletedAt: null
+          deletedAt: null,
+          Nome: nome? {contains: nome, mode: 'insensitive'} : undefined
         },
         include: {
           link: true,
           publicacao: true,
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
-          usuarioUsuario: { include: { usuario: true } },
           carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
@@ -71,11 +69,7 @@ export async function GET(request: Request) {
     }
     else if (nome) {
       const usuario = await prisma.usuario.findMany({
-        where: { Nome: 
-          {
-          contains: nome, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
-          mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
-          },
+        where: { Nome: {contains: nome, mode: 'insensitive'},
           deletedAt: null
         },
         include: {
@@ -83,7 +77,6 @@ export async function GET(request: Request) {
           publicacao: true,
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
-          usuarioUsuario: { include: { usuario: true } },
           carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
@@ -100,7 +93,6 @@ export async function GET(request: Request) {
         publicacao: true,
         eventoUsuario: { include: { evento: true } },
         cursoUsuario: { include: { curso: true } },
-        usuarioUsuario: { include: { usuario: true } },
         carreira: true
       },
       orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
