@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 					, categoria 
 				},
 				include: {
-					projetoUsuario: true,
+					projetoUsuario: {include: {usuario: true}},
 					curso: true,
 					projetoColaborador: { include: { colaborador: true } },
 				}, 
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 			const projeto = await prisma.projeto.findUnique({
 				where: { id: Number(id)},
 				include: {
-					projetoUsuario: {},
+					projetoUsuario: {include: {usuario: true}},
 					curso: true,
 					projetoColaborador: { include: { colaborador: true } },
 				},
@@ -63,7 +63,7 @@ export async function GET(request: Request) {
 					},
 				},
 				include: {
-					projetoUsuario: true,
+					projetoUsuario: {include: {usuario: true}},
 					curso: true,
 					projetoColaborador: { include: { colaborador: true } },
 				},
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
 			const projetos = await prisma.projeto.findMany({
 				where: { categoria },
 				include: {
-					projetoUsuario: true,
+					projetoUsuario: {include: {usuario: true}},
 					curso: true,
 					projetoColaborador: { include: { colaborador: true } },
 				},
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
 			// Retorna todos os projetos se não houver título na URL
 			const projetos = await prisma.projeto.findMany({
 				include: {
-					projetoUsuario: true,
+					projetoUsuario: {include: {usuario: true}},
 					curso: true,
 					projetoColaborador: { include: { colaborador: true } },
 				},
