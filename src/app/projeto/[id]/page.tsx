@@ -20,7 +20,16 @@ interface Projeto {
     funcao: string;
   }[];
   curso: any[];
-  projetoColaborador: any[];
+  projetoColaborador: {
+    id: number;
+    categoria: string;
+    idProjeto: number;
+    idColaborador: number;
+    colaborador: {
+      id: number;
+      nome: string;
+    };
+  }[];
 }
 
 const ProjetoHome: React.FC = () => {
@@ -49,8 +58,26 @@ const ProjetoHome: React.FC = () => {
               }
             ],
             projetoColaborador: [
-              { nome: "Maria Oliveira - Instrutora" },
-              { nome: "Carlos Souza - Tutor" }
+              { 
+                id: 1,
+                categoria: "Instrutor",
+                idProjeto: 999,
+                idColaborador: 1,
+                colaborador: {
+                  id: 1,
+                  nome: "Maria Oliveira"
+                }
+              },
+              { 
+                id: 2,
+                categoria: "Tutor",
+                idProjeto: 999,
+                idColaborador: 2,
+                colaborador: {
+                  id: 2,
+                  nome: "Carlos Souza"
+                }
+              }
             ],
             curso: [
               { imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas" },
@@ -58,7 +85,7 @@ const ProjetoHome: React.FC = () => {
               { imagem: "/prof4.jpg", nome: "Sistemas Embarcados", descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.", cargahoraria: "80 horas" },
               { imagem: "/prof5.jpg", nome: "C/C++", descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.", cargahoraria: "70 horas" }
             ]
-          };
+          };;
           setProjeto(projetoFalso);
           setIsOwner(true); // Como é só teste, assume que é dono
           return;
@@ -69,7 +96,7 @@ const ProjetoHome: React.FC = () => {
         const data: Projeto = await res.json();
         setProjeto(data);
   
-        const usuarioLogadoId = 1; // <--- Ajusta conforme necessário
+        const usuarioLogadoId = 1; // <--- Ajusta 
         const coordenador = data.projetoUsuario.find(
           (user) => user.funcao === "Coordenador" && user.idUsuario === usuarioLogadoId
         );
@@ -127,8 +154,11 @@ const ProjetoHome: React.FC = () => {
                 <p className="text-lg">
                   <strong>Coordenador:</strong>{" "}
                   {
-                    projeto.projetoUsuario.find((u) => u.funcao === "Coordenador")
-                      ?.idUsuario ?? "Não informado"
+                    // Primeiro verifica em projetoUsuario
+                    projeto.projetoUsuario.find((u) => u.funcao === "Coordenador")?.idUsuario ??
+                    // Se não encontrar, verifica em projetoColaborador
+                    projeto.projetoColaborador.find((c) => c.categoria === "Coordenador")?.colaborador.nome ??
+                    "Não informado"
                   }
                 </p>
               </div>
@@ -139,18 +169,33 @@ const ProjetoHome: React.FC = () => {
               </div>
             </div>
 
-            <div>
+          <div>
               <strong className="text-lg">Colaboradores:</strong>
               <ul className="list-disc pl-5 mt-2 text-base">
-                {projeto.projetoColaborador.length === 0 ? (
+                {projeto.projetoColaborador.length === 0 && !projeto.projetoUsuario.some(u => u.funcao !== "Coordenador") ? (
                   <li>Nenhum colaborador</li>
                 ) : (
-                  projeto.projetoColaborador.map((colab, index) => (
-                    <li key={index}>{colab.nome}</li> // Ajuste se necessário
-                  ))
+                  <>
+                    {/* Lista de colaboradores externos */}
+                    {projeto.projetoColaborador.map((colab, index) => (
+                      <li key={`colab-${index}`}>
+                        {colab.colaborador.nome} - {colab.categoria}
+                      </li>
+                    ))}
+                    
+                    {/* Usuários do sistema que não são coordenadores */}
+                    {projeto.projetoUsuario
+                      .filter(u => u.funcao !== "Coordenador")
+                      .map((user, index) => (
+                        <li key={`user-${index}`}>
+                          {user.idUsuario} - {user.funcao}
+                        </li>
+                      ))
+                    }
+                  </>
                 )}
               </ul>
-            </div>
+            </div>'
           </div>
 
           <hr
