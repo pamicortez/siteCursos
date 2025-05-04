@@ -18,6 +18,9 @@ interface Projeto {
     idProjeto: number;
     idUsuario: number;
     funcao: string;
+    usuario: {
+      Nome: string;
+    }
   }[];
   curso: any[];
   projetoColaborador: {
@@ -60,7 +63,8 @@ const ProjetoHome: React.FC = () => {
                 id: 1,
                 idProjeto: 999,
                 idUsuario: 1,
-                funcao: "Coordenador"
+                funcao: "Coordenador",
+                usuario: {Nome: "Fulano"}
               }
             ],
             projetoColaborador: [
@@ -194,7 +198,7 @@ const ProjetoHome: React.FC = () => {
                       .filter(u => u.funcao !== "Coordenador")
                       .map((user, index) => (
                         <li key={`user-${index}`}>
-                          {user.idUsuario} - {user.funcao}
+                          {user.usuario.Nome} - {user.funcao}
                         </li>
                       ))
                     }
