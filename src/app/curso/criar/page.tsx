@@ -129,8 +129,22 @@ export default function Curso() {
       });
     };
 
+    // remove aulas vazias (caso tenha clicado pra add uma nova e nao preencher)
+    function removerAulasVazias(aulas: AulaType[]) {
+      return aulas.filter((aula) => {
+        return Object.values(aula).every((valor) => {
+          if (typeof valor === "string") {
+            return valor.trim() !== "";
+          }
+          return valor !== null || valor !== undefined;
+        });
+      });
+    }
+
+    const aulasFiltradas = removerAulasVazias(aulas)
+
     const aulasConvertidas = await Promise.all(
-      aulas.map(async (aula) => {
+      aulasFiltradas.map(async (aula) => {
         const slideBase64 = await fileToBase64(aula.slide);
         return {
           titulo: aula.titulo,
@@ -157,7 +171,7 @@ export default function Curso() {
       bibliografia: formData.get('bibliografia'),
       imagem: imagemBase64,
       aulas: aulasConvertidas,
-      idProjeto: Number(idProjeto), // como pegar
+      idProjeto: Number(idProjeto), // recebe via query param ?idprojeto
       idUsuario: 1, // como pegar
       linkInscricao: formData.get('inscricao'),
       vagas: Number(formData.get('vagas')),

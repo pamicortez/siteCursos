@@ -21,6 +21,14 @@ export default async function DetalhesCurso({params}: any) {
   const {id} = await params
   const curso = await loadCurso(id);
 
+  console.log(curso)
+
+  const absoluteLink = (url) => {
+      return url.startsWith('http://') || url.startsWith('https://')
+      ? url
+      : `https://${url}`;
+    }
+
   return (
     <div>
         <div className="flex w-100% h-100 bg-gray-200">
@@ -47,7 +55,19 @@ export default async function DetalhesCurso({params}: any) {
         <div className="flex flex-col items-center">
           <h1 className="text-5xl font-bold py-9">Materiais</h1>
           <div className="flex items-center hover:cursor-pointer">
-            <Link /><span className="px-2 text-xl font-medium">Apostila</span>
+             {curso.linkApostila && (
+                <a
+                  href={curso.linkApostila}
+                  download="apostila.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <Link />
+                  <span className="text-xl font-medium">Apostila</span>
+                </a>
+              )}
+
           </div>
 
         <div className="mt-10 mx-20 w-[90%]">
@@ -58,9 +78,24 @@ export default async function DetalhesCurso({params}: any) {
             >
               <p className="font-medium text-xl">{aula.titulo}</p>
               <div className="flex gap-1 hover:cursor-pointer">
-                <a href={aula.linkVideo} target="_blank"><TvMinimalPlay/></a>
-                <a href={aula.linkPodcast} target="__blank"><Headphones /></a>
-                <a href={aula.linkPdf} target="_blank"><Images/></a>
+                {aula.linkVideo && (
+                  <a href={absoluteLink(aula.linkVideo)} target="_blank" rel="noopener noreferrer">
+                    <TvMinimalPlay />
+                  </a>
+                )}
+
+                {aula.linkPodcast && (
+                  <a href={absoluteLink(aula.linkPodcast)} target="_blank" rel="noopener noreferrer">
+                    <Headphones />
+                  </a>
+                )}
+
+                {aula.linkPdf && (
+                  <a href={aula.linkPdf} target="_blank" rel="noopener noreferrer" download="slide.pdf">
+                    <Images />
+                  </a>
+                )}
+
               </div>
             </div>
           ))}
@@ -94,4 +129,5 @@ export default async function DetalhesCurso({params}: any) {
         </div>
     </div>
   );
+
 }

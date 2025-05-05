@@ -155,13 +155,13 @@ export default function Curso() {
     // remove aulas vazias (caso tenha clicado pra add uma nova e nao preencher)
     function removerAulasVazias(aulas: AulaType[]) {
       return aulas.filter((aula) => {
-        return Object.values(aula).some((valor) => {
+        return Object.values(aula).every((valor) => {
           if (typeof valor === "string") {
             return valor.trim() !== "";
           }
-          return valor !== null && valor !== undefined;
+          return valor !== null || valor !== undefined;
         });
-      }); // corrigir essa função
+      });
     }
 
 
@@ -199,13 +199,11 @@ export default function Curso() {
     const data = {
       titulo: formData.get("titulo"),
       metodologia: formData.get("metodologia"),
-      categoria: selectedOption?.value, // Seleção feita com react-select
+      categoria: selectedOption?.value ?? curso.categoria, // Seleção feita com react-select
       descricao: formData.get('descricao'),
       bibliografia: formData.get('bibliografia'),
       imagem: imagemBase64,
       aulas: aulasConvertidas,
-      idProjeto: curso.idProjeto, // como pegar
-      idUsuario: curso.idUsuario, // como pegar
       linkInscricao: formData.get('inscricao'),
       vagas: Number(formData.get('vagas')),
       metodoAvaliacao: formData.get('avaliacao'),
@@ -215,23 +213,23 @@ export default function Curso() {
 
     console.log(data)
 
-    // try {
-    //   const response = await fetch('/api/curso', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(data),
-    //   });
+    try {
+      const response = await fetch(`/api/curso?id=${curso.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
 
-    //   if (response.ok) {
-    //     alert('Curso criado com sucesso!');
-    //   } else {
-    //     alert('Erro ao criar o curso');
-    //   }
-    // } catch (error) {
-    //   alert('Erro ao enviar os dados para a API');
-    // }
+      if (response.ok) {
+        alert('Curso editado com sucesso!');
+      } else {
+        alert('Erro ao editar o curso');
+      }
+    } catch (error) {
+      alert('Erro ao enviar os dados para a API');
+    }
 }
 
   
