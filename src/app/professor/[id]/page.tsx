@@ -47,12 +47,14 @@ interface Publicacao {
   link: string;
 }
 
-interface Formacao {
+interface Carreira {
   id: number;
-  nivel: string;
+  titulo: string;
   instituicao: string;
   periodo: string;
   local: string;
+  descricao: string;
+  categoria: 'academica' | 'profissional';
 }
 
 export default function ProfessorPortfolio({ params }: { params: { id: string } }) {
@@ -60,10 +62,14 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
   const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [publicacoes, setPublicacoes] = useState<Publicacao[]>([]);
-  const [formacoes, setFormacoes] = useState<Formacao[]>([]);
+  const [carreiras, setCarreiras] = useState<Carreira[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visiblePosts, setVisiblePosts] = useState(3);
+
+  // Filtrar carreiras por categoria
+  const formacoesAcademicas = carreiras.filter(item => item.categoria === 'academica');
+  const experienciasProfissionais = carreiras.filter(item => item.categoria === 'profissional');
 
   const loadMorePosts = () => {
     setVisiblePosts(prev => prev + 3);
@@ -100,11 +106,11 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
         const publicacoesData = await publicacoesRes.json();
         setPublicacoes(publicacoesData);
 
-        // Buscar formações do professor (assumindo que existe um endpoint para isso)
-        const formacoesRes = await fetch(`http://localhost:3000/api/formacao?usuarioId=${params.id}`);
-        if (formacoesRes.ok) { // Verifica se a resposta foi bem-sucedida
-          const formacoesData = await formacoesRes.json();
-          setFormacoes(formacoesData);
+        // Buscar carreiras (formação e experiência) do professor
+        const carreirasRes = await fetch(`http://localhost:3000/api/carreira?usuarioId=${params.id}`);
+        if (carreirasRes.ok) {
+          const carreirasData = await carreirasRes.json();
+          setCarreiras(carreirasData);
         }
 
       } catch (err) {
@@ -231,22 +237,40 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
         </div>
       )}
 
-      {/* Seção Formação */}
+      {/* Seção Formação Acadêmica */}
       <div className="bg-white p-6 rounded-lg shadow-md mt-12">
         <h1 className="text-3xl font-bold mb-6">Formação Acadêmica</h1>
-        <div className="space-y-6">
-          {formacoes.map(form => (
-            <div key={form.id} className="border-b pb-6 last:border-b-0">
-              <div className="space-y-1">
-                <h3 className="font-bold text-lg">{form.nivel}</h3>
-                <p className="text-gray-800">{form.instituicao}</p>
-                <p className="text-gray-600 text-sm">{form.periodo}</p>
-                <p className="text-gray-500 text-sm">{form.local}</p>
-              </div>
+        
+        <div className="space-y-8">
+          {formacoesAcademicas.map((formacao) => (
+            <div key={formacao.id} className="border-l-4 border-blue-500 pl-4">
+              <h3 className="font-bold text-xl">{formacao.titulo}</h3>
+              <p className="text-gray-800 font-medium">{formacao.instituicao}</p>
+              <p className="text-gray-600">{formacao.periodo}</p>
+              <p className="text-gray-500 text-sm">{formacao.local}</p>
             </div>
           ))}
         </div>
       </div>
-    </div>
+
+      {/* Seção Experiência Profissional */}
+      <div className="bg-white p-6 rounded-lg shadow-md mt-8">
+        <h1 className="text-3xl font-bold mb-6">Experiência Profissional</h1>
+        
+        <div className="space-y-8">
+          {experienciasProfissionais.map((experiencia) => (
+            <div key={experiencia.id} className="border-l-4 border-blue-500 pl-4">
+              <h3 className="font-bold text-xl">{experiencia.titulo}</h3>
+              <p className="text-gray-800 font-medium">{experiencia.instituicao}</p>
+              <p className="text-gray-600">{experiencia.periodo}</p>
+              <p className="text-gray-500 text-sm">{experiencia.local}</p>
+              {experiencia.descricao && (
+                <p className="text-gray-700 mt-2">{experiencia.descricao}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+        </div>
   );
 }

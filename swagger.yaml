@@ -1,0 +1,285 @@
+openapi: 3.0.0
+info:
+  title: API Documentation
+  description: API para gerenciamento de usuários, projetos, cursos, eventos e mais.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+    description: Servidor local
+
+paths:
+  /usuario:
+    get:
+      summary: Lista usuários
+      parameters:
+        - name: id
+          in: query
+          description: ID do usuário
+          schema:
+            type: integer
+        - name: nome
+          in: query
+          description: Nome do usuário
+          schema:
+            type: string
+        - name: ordem
+          in: query
+          description: Ordenação (recente ou alfabética)
+          schema:
+            type: string
+        - name: formacaoAcademica
+          in: query
+          description: Filtra por formação acadêmica
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de usuários
+        '500':
+          description: Erro interno
+    post:
+      summary: Cria um novo usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                senha:
+                  type: string
+                Nome:
+                  type: string
+                formacaoAcademica:
+                  type: string
+      responses:
+        '201':
+          description: Usuário criado
+        '409':
+          description: Email já cadastrado
+        '500':
+          description: Erro interno
+    patch:
+      summary: Atualiza um atributo do usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                atributo:
+                  type: string
+                novoValor:
+                  type: string
+      responses:
+        '200':
+          description: Usuário atualizado
+        '400':
+          description: Dados inválidos
+        '404':
+          description: Usuário não encontrado
+        '500':
+          description: Erro interno
+    delete:
+      summary: Deleta um usuário
+      parameters:
+        - name: id
+          in: query
+          description: ID do usuário
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Usuário deletado
+        '400':
+          description: ID inválido
+        '404':
+          description: Usuário não encontrado
+        '500':
+          description: Erro interno
+
+  /publicacao:
+    get:
+      summary: Lista publicações
+      parameters:
+        - name: idUsuario
+          in: query
+          description: ID do usuário
+          schema:
+            type: integer
+        - name: ordem
+          in: query
+          description: Ordenação (recente ou alfabética)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de publicações
+        '500':
+          description: Erro interno
+    post:
+      summary: Cria uma nova publicação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idUsuario:
+                  type: integer
+                descricao:
+                  type: string
+                link:
+                  type: string
+      responses:
+        '201':
+          description: Publicação criada
+        '404':
+          description: Usuário não encontrado
+        '500':
+          description: Erro interno
+    patch:
+      summary: Atualiza um atributo da publicação
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                atributo:
+                  type: string
+                novoValor:
+                  type: string
+      responses:
+        '200':
+          description: Publicação atualizada
+        '400':
+          description: Dados inválidos
+        '404':
+          description: Publicação não encontrada
+        '500':
+          description: Erro interno
+    delete:
+      summary: Deleta uma publicação
+      parameters:
+        - name: idPublicacao
+          in: query
+          description: ID da publicação
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Publicação deletada
+        '404':
+          description: Publicação não encontrada
+        '500':
+          description: Erro interno
+
+  /projeto:
+    get:
+      summary: Lista projetos
+      parameters:
+        - name: titulo
+          in: query
+          description: Título do projeto
+          schema:
+            type: string
+        - name: categoria
+          in: query
+          description: Categoria do projeto
+          schema:
+            type: string
+        - name: ordem
+          in: query
+          description: Ordenação (recente ou alfabética)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de projetos
+        '500':
+          description: Erro interno
+    post:
+      summary: Cria um novo projeto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                titulo:
+                  type: string
+                descricao:
+                  type: string
+                categoria:
+                  type: string
+                dataInicio:
+                  type: string
+                  format: date
+                dataFim:
+                  type: string
+                  format: date
+                usuarioId:
+                  type: integer
+                funcao:
+                  type: string
+      responses:
+        '201':
+          description: Projeto criado
+        '400':
+          description: Dados inválidos
+        '404':
+          description: Usuário não encontrado
+        '500':
+          description: Erro interno
+    patch:
+      summary: Atualiza um atributo do projeto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                atributo:
+                  type: string
+                novoValor:
+                  type: string
+      responses:
+        '200':
+          description: Projeto atualizado
+        '400':
+          description: Dados inválidos
+        '404':
+          description: Projeto não encontrado
+        '500':
+          description: Erro interno
+    delete:
+      summary: Deleta um projeto
+      parameters:
+        - name: id
+          in: query
+          description: ID do projeto
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Projeto deletado
+        '404':
+          description: Projeto não encontrado
+        '500':
+          description: Erro interno
+
+# Continue adicionando os outros endpoints (curso, evento, aula, colaborador, etc.) seguindo o mesmo padrão.

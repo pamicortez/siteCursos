@@ -10,6 +10,8 @@ export async function GET(request: Request) {
 	const titulo = searchParams.get('titulo');
 	const data_inicio = searchParams.get('data_inicio');// data de inicio do filtro
     const data_fim = searchParams.get('data_fim');// data de fim do filtro
+	const ordem = searchParams.get('ordem');
+	const id = searchParams.get('id');
 
 	try {
 		// === Buscando eventos com título ===
@@ -17,14 +19,34 @@ export async function GET(request: Request) {
 			console.log('Buscando eventos com título:', titulo);
 			// Buscar eventos que tenham o título especificado
 			const eventos = await prisma.evento.findMany({
-				where: { titulo },
+				where: { titulo:
+					{
+						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+				 },
+				include: {
+					eventoUsuario: true,
+					imagemEvento: true,
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
+			});
+		
+			return NextResponse.json(eventos);
+		}
+		// === Buscando eventos com id ===
+		else if (id) {
+			console.log('Buscando evento com id:', id);
+			// Buscar evento que tenha o id especificado
+			const evento = await prisma.evento.findUnique({
+				where: { id: Number(id) },
 				include: {
 					eventoUsuario: true,
 					imagemEvento: true,
 				}
 			});
 		
-			return NextResponse.json(eventos);
+			return NextResponse.json(evento);
 		}
 		// === Buscando eventos com data >= data_inicio e data <= data_fim ===
 		else if (data_fim && data_inicio) {
@@ -41,7 +63,8 @@ export async function GET(request: Request) {
 				include: {
 					eventoUsuario: true,
 					imagemEvento: true,
-				}
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
             });
             return NextResponse.json(eventos);
 		}
@@ -53,7 +76,8 @@ export async function GET(request: Request) {
 				include: {
 					eventoUsuario: true,
 					imagemEvento: true,
-				}
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(eventos);
 		}

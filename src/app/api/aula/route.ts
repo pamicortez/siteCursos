@@ -8,6 +8,7 @@ export async function GET(request: Request) {
 	const titulo = searchParams.get('titulo');
 	const idCurso = searchParams.get('idCurso');
 	const id = searchParams.get('id');// id aula
+	const ordem = searchParams.get('ordem');
 	//const categoria = searchParams.get('categoria');
 	try {
 		// === Buscando aulas com título ===
@@ -15,10 +16,16 @@ export async function GET(request: Request) {
 			console.log('Buscando aulas com título:', titulo);
 			// Buscar aulas que tenham o título especificado
 			const aulas = await prisma.aula.findMany({
-				where: { titulo },
+				where: { titulo:
+					{
+						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+				 },
 				include: {
 					curso: true
-				}
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
 			return NextResponse.json(aulas);
@@ -44,7 +51,8 @@ export async function GET(request: Request) {
 				where: { idCurso: Number(idCurso) },
 				include: {
 					curso: true
-				}
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
 			return NextResponse.json(aulas);
@@ -57,7 +65,8 @@ export async function GET(request: Request) {
 			const aulas = await prisma.aula.findMany({
 				include: {
 					curso: true
-				}
+				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(aulas);
 		}
@@ -95,18 +104,23 @@ export async function DELETE(request: Request) {
 // Método para criar uma nova Aula. É preciso ter um Curso
 export async function POST(request: Request) {
 	try {
-		const data: Prisma.AulaCreateInput = await request.json(); // Pega os dados do corpo da requisição
 
-		const {idCurso} = data;
+		const body = await request.json();
+		
+		const {idCurso, ...dados} = body;
 
-		// Verifica se o curso existe
 		const curso = await prisma.curso.findUnique({ where: { id: idCurso } });
 		if (!curso) {
 			return NextResponse.json({error: 'Curso não encontrado'}, {status: 404})
 		}
-
+		
 		const novaAula = await prisma.aula.create({
-			data, // Dados da aula que será criada
+			data: {
+				...dados,
+				curso: {
+					connect: {id: idCurso}
+				}
+			}
 		});
 
 		return NextResponse.json(novaAula, { status: 201 }); // Retorna a nova aula com status 201

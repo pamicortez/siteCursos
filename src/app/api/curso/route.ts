@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
+import { connect } from 'http2';
 
 
 // Método GET para retornar todos os cursos
@@ -10,18 +11,26 @@ export async function GET(request: Request) {
 	const categoria = searchParams.get('categoria');
 	const idUsuario = searchParams.get('idUsuario'); // ID do usuário
 	const idCurso = searchParams.get('id'); // ID do curso
+	const ordem = searchParams.get('ordem');
 	try {
 		// === Buscando cursos com título ===
 		if (titulo) {
 			console.log('Buscando cursos com título:', titulo);
 			// Buscar cursos que tenham o título especificado
 			const cursos = await prisma.curso.findMany({
-				where: { titulo },
+				where: { titulo:
+					{
+						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
+						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
+					},
+					categoria: categoria? categoria : undefined // Se categoria não for passada, não filtra por categoria 
+				},
 				include: {
 				projeto: true, // Inclui o projeto relacionado
 				usuario: true, // Inclui o usuário que criou o curso
 				aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
 			return NextResponse.json(cursos);
@@ -37,6 +46,7 @@ export async function GET(request: Request) {
 				usuario: true, // Inclui o usuário que criou o curso
 				aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(cursos);
 		}
@@ -65,17 +75,22 @@ export async function GET(request: Request) {
 				usuario: true, // Inclui o usuário que criou o curso
 				aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 			return NextResponse.json(cursos);
 		}
 		// === Buscando todos os cursos === 
 		else {
 			const cursos = await prisma.curso.findMany({
+				where: { 				 	
+					categoria: categoria? categoria : undefined // Se categoria não for passada, não filtra por categoria 
+				}, // Verifica se o curso não foi deletado
 				include: {
 				  projeto: true, // Inclui o projeto relacionado
 				  usuario: true, // Inclui o usuário que criou o curso
 				  aula: true, // Inclui as aulas relacionadas
 				},
+				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			  });
 			  return NextResponse.json(cursos); // Retorna todos os cursos
 		}
@@ -112,9 +127,9 @@ export async function DELETE(request: Request) {
 // Método para criar um novo Curso. É preciso ter um Projeto e um Usuário
 export async function POST(request: Request) {
 	try {
-		const data: Prisma.CursoCreateInput = await request.json(); // Pega os dados do corpo da requisição
+		const body = await request.json();
 
-		const {idUsuario, idProjeto} = data;
+		const {idUsuario, idProjeto, aulas, ...data} = body;
 
 		// Verifica se o usuário existe
 		const usuario = await prisma.usuario.findUnique({ where: { id: idUsuario } });
@@ -126,13 +141,30 @@ export async function POST(request: Request) {
 		}
 
 		const novoCurso = await prisma.curso.create({
-			data, // Dados do Curso que será criado
+			data:{
+				...data,
+				usuario: {
+					connect: {id: idUsuario}
+				},
+				projeto: {
+					connect: {id: idProjeto}
+				},
+                aula: aulas ? {
+                    create: aulas.map((aula: { titulo: string, linkPdf: string, linkVideo: string, linkPodcast: string }) => ({ 
+						titulo: aula.titulo, 
+						linkPdf: aula.linkPdf, 
+						linkVideo: aula.linkVideo,
+						linkPodcast: aula.linkPodcast
+					}))
+                } : undefined,
+            },
+            include: { aula: true },
 		});
 
 		const cursoUsuario = await prisma.cursoUsuario.create({
 			data:{
-				idUsuario: idUsuario,
-				idCurso: novoCurso.id
+				usuario: {connect: {id: idUsuario}},
+				curso: {connect: {id: novoCurso.id}}
 			}
 		})
 		return NextResponse.json(novoCurso, { status: 201 }); // Retorna o novo Curso com status 201
@@ -146,39 +178,43 @@ export async function POST(request: Request) {
 	}
   }
 
-  // Método para atualização de um atributo do curso
+    // Método para atualização dos atributos do projeto
 export async function PATCH(request: Request) {
-	try {
-	  const { id, atributo, novoValor } = await request.json();
-  
-	  // Certificar que todos os dados foram passados
-	  if (!id || !atributo || novoValor === undefined) {
-		return NextResponse.json({ error: "Todos os campos são obrigatórios" }, { status: 400 });
-	  }
-  
-	  // Verifica se o curso existe
-		const curso = await prisma.curso.findUnique({ where: { id: id } });
-		if (!curso) {
-			return NextResponse.json({error: 'Curso não encontrado'}, {status: 404})
-		}
-	  // Atributos que NÃO podem ser alterados
-	  const atributosFixos = ["id", "idProjeto", "idUsuario"];
+		try {
+		  	const { searchParams } = new URL(request.url);
+		  	const id = Number(searchParams.get('id')); // ID do projeto
+	
+		 	const { atualizacoes } = await request.json();
 	  
-	  if (atributosFixos.includes(atributo)) {
-		return NextResponse.json({ error: "Atributo não pode ser atualizaddo" }, { status: 400 });
+			// Verifica se o curso existe
+			const curso = await prisma.curso.findUnique({ where: { id: id } });
+			if (!curso) {
+				return NextResponse.json({error: 'Curso não encontrado'}, {status: 404})
+			}
+		  // Atributos que NÃO podem ser alterados
+			const atributosFixos = ["id", "idProjeto", "idUsuario"];
+		
+			// Verifica se há algum campo proibido na requisição
+			const camposInvalidos = Object.keys(atualizacoes).filter((chave) =>
+				atributosFixos.includes(chave)
+				);
+		
+			if (camposInvalidos.length > 0) {
+				return NextResponse.json(
+					{ error: `Campos não permitidos: ${camposInvalidos.join(", ")}` },
+					{ status: 400 }
+				);
+				}
+				
+			const cursoAtualizado = await prisma.curso.update({
+				where: { id },
+				data: atualizacoes,
+			});
+		
+			return NextResponse.json(cursoAtualizado, { status: 200 });
+	  
+		} catch (error) {
+		  console.error(error);
+		  return NextResponse.json({ error: "Erro ao atualizar curso" }, { status: 500 });
+		}
 	  }
-  
-	  let valorAtualizado = novoValor;
-  
-	  const cursoAtualizado = await prisma.curso.update({
-		where: { id },
-		data: { [atributo]: valorAtualizado },
-	  });
-  
-	  return NextResponse.json(cursoAtualizado, { status: 200 });
-  
-	} catch (error) {
-	  console.error(error);
-	  return NextResponse.json({ error: "Erro ao atualizar curso" }, { status: 500 });
-	}
-  }
