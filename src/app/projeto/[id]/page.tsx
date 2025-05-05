@@ -115,7 +115,7 @@ const ProjetoHome: React.FC = () => {
   
         const usuarioLogadoId = 1; // <--- Ajusta 
         const coordenador = data.projetoUsuario.find(
-          (user) => user.funcao === "Coordenador" && user.idUsuario === usuarioLogadoId
+          (user) => user.idUsuario === usuarioLogadoId
         );
         setIsOwner(!!coordenador);
       } catch (error) {
@@ -129,7 +129,7 @@ const ProjetoHome: React.FC = () => {
   
 
   const handleAdicionarCurso = () => {
-    router.push(`/curso/crtiar?idProjeto=${id}`);
+    router.push(`/curso/criar?idProjeto=${id}`);
   };
 
   return (

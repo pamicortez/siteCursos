@@ -1,3 +1,4 @@
+"use client"
 import { Badge } from "@/components/ui/badge"
 import { Link, TvMinimalPlay, Headphones, Images } from "lucide-react"
 import {
@@ -9,17 +10,41 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
 
-async function loadCurso(id: Number) {
-    const res = await fetch(`http://localhost:3000/api/curso?id=${id}`); 
+export default function DetalhesCurso() {
 
-    return res.json();
-}
+  const params = useParams();
+  const id = params.id;
 
-export default async function DetalhesCurso({params}: any) {
-  const {id} = await params
-  const curso = await loadCurso(id);
+  const [curso, setCurso] = useState(null);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const aulasPorPagina = 3;
+
+  useEffect(() => {
+    async function loadCurso() {
+      const res = await fetch(`http://localhost:3000/api/curso?id=${id}`);
+      const data = await res.json();
+      setCurso(data);
+    }
+    loadCurso();
+  }, [id]);
+
+  const absoluteLink = (url) => {
+      return url.startsWith('http://') || url.startsWith('https://')
+      ? url
+      : `https://${url}`;
+  }
+
+  if (!curso) return <div></div>;
+
+  const totalPaginas = Math.ceil((curso.aula?.length || 0) / aulasPorPagina);
+  const aulasVisiveis = curso.aula?.slice(
+    (paginaAtual - 1) * aulasPorPagina,
+    paginaAtual * aulasPorPagina
+  ) || [];
 
   return (
     <div>
@@ -30,7 +55,6 @@ export default async function DetalhesCurso({params}: any) {
                 <p className="px-10 text-justify" >{curso.descricao}</p>
                 <div className="flex">
                     <Badge className="ml-10 mr-2 my-5">{curso.categoria}</Badge>
-                    {/* <Badge variant="outline" className="my-5">Outline</Badge> */}
                 </div>
             </div>
 
@@ -47,51 +71,84 @@ export default async function DetalhesCurso({params}: any) {
         <div className="flex flex-col items-center">
           <h1 className="text-5xl font-bold py-9">Materiais</h1>
           <div className="flex items-center hover:cursor-pointer">
-            <Link /><span className="px-2 text-xl font-medium">Apostila</span>
+             {curso.linkApostila && (
+                <a
+                  href={curso.linkApostila}
+                  download="apostila.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2"
+                >
+                  <Link />
+                  <span className="text-xl font-medium">Apostila</span>
+                </a>
+              )}
+
           </div>
 
         <div className="mt-10 mx-20 w-[90%]">
-          {curso.aula.map((aula: any, index: any) => (
+          {aulasVisiveis.map((aula: any, index: any) => (
             <div
               key={index}
               className="flex justify-between p-3 rounded-md border-3 border-[#cac4d0] mb-4"
             >
               <p className="font-medium text-xl">{aula.titulo}</p>
               <div className="flex gap-1 hover:cursor-pointer">
-                <a href={aula.linkVideo} target="_blank"><TvMinimalPlay/></a>
-                <a href={aula.linkPodcast} target="__blank"><Headphones /></a>
-                <a href={aula.linkPdf} target="_blank"><Images/></a>
+                {aula.linkVideo && (
+                  <a href={absoluteLink(aula.linkVideo)} target="_blank" rel="noopener noreferrer">
+                    <TvMinimalPlay />
+                  </a>
+                )}
+
+                {aula.linkPodcast && (
+                  <a href={absoluteLink(aula.linkPodcast)} target="_blank" rel="noopener noreferrer">
+                    <Headphones />
+                  </a>
+                )}
+
+                {aula.linkPdf && (
+                  <a href={aula.linkPdf} target="_blank" rel="noopener noreferrer" download="slide.pdf">
+                    <Images />
+                  </a>
+                )}
+
               </div>
             </div>
           ))}
         </div>
 
-         <Pagination className="m-20">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">1</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#" isActive>
-                2
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+        {totalPaginas > 1 && (
+          <Pagination className="mt-10 mb-15">
+            <PaginationContent>
+              {paginaAtual > 1 && (
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => setPaginaAtual(p => p - 1)} />
+                </PaginationItem>
+              )}
+
+              {[...Array(totalPaginas)].map((_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    href="#"
+                    isActive={i + 1 === paginaAtual}
+                    onClick={() => setPaginaAtual(i + 1)}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              {paginaAtual < totalPaginas && (
+                <PaginationItem>
+                  <PaginationNext onClick={() => setPaginaAtual(p => p + 1)} />
+                </PaginationItem>
+              )}
+            </PaginationContent>
+          </Pagination>
+        )}
 
         </div>
     </div>
   );
+
 }

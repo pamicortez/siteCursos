@@ -1,3 +1,5 @@
+"use client"
+
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ConfirmationModal } from "./ConfirmationModal";
@@ -26,9 +28,9 @@ const CardCursoWithButton: React.FC<CardCursoWithButtonProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Verifica se a imagem é uma URL ou base64
-  const isBase64 = imagem.startsWith('data:image');
-  const imageSrc = isBase64 ? imagem : `/api/images?url=${encodeURIComponent(imagem)}`;
+  // Verifica se a imagem é base64 ou URL
+  const isBase64 = imagem?.startsWith('data:image');
+  const imageSrc = isBase64 ? imagem : imagem?.startsWith('/') ? imagem : `/api/images?url=${encodeURIComponent(imagem)}`;
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -50,38 +52,58 @@ const CardCursoWithButton: React.FC<CardCursoWithButtonProps> = ({
     }
   };
 
-  const handleEdit = () => {
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
     router.push(`/curso/editar/${idCurso}`);
+  };
+
+  const handleCardClick = () => {
+    router.push(`/curso/detalhes/${idCurso}`);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowDeleteModal(true);
   };
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow-md overflow-hidden" style={{ width: "17rem", margin: "0 auto" }}>
-        <img 
-          src={imageSrc} 
-          className="w-full h-[150px] object-cover" 
-          alt={nome} 
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/proj1.jpg';
-          }}
-        />
+      <div 
+        className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
+        style={{ width: "17rem", margin: "0 auto" }}
+        onClick={handleCardClick}
+      >
+        {/* Imagem com fallback */}
+        <div className="w-full h-[150px] overflow-hidden">
+          <img 
+            src={imageSrc} 
+            className="w-full h-full object-cover"
+            alt={nome} 
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/prof5.jpg';
+            }}
+          />
+        </div>
+        
         <div className="p-4">
-          <h5 className="text-xl font-semibold mb-2">{nome}</h5>
-          <p className="text-base text-gray-700 mb-2">{descricao}</p>
+          <h5 className="text-xl font-semibold mb-2 line-clamp-1">{nome}</h5>
+          <p className="text-base text-gray-700 mb-2 line-clamp-2">{descricao}</p>
           <p className="text-sm text-gray-500 mb-3">{cargahoraria}</p>
           
           {isOwner && (
-            <div className="flex justify-between">
+            <div className="flex justify-between" onClick={(e) => e.stopPropagation()}>
               <button 
-                className="p-0 border-none bg-transparent cursor-pointer"
+                className="p-0 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
                 onClick={handleEdit}
+                aria-label="Editar curso"
               >
                 <img src="/pen.png" alt="Editar" className="w-6 h-6" />
               </button>
               <button 
-                className="p-0 border-none bg-transparent cursor-pointer"
-                onClick={() => setShowDeleteModal(true)}
+                className="p-0 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
+                onClick={handleDeleteClick}
                 disabled={isDeleting}
+                aria-label="Excluir curso"
               >
                 <img 
                   src="/trash.png" 

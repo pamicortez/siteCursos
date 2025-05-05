@@ -1,6 +1,7 @@
 "use client"
 
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
+import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import CreatableSelect from 'react-select/creatable';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,6 +29,20 @@ type AulaType = {
 
 
 export default function Curso() {
+
+  const searchParams = useSearchParams();
+  const idProjeto = searchParams.get('idProjeto')
+  const router = useRouter();
+
+  // useEffect(() => {
+  //   if (!user) {
+  //     router.replace('/'); // (fazer isso tbm caso nao esteja logado)
+  //   }
+  // }, [idProjeto, router]);
+
+  if (!idProjeto) {
+    notFound(); // Retorna 404 se nao tiver o idProjeto
+  }
 
   const [options, setOptions] = useState<OptionType[]>([
     { value: "op1", label: "Opção 1" },
@@ -114,8 +129,22 @@ export default function Curso() {
       });
     };
 
+    // remove aulas vazias (caso tenha clicado pra add uma nova e nao preencher)
+    function removerAulasVazias(aulas: AulaType[]) {
+      return aulas.filter((aula) => {
+        return Object.values(aula).every((valor) => {
+          if (typeof valor === "string") {
+            return valor.trim() !== "";
+          }
+          return valor !== null || valor !== undefined;
+        });
+      });
+    }
+
+    const aulasFiltradas = removerAulasVazias(aulas)
+
     const aulasConvertidas = await Promise.all(
-      aulas.map(async (aula) => {
+      aulasFiltradas.map(async (aula) => {
         const slideBase64 = await fileToBase64(aula.slide);
         return {
           titulo: aula.titulo,
@@ -142,7 +171,7 @@ export default function Curso() {
       bibliografia: formData.get('bibliografia'),
       imagem: imagemBase64,
       aulas: aulasConvertidas,
-      idProjeto: 1, // como pegar
+      idProjeto: Number(idProjeto), // recebe via query param ?idprojeto
       idUsuario: 1, // como pegar
       linkInscricao: formData.get('inscricao'),
       vagas: Number(formData.get('vagas')),
@@ -150,6 +179,8 @@ export default function Curso() {
       linkApostila: apostilaBase64,
       cargaHoraria: Number(formData.get('cargaHoraria'))
     };
+
+    console.log(data)
 
     try {
       const response = await fetch('/api/curso', {
@@ -162,6 +193,8 @@ export default function Curso() {
 
       if (response.ok) {
         alert('Curso criado com sucesso!');
+        const res = await response.json();
+        router.replace(`/curso/detalhes/${res.id}`)
       } else {
         alert('Erro ao criar o curso');
       }
