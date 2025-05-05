@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
+import { tipoUser } from '@prisma/client';
 import bcrypt from "bcryptjs";
 
 // Método GET para retornar todos os usuários
@@ -10,6 +11,8 @@ export async function GET(request: Request) {
   const nome = searchParams.get('nome');
   const ordem = searchParams.get('ordem');
   const formacaoAcademica = searchParams.get('formacaoAcademica');
+  const tipo = searchParams.get('tipo');
+  //const tipoUserEnum = tipo as tipoUser; // Conversão segura para o enum tipoUser
 
   try {
     // ====== obtem um usuário específico
@@ -21,12 +24,28 @@ export async function GET(request: Request) {
           publicacao: true,
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
-          projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         
       });
       return NextResponse.json(usuario); // Retorna a resposta em formato JSON
     }
+    // ===== Obtem usuários por tipo
+    else if (tipo) {
+      const usuario = await prisma.usuario.findMany({
+        where: { tipo: tipo as tipoUser, deletedAt: null, Nome: nome? {contains: nome, mode: 'insensitive'} : undefined },
+        include: {
+          link: true,
+          publicacao: true,
+          eventoUsuario: { include: { evento: true } },
+          cursoUsuario: { include: { curso: true } },
+          carreira: true
+        },
+        orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
+      });
+      return NextResponse.json(usuario); // Retorna a resposta em formato JSON
+    }
+    // ====== Obtem usuários por formacaoAcademica
     else if (formacaoAcademica){
       const usuario = await prisma.usuario.findMany({
         where: { formacaoAcademica: 
@@ -34,14 +53,15 @@ export async function GET(request: Request) {
           contains: formacaoAcademica, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
           mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
           },
-          deletedAt: null
+          deletedAt: null,
+          Nome: nome? {contains: nome, mode: 'insensitive'} : undefined
         },
         include: {
           link: true,
           publicacao: true,
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
-          projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
       });
@@ -49,11 +69,7 @@ export async function GET(request: Request) {
     }
     else if (nome) {
       const usuario = await prisma.usuario.findMany({
-        where: { Nome: 
-          {
-          contains: nome, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
-          mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
-          },
+        where: { Nome: {contains: nome, mode: 'insensitive'},
           deletedAt: null
         },
         include: {
@@ -61,7 +77,7 @@ export async function GET(request: Request) {
           publicacao: true,
           eventoUsuario: { include: { evento: true } },
           cursoUsuario: { include: { curso: true } },
-          projetoUsuario: { include: { projeto: true } },
+          carreira: true
         },
         orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
       });
@@ -77,7 +93,7 @@ export async function GET(request: Request) {
         publicacao: true,
         eventoUsuario: { include: { evento: true } },
         cursoUsuario: { include: { curso: true } },
-        projetoUsuario: { include: { projeto: true } },
+        carreira: true
       },
       orderBy: ordem==='recente' ? {createdAt: 'desc'}: {Nome: 'asc'}
     });
@@ -116,52 +132,57 @@ export async function POST(request: Request) {
   }
 }
 
-// Método para atualização de um atributo do usuário
+   // Método para atualização dos atributos do usuario
 export async function PATCH(request: Request) {
-  try {
-    const { id, atributo, novoValor } = await request.json();
-
-    // Certificar que todos os dados foram passados
-    if (!id || !atributo || novoValor === undefined) {
-      return NextResponse.json({ error: "Todos os campos são obrigatórios" }, { status: 400 });
-    }
-
-    // Verifica se o usuário existe
-	  const usuario = await prisma.usuario.findUnique({ where: { id: id } });
-	  if (!usuario) {
-		  return NextResponse.json({error: 'Usuário não encontrado'}, {status: 404})
-	  }
-    // Atributos que NÃO podem ser alterados
-    const atributosFixos = ["id"];
+    try {
+      const { searchParams } = new URL(request.url);
+      const id = Number(searchParams.get('id')); // ID do usuario
+  
+      const atualizacoes = await request.json();
     
-    if (atributosFixos.includes(atributo)) {
-      return NextResponse.json({ error: "Atributo não pode ser atualizaddo" }, { status: 400 });
-    }
-
-    let valorAtualizado = novoValor;
-
-    // Criptografia para a senha e verificação de unicidade para o e-mail
-    if (atributo === "senha") {
-      const salt = await bcrypt.genSalt(10);
-      valorAtualizado = await bcrypt.hash(novoValor, salt);
-    } else if (atributo == "email"){
-      const email_unico = await prisma.usuario.findUnique( { where: { email: novoValor } });
-      if (email_unico){
-        return NextResponse.json({error: 'Email já cadastrado'}, {status: 409})
+      // Verifica se o usuario existe
+      const usuario = await prisma.usuario.findUnique({ where: { id: id } });
+      if (!usuario) {
+        return NextResponse.json({error: 'Usuario não encontrado'}, {status: 404})
       }
-    }
+      // Atributos que NÃO podem ser alterados
+      const atributosFixos = ["id"];
+  
+      // Verifica se há algum campo proibido na requisição
+      const camposInvalidos = Object.keys(atualizacoes).filter((chave) =>
+      atributosFixos.includes(chave)
+        );
+  
+      if (camposInvalidos.length > 0) {
+      return NextResponse.json(
+        { error: `Campos não permitidos: ${camposInvalidos.join(", ")}` },
+        { status: 400 }
+      );
+      }
 
-    const usuarioAtualizado = await prisma.usuario.update({
+      if (atualizacoes["senha"]){
+        const salt = await bcrypt.genSalt(10);
+        atualizacoes['senha'] = await bcrypt.hash(atualizacoes['senha'], salt);
+      }
+      
+      if (atualizacoes["email"]){
+        const email_unico = await prisma.usuario.findUnique( { where: { email: atualizacoes['email'] } });
+        if (email_unico && email_unico.id !== id){
+          return NextResponse.json({error: 'Email já cadastrado'}, {status: 409})
+        }
+      }
+
+      const usuarioAtualizado = await prisma.usuario.update({
       where: { id },
-      data: { [atributo]: valorAtualizado },
-    });
-
-    return NextResponse.json(usuarioAtualizado, { status: 200 });
-
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Erro ao atualizar usuário" }, { status: 500 });
-  }
+      data: atualizacoes,
+      });
+    
+      return NextResponse.json(usuarioAtualizado, { status: 200 });
+    
+    } catch (error) {
+      console.error(error);
+      return NextResponse.json({ error: "Erro ao atualizar usuario" }, { status: 500 });
+    }
 }
 
 

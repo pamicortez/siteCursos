@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 					},
 				 },
 				include: {
-					eventoUsuario: true,
+					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
 					imagemEvento: true,
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
 			const evento = await prisma.evento.findUnique({
 				where: { id: Number(id) },
 				include: {
-					eventoUsuario: true,
+					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
 					imagemEvento: true,
 				}
 			});
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
                     }
                 },
 				include: {
-					eventoUsuario: true,
+					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
 					imagemEvento: true,
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
 			// Retorna todos os eventos se não houver título na URL
 			const eventos = await prisma.evento.findMany({
 				include: {
-					eventoUsuario: true,
+					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
 					imagemEvento: true,
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
