@@ -26,6 +26,24 @@ type AulaType = {
   podcast: string;
 };
 
+enum Categoria {
+  Agricultura = "Agricultura",
+  Silvicultura = "Silvicultura",
+  PescaEVeterinaria = "Pesca e Veterinária",
+  ArtesEHumanidades = "Artes e Humanidades",
+  CienciasSociais = "Ciências Sociais",
+  ComunicacaoEInformacao = "Comunicação e Informação",
+  CienciasNaturais = "Ciências Naturais",
+  MatematicaEEstatistica = "Matemática e Estatística",
+  ComputacaoETecnologiaDaInformacao = "Computação e TI",
+  Engenharia = "Engenharia",
+  ProducaoEConstrucao = "Produção e Construção",
+  SaudeEBemEstar = "Saúde e Bem-Estar",
+  Educacao = "Educação",
+  NegociosAdministracaoEDireito = "Negócios, Administração e Direito",
+  Servicos = "Serviços",
+  ProgramasBasicos = "Programas Básicos",
+}
 
 
 export default function Curso() {
@@ -44,10 +62,12 @@ export default function Curso() {
     notFound(); // Retorna 404 se nao tiver o idProjeto
   }
 
-  const [options, setOptions] = useState<OptionType[]>([
-    { value: "op1", label: "Opção 1" },
-    { value: "op2", label: "Opção 2" },
-  ]);
+  const categoriasOptions = Object.entries(Categoria).map(([value, label]) => ({
+  value,
+  label,
+}));
+
+  const [options, setOptions] = useState<OptionType[]>(categoriasOptions);
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [linkApostila, setLinkApostila] = useState<string | null>(null);

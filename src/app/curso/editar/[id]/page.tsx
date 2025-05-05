@@ -27,6 +27,26 @@ type AulaType = {
 };
 
 
+enum Categoria {
+  Agricultura = "Agricultura",
+  Silvicultura = "Silvicultura",
+  PescaEVeterinaria = "Pesca e Veterinária",
+  ArtesEHumanidades = "Artes e Humanidades",
+  CienciasSociais = "Ciências Sociais",
+  ComunicacaoEInformacao = "Comunicação e Informação",
+  CienciasNaturais = "Ciências Naturais",
+  MatematicaEEstatistica = "Matemática e Estatística",
+  ComputacaoETecnologiaDaInformacao = "Computação e TI",
+  Engenharia = "Engenharia",
+  ProducaoEConstrucao = "Produção e Construção",
+  SaudeEBemEstar = "Saúde e Bem-Estar",
+  Educacao = "Educação",
+  NegociosAdministracaoEDireito = "Negócios, Administração e Direito",
+  Servicos = "Serviços",
+  ProgramasBasicos = "Programas Básicos",
+}
+
+
 export default function Curso() {
 
   const params = useParams()
@@ -34,6 +54,11 @@ export default function Curso() {
 
   const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", linkVideo: "", linkPdf: null, linkPodcast: "" }]);
   const [curso, setCurso] = useState([]);
+  
+  const categoriasOptions = Object.entries(Categoria).map(([value, label]) => ({
+  value,
+  label,
+  }));
 
   useEffect(() => {
     async function loadCurso() {
@@ -51,11 +76,7 @@ export default function Curso() {
     loadCurso()
   }, [id])
 
-  const [options, setOptions] = useState<OptionType[]>([
-    { value: "Opção 1", label: "Opção 1" },
-    { value: "Opção 2", label: "Opção 2" }, // as opçoes tem q vir do banco
-    { value: "Tecnologia", label: "Tecnologia" }
-  ]);
+  const [options, setOptions] = useState<OptionType[]>(categoriasOptions);
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [linkApostila, setLinkApostila] = useState<string | null>(null);
@@ -316,7 +337,8 @@ export default function Curso() {
                 isClearable
                 styles={customStyles}
                 options={options}
-                value={curso.categoria ? { label: curso.categoria, value: curso.categoria } : null}
+                value={curso.categoria ? {value: curso.categoria, label: Categoria[curso.categoria as keyof typeof Categoria]}: null
+                }
                 onChange={(option) => {
                   setSelectedOption(option);
                   console.log(option)
