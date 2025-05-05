@@ -1,3 +1,4 @@
+"use client"
 import { Badge } from "@/components/ui/badge"
 import { Link, TvMinimalPlay, Headphones, Images } from "lucide-react"
 import {
@@ -9,25 +10,41 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
 
-async function loadCurso(id: Number) {
-    const res = await fetch(`http://localhost:3000/api/curso?id=${id}`); 
+export default function DetalhesCurso() {
 
-    return res.json();
-}
+  const params = useParams();
+  const id = params.id;
 
-export default async function DetalhesCurso({params}: any) {
-  const {id} = await params
-  const curso = await loadCurso(id);
+  const [curso, setCurso] = useState(null);
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const aulasPorPagina = 3;
 
-  console.log(curso)
+  useEffect(() => {
+    async function loadCurso() {
+      const res = await fetch(`http://localhost:3000/api/curso?id=${id}`);
+      const data = await res.json();
+      setCurso(data);
+    }
+    loadCurso();
+  }, [id]);
 
   const absoluteLink = (url) => {
       return url.startsWith('http://') || url.startsWith('https://')
       ? url
       : `https://${url}`;
-    }
+  }
+
+  if (!curso) return <div></div>;
+
+  const totalPaginas = Math.ceil((curso.aula?.length || 0) / aulasPorPagina);
+  const aulasVisiveis = curso.aula?.slice(
+    (paginaAtual - 1) * aulasPorPagina,
+    paginaAtual * aulasPorPagina
+  ) || [];
 
   return (
     <div>
@@ -38,7 +55,6 @@ export default async function DetalhesCurso({params}: any) {
                 <p className="px-10 text-justify" >{curso.descricao}</p>
                 <div className="flex">
                     <Badge className="ml-10 mr-2 my-5">{curso.categoria}</Badge>
-                    {/* <Badge variant="outline" className="my-5">Outline</Badge> */}
                 </div>
             </div>
 
@@ -71,7 +87,7 @@ export default async function DetalhesCurso({params}: any) {
           </div>
 
         <div className="mt-10 mx-20 w-[90%]">
-          {curso.aula.map((aula: any, index: any) => (
+          {aulasVisiveis.map((aula: any, index: any) => (
             <div
               key={index}
               className="flex justify-between p-3 rounded-md border-3 border-[#cac4d0] mb-4"
@@ -101,30 +117,35 @@ export default async function DetalhesCurso({params}: any) {
           ))}
         </div>
 
-         <Pagination className="m-20">
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious href="#" />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">1</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#" isActive>
-                2
-              </PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationLink href="#">3</PaginationLink>
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationEllipsis />
-            </PaginationItem>
-            <PaginationItem>
-              <PaginationNext href="#" />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+        {totalPaginas > 1 && (
+          <Pagination className="mt-10 mb-15">
+            <PaginationContent>
+              {paginaAtual > 1 && (
+                <PaginationItem>
+                  <PaginationPrevious onClick={() => setPaginaAtual(p => p - 1)} />
+                </PaginationItem>
+              )}
+
+              {[...Array(totalPaginas)].map((_, i) => (
+                <PaginationItem key={i}>
+                  <PaginationLink
+                    href="#"
+                    isActive={i + 1 === paginaAtual}
+                    onClick={() => setPaginaAtual(i + 1)}
+                  >
+                    {i + 1}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+
+              {paginaAtual < totalPaginas && (
+                <PaginationItem>
+                  <PaginationNext onClick={() => setPaginaAtual(p => p + 1)} />
+                </PaginationItem>
+              )}
+            </PaginationContent>
+          </Pagination>
+        )}
 
         </div>
     </div>
