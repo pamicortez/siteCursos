@@ -234,7 +234,7 @@ const ProjetoHome: React.FC = () => {
                 <div key={index} className="m-0 p-0 flex">
                   <CardCursoWithButton
                     key={`${curso.nome}-${index}`}
-                    idCurso={curso.id} // Certifique-se de que cada curso tem um ID
+                    idCurso={curso.id} 
                     imagem={curso.imagem}
                     nome={curso.nome}
                     descricao={curso.descricao}

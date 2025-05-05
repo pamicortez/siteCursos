@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { useRouter } from "next/navigation"; 
+
 interface CardCursoWithButtonProps {
   idCurso: number;
   imagem: string;
@@ -24,6 +25,10 @@ const CardCursoWithButton: React.FC<CardCursoWithButtonProps> = ({
   const router = useRouter(); 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Verifica se a imagem é uma URL ou base64
+  const isBase64 = imagem.startsWith('data:image');
+  const imageSrc = isBase64 ? imagem : `/api/images?url=${encodeURIComponent(imagem)}`;
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -52,7 +57,14 @@ const CardCursoWithButton: React.FC<CardCursoWithButtonProps> = ({
   return (
     <>
       <div className="bg-white rounded-lg shadow-md overflow-hidden" style={{ width: "17rem", margin: "0 auto" }}>
-        <img src={imagem} className="w-full h-[150px] object-cover" alt={nome} />
+        <img 
+          src={imageSrc} 
+          className="w-full h-[150px] object-cover" 
+          alt={nome} 
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = '/proj1.jpg';
+          }}
+        />
         <div className="p-4">
           <h5 className="text-xl font-semibold mb-2">{nome}</h5>
           <p className="text-base text-gray-700 mb-2">{descricao}</p>
