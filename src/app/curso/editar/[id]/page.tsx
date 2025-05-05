@@ -43,6 +43,9 @@ export default function Curso() {
       const data = await res.json();
       setCurso(data)
       setAulas(data.aula);
+      setImagemBase64(data.imagem)
+      setLinkApostila(data.linkApostila)
+
       console.log(data)
     }
     loadCurso()
@@ -50,8 +53,8 @@ export default function Curso() {
 
   const [options, setOptions] = useState<OptionType[]>([
     { value: "Opção 1", label: "Opção 1" },
-    { value: "Opção 2", label: "Opção 2" },
-    { value: "Tecnologia", label: "Tecnologia" },
+    { value: "Opção 2", label: "Opção 2" }, // as opçoes tem q vir do banco
+    { value: "Tecnologia", label: "Tecnologia" }
   ]);
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
@@ -141,7 +144,7 @@ export default function Curso() {
      // Função auxiliar para transformar um File em base64
     const fileToBase64 = (file: File | null) => {
       return new Promise<string | null>((resolve, reject) => {
-        if (!file) return resolve(null);
+        if (!file || typeof file === "string") return resolve(null); // se for string é pq ja existe o base64
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => resolve(reader.result as string);
@@ -158,29 +161,40 @@ export default function Curso() {
           }
           return valor !== null && valor !== undefined;
         });
-      });
+      }); // corrigir essa função
     }
 
 
     const aulasFiltradas = removerAulasVazias(aulas)
+    console.log(aulasFiltradas)
 
   // conversão em base64
     const aulasConvertidas = await Promise.all(
       aulasFiltradas.map(async (aula) => {
-        const slideBase64 = await fileToBase64(aula.linkPdf);
-        return {
-          titulo: aula.titulo,
-          linkVideo: aula.linkVideo,
-          linkPdf: slideBase64,
-          linkPodcast: aula.linkPodcast
+        let slideBase64 = null;
+
+        if (aula.linkPdf != null) {
+          slideBase64 = await fileToBase64(aula.linkPdf);
+        }
+
+        if (!aula.id) { // se nao tiver id é aula nova, monta o obj
+          return {
+            titulo: aula.titulo,
+            linkVideo: aula.linkVideo,
+            linkPdf: slideBase64,
+            linkPodcast: aula.linkPodcast
           };
-        })
+        } else return aula // se ja existir, retorna como ja estava
+      })
     );
 
     // Pega os arquivos
     const apostilaFile = formData.get("apostila") as File | null;
-
-    const apostilaBase64 = await fileToBase64(apostilaFile)
+    let apostilaBase64 = null;
+    if (apostilaFile != null) {
+      apostilaBase64 = await fileToBase64(apostilaFile)
+    }
+    
 
     const data = {
       titulo: formData.get("titulo"),
@@ -225,7 +239,7 @@ export default function Curso() {
     <div>
       <form onSubmit={handleUpdate}>
       <div className="px-20 py-12">
-        <h1 className="text-3xl font-bold mb-12 text-center">Criar Curso</h1>
+        <h1 className="text-3xl font-bold mb-12 text-center">Editar Curso</h1>
           <div className="grid gap-6 mb-6 md:grid-cols-3">
 
             <div className="grid items-center gap-1.5">
@@ -286,9 +300,11 @@ export default function Curso() {
                       setImagemBase64(reader.result as string); // base64 com prefixo data:image/...
                     };
                     reader.readAsDataURL(file); // Converte para base64
+                    console.log(file.name)
                   }
                 }} 
               />
+            
             </div>
 
             <div className="grid items-center gap-1.5">
