@@ -1,9 +1,9 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import UserAproveCard from '@/components/ui/userAproveCard';
 import UserBlockCard from '@/components/ui/userBlockCard';
 import UserDeleteCard from '@/components/ui/userDeleteCard';
-import { useState, useEffect } from 'react';
 
 type User = {
   id: number;
@@ -25,6 +25,7 @@ type User = {
 export default function UserManagement() {
   const [selectedButton, setSelectedButton] = useState<string>('aprovação');
   const [users, setUsers] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Recuperar valor do localStorage após o componente montar
   useEffect(() => {
@@ -78,8 +79,14 @@ export default function UserManagement() {
     }
   };
 
+  // Filtrar usuários com base no termo de pesquisa
+  const filteredUsers = users.filter(user =>
+    user.Nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-100 flex items-top justify-center">
       <div className="w-180">
         <h1 className="text-4xl font-bold text-center mt-8 mb-8 text-left">GERENCIAMENTO DE USUÁRIOS</h1>
 
@@ -87,17 +94,17 @@ export default function UserManagement() {
           <button
             onClick={() => handleButtonClick('aprovação')}
             className={`flex-1 py-2 px-4 rounded-lg border-2 ${selectedButton === 'aprovação' ? 'border-black' : 'border-transparent'}`}>
-            Aprovação
+            Aprovar
           </button>
           <button
             onClick={() => handleButtonClick('bloqueio')}
             className={`flex-1 py-2 px-4 rounded-lg border-2 ${selectedButton === 'bloqueio' ? 'border-black' : 'border-transparent'}`}>
-            Bloqueio
+            Bloquear
           </button>
           <button
             onClick={() => handleButtonClick('exclusao')}
             className={`flex-1 py-2 px-4 rounded-lg border-2 ${selectedButton === 'exclusao' ? 'border-black' : 'border-transparent'}`}>
-            Exclusão
+            Excluir
           </button>
         </div>
 
@@ -106,12 +113,13 @@ export default function UserManagement() {
             type="text"
             placeholder="Pesquisar..."
             className="w-full p-2 border border-gray-300 rounded-lg"
-            // Lógica de filtro futura
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
 
         <div className="space-y-4">
-          {users.map((user, index) => renderUserCard(user, index))}
+          {filteredUsers.map((user, index) => renderUserCard(user, index))}
         </div>
       </div>
     </div>

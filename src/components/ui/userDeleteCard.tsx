@@ -28,15 +28,13 @@ export default function UserDeleteCard({
 
   const confirmUnblock = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/usuario", {
+      const response = await fetch(`http://localhost:3000/api/usuario?id=${id_user}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id: id_user,
-          atributo: "tipo",
-          novoValor: "Normal",
+         "tipo": "Normal",
         }),
       });
 
@@ -94,13 +92,13 @@ export default function UserDeleteCard({
         <div className="flex flex-col items-end flex-1">
           <button
             onClick={handleUnblock}
-            className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 w-35 mb-2"
+            className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 w-35 mb-2"
           >
             DESBLOQUEAR
           </button>
           <button
             onClick={handleDelete}
-            className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 w-35"
+            className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 w-35"
           >
             EXCLUIR
           </button>
@@ -122,7 +120,7 @@ export default function UserDeleteCard({
               </button>
               <button
                 onClick={confirmUnblock}
-                className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+                className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
               >
                 Sim
               </button>

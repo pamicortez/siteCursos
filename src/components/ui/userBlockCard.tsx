@@ -23,15 +23,13 @@ export default function UserBlockCard({
 
   const confirmBlock = async () => {
     try {
-      const response = await fetch("http://localhost:3000/api/usuario", {
+      const response = await fetch(`http://localhost:3000/api/usuario?id=${id_user}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id: id_user,
-          atributo: "tipo",
-          novoValor: "Bloqueado",
+          "tipo": "Bloqueado",
         }),
       });
 
@@ -72,7 +70,7 @@ export default function UserBlockCard({
         <div className="flex flex-col items-end flex-1">
           <button
             onClick={handleBlock}
-            className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 w-30"
+            className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 w-30"
           >
             BLOQUEAR
           </button>
@@ -94,7 +92,7 @@ export default function UserBlockCard({
               </button>
               <button
                 onClick={confirmBlock}
-                className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded"
+                className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
               >
                 Sim
               </button>

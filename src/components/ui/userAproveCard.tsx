@@ -16,33 +16,30 @@ export default function UserAproveCard({
   lattes,
 }: UserManagementCardProps) {
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const handleAccept = () => {
     setShowModal(true);
   };
 
-  const confirmAccept = async () => {
+  const updateUserType = async (tipo: "Normal" | "Super") => {
     try {
-      const response = await fetch("http://localhost:3000/api/usuario", {
+      const response = await fetch(`http://localhost:3000/api/usuario?id=${id_user}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          id: id_user,
-          atributo: "tipo",
-          novoValor: "Normal", // ou o valor correspondente ao tipo desejado
+          tipo,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Erro ao aprovar o usuário.");
+        throw new Error(`Erro ao atualizar o usuário para tipo ${tipo}.`);
       }
 
-      console.log("Usuário aceito:", email);
-
+      console.log(`Usuário atualizado para tipo ${tipo}:`, email);
       window.location.reload();
-
     } catch (error) {
       console.error(error);
     } finally {
@@ -50,9 +47,23 @@ export default function UserAproveCard({
     }
   };
 
-  const makeAdmin = () => {
-    console.log("Usuário tornado administrador:", email);
-    setShowModal(false);
+  const confirmDelete = async () => {
+    try {
+      const response = await fetch(`http://localhost:3000/api/usuario?id=${id_user}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao excluir usuário");
+      }
+
+      console.log("Usuário excluído:", email);
+      window.location.reload();
+    } catch (error) {
+      console.error("Erro:", error);
+    } finally {
+      setShowDeleteModal(false);
+    }
   };
 
   return (
@@ -77,11 +88,14 @@ export default function UserAproveCard({
         <div className="flex flex-col items-end flex-1">
           <button
             onClick={handleAccept}
-            className="bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 w-25 mb-2"
+            className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 w-25 mb-2"
           >
             ACEITAR
           </button>
-          <button className="bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 w-25">
+          <button
+            onClick={() => setShowDeleteModal(true)} // Abre o modal de exclusão
+            className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 w-25"
+          >
             NEGAR
           </button>
         </div>
@@ -93,13 +107,13 @@ export default function UserAproveCard({
             <h2 className="text-xl font-bold mb-4">Deseja aceitar esse usuário?</h2>
             <div className="flex flex-col gap-2">
               <button
-                onClick={confirmAccept}
-                className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded"
+                onClick={() => updateUserType("Normal")}
+                className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
               >
                 Sim
               </button>
               <button
-                onClick={makeAdmin}
+                onClick={() => updateUserType("Super")}
                 className="bg-yellow-400 hover:bg-yellow-500 text-black py-2 px-4 rounded"
               >
                 Tornar Administrador
@@ -109,6 +123,28 @@ export default function UserAproveCard({
                 className="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded"
               >
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-xl font-bold mb-4">Deseja realmente negar esse usuário?</h2>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowDeleteModal(false)} // Fecha o modal de negação
+                className="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete} // Chama a função para excluir o usuário
+                className="bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded"
+              >
+                Sim
               </button>
             </div>
           </div>
