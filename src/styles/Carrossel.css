@@ -1,0 +1,66 @@
+.carrossel-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  margin: auto;
+  overflow: hidden;
+}
+
+.carrossel {
+  width: 100%;
+  overflow: hidden;
+}
+
+.carrossel-inner {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.carrossel-item {
+  flex: 0 0 calc(100% / 3);
+  display: flex;
+  justify-content: center;
+  padding: 25px;
+}
+@media (max-width: 768px) {
+  .carrossel-item {
+    flex: 0 0 calc(100%);
+    display: flex;
+    width: 100%; /* Em telas menores, cada card ocupa 100% da largura */
+  }
+}
+
+.carrossel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  color: gray;
+  cursor: pointer;
+  z-index: 2;
+  height: 100%;
+  padding: 0 10px;
+}
+
+.carrossel-btn.left {
+  left: -15px; /* Mover para a esquerda */
+}
+
+.carrossel-btn.right {
+  right: -15px; /* Mover para a direita */
+}
+
+@media (max-width: 600px) {
+  .carrossel-btn.left {
+    left: -10px; /* Mover para a esquerda */
+  }
+  
+  .carrossel-btn.right {
+    right: -10px; /* Mover para a direita */
+  }
+}
