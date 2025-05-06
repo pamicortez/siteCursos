@@ -10,6 +10,7 @@ import Carrossel from "@/components/Carrossel";
 import CardProjeto from "@/components/CardProjeto";
 import CardEvento from "@/components/CardEvento";
 import Navbar from "@/components/Navbar";
+import { useRouter } from "next/navigation";
 
 interface Profile {
   id: string;
@@ -61,6 +62,22 @@ interface Post {
   userId: string;
 }
 
+interface ProjetoColaborador {
+  id: number;
+  categoria: string;
+  idProjeto: number;
+  idColaborador: number;
+  projeto: {
+    id: number;
+    titulo: string;
+    imagem: string;
+    descricao: string;
+    categoria: string;
+    dataInicio: string;
+    dataFim: string;
+  };
+}
+
 export default function ProfessorPortfolio() {
   const { data: session } = useSession();
   const [loading, setLoading] = useState(true);
@@ -84,6 +101,29 @@ export default function ProfessorPortfolio() {
   const [editProfile, setEditProfile] = useState(false);
   const [editMode, setEditMode] = useState<{section: string, id: string | null, editing: boolean}>({section: '', id: null, editing: false});
   const [formData, setFormData] = useState<any>({});
+
+  const [projetosColaborados, setProjetosColaborados] = useState<ProjetoColaborador[]>([]);
+  const [projetoSelecionado, setProjetoSelecionado] = useState<number | null>(null);
+
+  const router = useRouter();
+
+  const handleProjetoClick = (projetoId: string) => {
+    router.push(`/projeto/${projetoId}`);
+  };
+  
+  const handleEventoClick = (eventoId: string) => {
+    router.push(`/evento/${eventoId}`);
+  };
+
+  const fetchProjetosColaborados = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/colaborador/semProjetoUsuario?id=${userId}`);
+      const data = await response.json();
+      setProjetosColaborados(data.projetoColaborador || []);
+    } catch (error) {
+      console.error("Erro ao buscar projetos colaborados:", error);
+    }
+  };
 
   // Buscar dados do usuário
   const fetchUserData = async (userId: string) => {
@@ -337,7 +377,12 @@ export default function ProfessorPortfolio() {
     if (session?.user?.email) {
       fetch(`/api/usuario?email=${session.user.email}`)
         .then(res => res.json())
-        .then(data => data.id && fetchUserData(data.id))
+        .then(data => {
+          if (data.id) {
+            fetchUserData(data.id);
+            fetchProjetosColaborados(data.id);
+          }
+        })
         .catch(err => console.error("Erro ao buscar ID do usuário:", err));
     }
   }, [session]);
@@ -440,14 +485,69 @@ export default function ProfessorPortfolio() {
           <h1 className="px-8 text-left text-3xl font-bold">Projetos</h1>
           <Carrossel linhas={1}>
             {projetos.map((projeto) => (
-              <CardProjeto 
-                key={projeto.id}
-                nome={projeto.nome}
-                descricao={projeto.descricao}
-                imagem={projeto.imagem}
-              />
+              <div 
+                key={projeto.id} 
+                onClick={() => handleProjetoClick(projeto.id)}
+                className="cursor-pointer"
+              >
+                <CardProjeto 
+                  nome={projeto.nome}
+                  descricao={projeto.descricao}
+                  imagem={projeto.imagem}
+                />
+              </div>
             ))}
           </Carrossel>
+        </div>
+      </div>
+
+      {/* Seção Projetos Colaborados*/}
+      <div className="container space-y-4 mt-12">
+        <div className="mt-8">
+          <h1 className="px-8 text-left text-3xl font-bold">Projetos Colaborados</h1>
+          {projetosColaborados.length > 0 ? (
+            <>
+              <Carrossel linhas={1}>
+                {projetosColaborados.map((colaboracao) => (
+                  <div 
+                    key={colaboracao.id} 
+                    className={`relative ${projetoSelecionado === colaboracao.id ? 'ring-2 ring-blue-500' : ''}`}
+                    onClick={() => handleProjetoClick(colaboracao.projeto.id.toString())}
+                  >
+                    <CardProjeto 
+                      nome={colaboracao.projeto.titulo}
+                      descricao={colaboracao.projeto.descricao}
+                      imagem={colaboracao.projeto.imagem}
+                    />
+                    <div className="absolute bottom-2 right-2 bg-white px-2 py-1 rounded text-sm">
+                      {colaboracao.categoria}
+                    </div>
+                  </div>
+                ))}
+              </Carrossel>
+              
+              {projetoSelecionado && (
+                <div className="flex justify-center gap-4 mt-6">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => console.log('Sim selecionado para projeto', projetoSelecionado)}
+                  >
+                    Sim
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => console.log('Não selecionado para projeto', projetoSelecionado)}
+                  >
+                    Não
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              Nenhum projeto colaborado encontrado
+            </div>
+          )}
         </div>
       </div>
 
@@ -456,12 +556,17 @@ export default function ProfessorPortfolio() {
         <h1 className="px-8 text-left text-3xl font-bold">Eventos</h1>
         <Carrossel linhas={1}>
           {eventos.map((evento) => (
-            <CardEvento 
+            <div 
               key={evento.id}
-              nome={evento.nome}
-              descricao={evento.descricao}
-              data={evento.data}
-            />
+              onClick={() => handleEventoClick(evento.id)}
+              className="cursor-pointer"
+            >
+              <CardEvento 
+                nome={evento.nome}
+                descricao={evento.descricao}
+                data={evento.data}
+              />
+            </div>
           ))}
         </Carrossel>
       </div>

@@ -7,6 +7,7 @@ import CardEvento from "@/components/CardEvento";
 import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 interface Usuario {
   id: number;
@@ -16,6 +17,10 @@ interface Usuario {
   resumoPessoal: string;
   fotoPerfil: string;
   Links?: { link: string }[];
+  publicacao: Publicacao[];
+  eventoUsuario: { evento: Evento }[];
+  projetoUsuario: { projeto: Projeto }[];
+  carreira: Carreira[];
 }
 
 interface Projeto {
@@ -46,15 +51,15 @@ interface Publicacao {
 
 interface Carreira {
   id: number;
-  titulo: string;
-  instituicao: string;
-  periodo: string;
-  local: string;
+  nome: string;
   descricao: string;
-  categoria: 'academica' | 'profissional';
+  categoria: 'Formação acadêmica' | 'Experiencia profissional';
+  dataInicio: string;
+  dataFim: string | null;
 }
 
 export default function ProfessorPortfolio({ params }: { params: { id: string } }) {
+  const router = useRouter();
   const [id, setId] = useState<string>("");
   
   useEffect(() => {
@@ -64,16 +69,18 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
   }, [params]);
   
   const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [projetos, setProjetos] = useState<Projeto[]>([]);
-  const [eventos, setEventos] = useState<Evento[]>([]);
-  const [publicacoes, setPublicacoes] = useState<Publicacao[]>([]);
-  const [carreiras, setCarreiras] = useState<Carreira[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [visiblePosts, setVisiblePosts] = useState(3);
 
-  const formacoesAcademicas = carreiras.filter(item => item.categoria === 'academica');
-  const experienciasProfissionais = carreiras.filter(item => item.categoria === 'profissional');
+  // Extrai os dados das relações do usuário
+  const projetos = usuario?.projetoUsuario?.map(pu => pu.projeto) || [];
+  const eventos = usuario?.eventoUsuario?.map(eu => eu.evento) || [];
+  const publicacoes = usuario?.publicacao || [];
+  const carreiras = usuario?.carreira || [];
+
+  const formacoesAcademicas = carreiras.filter(item => item.categoria === 'Formação acadêmica');
+  const experienciasProfissionais = carreiras.filter(item => item.categoria === 'Experiencia profissional');
 
   const loadMorePosts = () => {
     setVisiblePosts(prev => prev + 3);
@@ -83,6 +90,20 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
     setVisiblePosts(3);
   };
 
+  const formatarPeriodo = (dataInicio: string, dataFim: string | null) => {
+    const inicio = new Date(dataInicio).toLocaleDateString('pt-BR');
+    const fim = dataFim ? new Date(dataFim).toLocaleDateString('pt-BR') : 'Em andamento';
+    return `${inicio} - ${fim}`;
+  };
+
+  const handleProjetoClick = (projetoId: number) => {
+    router.push(`/projeto/${projetoId}`);
+  };
+
+  const handleEventoClick = (eventoId: number) => {
+    router.push(`/evento/${eventoId}`);
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -90,27 +111,6 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
         if (!usuarioRes.ok) throw new Error('Erro ao carregar dados do professor');
         const usuarioData = await usuarioRes.json();
         setUsuario(usuarioData);
-
-        const projetosRes = await fetch(`http://localhost:3000/api/projeto?usuarioId=${id}`);
-        if (!projetosRes.ok) throw new Error('Erro ao carregar projetos');
-        const projetosData = await projetosRes.json();
-        setProjetos(projetosData);
-
-        const eventosRes = await fetch(`http://localhost:3000/api/evento?usuarioId=${id}`);
-        if (!eventosRes.ok) throw new Error('Erro ao carregar eventos');
-        const eventosData = await eventosRes.json();
-        setEventos(eventosData);
-
-        const publicacoesRes = await fetch(`http://localhost:3000/api/publicacao?usuarioId=${id}`);
-        if (!publicacoesRes.ok) throw new Error('Erro ao carregar publicações');
-        const publicacoesData = await publicacoesRes.json();
-        setPublicacoes(publicacoesData);
-
-        const carreirasRes = await fetch(`http://localhost:3000/api/carreira?usuarioId=${id}`);
-        if (carreirasRes.ok) {
-          const carreirasData = await carreirasRes.json();
-          setCarreiras(carreirasData);
-        }
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Ocorreu um erro desconhecido');
@@ -207,12 +207,13 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
             <h1 className="px-8 text-left text-3xl font-bold">Projetos</h1>
             <Carrossel linhas={1}>
               {projetos.map((projeto) => (
-                <CardProjeto 
-                  key={projeto.id}
-                  imagem={projeto.imagem}
-                  nome={projeto.titulo}
-                  descricao={projeto.descricao}
-                />
+                <div key={projeto.id} onClick={() => handleProjetoClick(projeto.id)} className="cursor-pointer">
+                  <CardProjeto 
+                    imagem={projeto.imagem}
+                    nome={projeto.titulo}
+                    descricao={projeto.descricao}
+                  />
+                </div>
               ))}
             </Carrossel>
           </div>
@@ -225,12 +226,13 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
           <h1 className="px-8 text-left text-3xl font-bold">Eventos</h1>
           <Carrossel linhas={1}>
             {eventos.map(evento => (
-              <CardEvento
-                key={evento.id}
-                nome={evento.titulo}
-                descricao={evento.descricao}
-                data={new Date(evento.data).toLocaleDateString('pt-BR')}
-              />
+              <div key={evento.id} onClick={() => handleEventoClick(evento.id)} className="cursor-pointer">
+                <CardEvento
+                  nome={evento.titulo}
+                  descricao={evento.descricao}
+                  data={new Date(evento.data).toLocaleDateString('pt-BR')}
+                />
+              </div>
             ))}
           </Carrossel>
         </div>
@@ -240,36 +242,47 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
       <div className="bg-white p-6 rounded-lg shadow-md mt-12">
         <h1 className="text-3xl font-bold mb-6">Formação Acadêmica</h1>
         
-        <div className="space-y-8">
-          {formacoesAcademicas.map((formacao) => (
-            <div key={formacao.id} className="border-l-4 border-blue-500 pl-4">
-              <h3 className="font-bold text-xl">{formacao.titulo}</h3>
-              <p className="text-gray-800 font-medium">{formacao.instituicao}</p>
-              <p className="text-gray-600">{formacao.periodo}</p>
-              <p className="text-gray-500 text-sm">{formacao.local}</p>
-            </div>
-          ))}
-        </div>
+        {formacoesAcademicas.length > 0 ? (
+          <div className="space-y-8">
+            {formacoesAcademicas.map((formacao) => (
+              <div key={formacao.id} className="border-l-4 border-blue-500 pl-4">
+                <h3 className="font-bold text-xl">{formacao.nome}</h3>
+                <p className="text-gray-700 mt-2">{formacao.descricao}</p>
+                <p className="text-gray-600 mt-1">
+                  {formatarPeriodo(formacao.dataInicio, formacao.dataFim)}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            Nenhuma formação acadêmica cadastrada
+          </div>
+        )}
       </div>
 
       {/* Seção Experiência Profissional */}
       <div className="bg-white p-6 rounded-lg shadow-md mt-8">
         <h1 className="text-3xl font-bold mb-6">Experiência Profissional</h1>
         
-        <div className="space-y-8">
-          {experienciasProfissionais.map((experiencia) => (
-            <div key={experiencia.id} className="border-l-4 border-blue-500 pl-4">
-              <h3 className="font-bold text-xl">{experiencia.titulo}</h3>
-              <p className="text-gray-800 font-medium">{experiencia.instituicao}</p>
-              <p className="text-gray-600">{experiencia.periodo}</p>
-              <p className="text-gray-500 text-sm">{experiencia.local}</p>
-              {experiencia.descricao && (
+        {experienciasProfissionais.length > 0 ? (
+          <div className="space-y-8">
+            {experienciasProfissionais.map((experiencia) => (
+              <div key={experiencia.id} className="border-l-4 border-blue-500 pl-4">
+                <h3 className="font-bold text-xl">{experiencia.nome}</h3>
                 <p className="text-gray-700 mt-2">{experiencia.descricao}</p>
-              )}
-            </div>
-          ))}
-        </div>
+                <p className="text-gray-600 mt-1">
+                  {formatarPeriodo(experiencia.dataInicio, experiencia.dataFim)}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            Nenhuma experiência profissional cadastrada
+          </div>
+        )}
       </div>
-        </div>
+    </div>
   );
 }
