@@ -12,6 +12,25 @@ datasource db {
   url      = env("DATABASE_URL") // URL de conexão ao banco de dados, que está definida em um arquivo .env
 }
 
+enum categoriaCurso {
+  Agricultura
+  Silvicultura
+  PescaEVeterinaria
+  ArtesEHumanidades
+  CienciasSociais
+  ComunicacaoEInformacao
+  CienciasNaturais
+  MatematicaEEstatistica
+  ComputacaoETecnologiaDaInformacao
+  Engenharia
+  ProducaoEConstrucao
+  SaudeEBemEstar
+  Educacao
+  NegociosAdministracaoEDireito
+  Servicos
+  ProgramasBasicos
+}
+
 enum tipoLink {
   Instragram
   Whatsapp
@@ -86,7 +105,7 @@ model Curso {
   titulo      String   // Título do curso
   imagem      String   // URL da imagem do curso
   descricao   String   // Descrição do curso
-  categoria   String   // Categoria do curso
+  categoria   categoriaCurso   // Categoria do curso
   cargaHoraria Float   // Carga horária do curso
   linkInscricao String // Link para inscrição no curso
   vagas       Int      // Quantidade de vagas disponíveis

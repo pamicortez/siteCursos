@@ -22,17 +22,13 @@ export async function GET(request: Request) {
 			console.log('Buscando projetos com título e categoria:', titulo, categoria); // http://localhost:3000/api/projeto?titulo=Projeto%20AI&categoria=IA
 			// Buscar projetos que tenham o título e categoria especificados
 			const projetos = await prisma.projeto.findMany({
-				where: { titulo:
-					{
-						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
-						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
-					}
+				where: { titulo:{ contains: titulo, mode: 'insensitive'}
 					, categoria 
 				},
 				include: {
-					projetoUsuario: true,
+					projetoUsuario: {include: {usuario: true}},
 					curso: true,
-					projetoColaborador: true,
+					projetoColaborador: { include: { colaborador: true } },
 				}, 
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'} 
 			});
@@ -44,9 +40,9 @@ export async function GET(request: Request) {
 			const projeto = await prisma.projeto.findUnique({
 				where: { id: Number(id)},
 				include: {
-					projetoUsuario: {},
+					projetoUsuario: {include: {usuario: true}},
 					curso: true,
-					projetoColaborador: true,
+					projetoColaborador: { include: { colaborador: true } },
 				},
 			});
 			return NextResponse.json(projeto); // Retorna a resposta em formato JSON
@@ -63,9 +59,9 @@ export async function GET(request: Request) {
 					},
 				},
 				include: {
-					projetoUsuario: true,
+					projetoUsuario: {include: {usuario: true}},
 					curso: true,
-					projetoColaborador: true,
+					projetoColaborador: { include: { colaborador: true } },
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
@@ -79,9 +75,9 @@ export async function GET(request: Request) {
 			const projetos = await prisma.projeto.findMany({
 				where: { categoria },
 				include: {
-					projetoUsuario: true,
+					projetoUsuario: {include: {usuario: true}},
 					curso: true,
-					projetoColaborador: true,
+					projetoColaborador: { include: { colaborador: true } },
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
@@ -93,9 +89,9 @@ export async function GET(request: Request) {
 			// Retorna todos os projetos se não houver título na URL
 			const projetos = await prisma.projeto.findMany({
 				include: {
-					projetoUsuario: true,
+					projetoUsuario: {include: {usuario: true}},
 					curso: true,
-					projetoColaborador: true,
+					projetoColaborador: { include: { colaborador: true } },
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
@@ -201,15 +197,15 @@ export async function PATCH(request: Request) {
 	  const { searchParams } = new URL(request.url);
 	  const id = Number(searchParams.get('id')); // ID do projeto
 
-	  const { atualizacoes } = await request.json();
-  
+	  const atualizacoes = await request.json();
+	  const colNovos: {nome: string; categoria: funcaoProjeto}[] = atualizacoes.colaboradores || []; 
 	  // Verifica se o projeto existe
 		const projeto = await prisma.projeto.findUnique({ where: { id: id } });
 		if (!projeto) {
 			return NextResponse.json({error: 'Projeto não encontrado'}, {status: 404})
 		}
 	  // Atributos que NÃO podem ser alterados
-	  const atributosFixos = ["id", "usuarioId"];
+	  const atributosFixos = ["id"];
 
 	  // Verifica se há algum campo proibido na requisição
 	  const camposInvalidos = Object.keys(atualizacoes).filter((chave) =>
@@ -222,13 +218,104 @@ export async function PATCH(request: Request) {
 			{ status: 400 }
 		);
 		}
-		
+	  
+	  const {colaboradores, funcao, usuarioId, ...dadosProjeto} = atualizacoes;
+
 	  const projetoAtualizado = await prisma.projeto.update({
 		where: { id },
-		data: atualizacoes,
+		data: dadosProjeto,
 	  });
-  
-	  return NextResponse.json(projetoAtualizado, { status: 200 });
+
+	  if (funcao){
+		const projetoUsu = await prisma.projetoUsuario.findFirst({
+			where: {
+				idProjeto: id,
+				idUsuario: usuarioId,
+			},
+		});
+
+		if (projetoUsu){
+			await prisma.projetoUsuario.update({
+				where: { id: projetoUsu.id },
+				data: {
+				  funcao: funcao,
+				},
+			  });
+		}
+	  }
+
+	  if (colaboradores){
+		const colAtuais = await prisma.projetoColaborador.findMany({
+			where: {idProjeto: id},
+			include: {colaborador: true},
+		});
+
+		const nomesAtuais = colAtuais.map((projCol) => projCol.colaborador.nome);
+		const nomesNovos = colNovos.map((col) => col.nome);
+
+		const pRemover = colAtuais.filter(
+			(projCol) => !nomesNovos.includes(projCol.colaborador.nome)
+		);
+
+		await prisma.projetoColaborador.deleteMany({
+			where: {
+				idProjeto: id,
+				idColaborador: {
+					in: pRemover.map((projCol) => projCol.idColaborador),
+				},
+			},
+		});
+
+		for (const colab of colNovos){
+			const colExistente = await prisma.colaborador.findFirst({
+				where: {nome: colab.nome},
+			});
+
+			let colId: number;
+			if (colExistente){
+				colId = colExistente.id;
+			} else{
+				const novoCol = await prisma.colaborador.create({
+					data: {nome: colab.nome},
+				});
+				colId = novoCol.id;
+			}
+
+			const assocExist = await prisma.projetoColaborador.findFirst({
+				where: {
+					idProjeto: id,
+					idColaborador: colId,
+				},
+			});
+
+			if (!assocExist){
+				await prisma.projetoColaborador.create({
+					data:{
+						idProjeto: id,
+						idColaborador: colId,
+						categoria: colab.categoria,
+					},
+				});
+			} else{
+				if (assocExist.categoria !== colab.categoria) {
+					await prisma.projetoColaborador.update({
+					where: { id: assocExist.id },
+					data: { categoria: colab.categoria },
+					});
+				}
+			}
+		}
+	  }
+
+	  const projAtua = await prisma.projeto.findUnique({
+		where: {id: id},
+		include: {
+			projetoColaborador: {
+				include: {colaborador: true}
+			}
+		}
+	  })
+	  return NextResponse.json(projAtua, { status: 200 });
   
 	} catch (error) {
 	  console.error(error);
