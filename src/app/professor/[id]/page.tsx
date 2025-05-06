@@ -6,10 +6,7 @@ import CardProjeto from "@/components/CardProjeto";
 import CardEvento from "@/components/CardEvento";
 import Navbar from "@/components/Navbar";
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 
 interface Usuario {
   id: number;
@@ -58,6 +55,14 @@ interface Carreira {
 }
 
 export default function ProfessorPortfolio({ params }: { params: { id: string } }) {
+  const [id, setId] = useState<string>("");
+  
+  useEffect(() => {
+    Promise.resolve(params).then(resolvedParams => {
+      setId(resolvedParams.id);
+    });
+  }, [params]);
+  
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
@@ -67,7 +72,6 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
   const [error, setError] = useState<string | null>(null);
   const [visiblePosts, setVisiblePosts] = useState(3);
 
-  // Filtrar carreiras por categoria
   const formacoesAcademicas = carreiras.filter(item => item.categoria === 'academica');
   const experienciasProfissionais = carreiras.filter(item => item.categoria === 'profissional');
 
@@ -82,32 +86,27 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Buscar dados do professor
-        const usuarioRes = await fetch(`http://localhost:3000/api/usuario?id=${params.id}`);
+        const usuarioRes = await fetch(`http://localhost:3000/api/usuario?id=${id}`);
         if (!usuarioRes.ok) throw new Error('Erro ao carregar dados do professor');
         const usuarioData = await usuarioRes.json();
         setUsuario(usuarioData);
 
-        // Buscar projetos do professor
-        const projetosRes = await fetch(`http://localhost:3000/api/projeto?usuarioId=${params.id}`);
+        const projetosRes = await fetch(`http://localhost:3000/api/projeto?usuarioId=${id}`);
         if (!projetosRes.ok) throw new Error('Erro ao carregar projetos');
         const projetosData = await projetosRes.json();
         setProjetos(projetosData);
 
-        // Buscar eventos do professor
-        const eventosRes = await fetch(`http://localhost:3000/api/evento?usuarioId=${params.id}`);
+        const eventosRes = await fetch(`http://localhost:3000/api/evento?usuarioId=${id}`);
         if (!eventosRes.ok) throw new Error('Erro ao carregar eventos');
         const eventosData = await eventosRes.json();
         setEventos(eventosData);
 
-        // Buscar publicações do professor
-        const publicacoesRes = await fetch(`http://localhost:3000/api/publicacao?usuarioId=${params.id}`);
+        const publicacoesRes = await fetch(`http://localhost:3000/api/publicacao?usuarioId=${id}`);
         if (!publicacoesRes.ok) throw new Error('Erro ao carregar publicações');
         const publicacoesData = await publicacoesRes.json();
         setPublicacoes(publicacoesData);
 
-        // Buscar carreiras (formação e experiência) do professor
-        const carreirasRes = await fetch(`http://localhost:3000/api/carreira?usuarioId=${params.id}`);
+        const carreirasRes = await fetch(`http://localhost:3000/api/carreira?usuarioId=${id}`);
         if (carreirasRes.ok) {
           const carreirasData = await carreirasRes.json();
           setCarreiras(carreirasData);
@@ -121,7 +120,7 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
     };
 
     fetchData();
-  }, [params.id]);
+  }, [id]);
 
   if (loading) return <div className="text-center py-20">Carregando...</div>;
   if (error) return <div className="text-center py-20 text-red-500">{error}</div>;
@@ -159,7 +158,7 @@ export default function ProfessorPortfolio({ params }: { params: { id: string } 
         </div>
       </div>
 
-      {/* Seção Posts - Feed expansível */}
+      {/* Seção Posts */}
       <div className="mt-8">
         <div className="flex justify-between items-center mb-6 px-4">
           <h1 className="text-3xl font-bold">Publicações</h1>

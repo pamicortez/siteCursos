@@ -1,19 +1,23 @@
 "use client"
 
 import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import Carrossel from "@/components/Carrossel";
 import CardProjeto from "@/components/CardProjeto";
+import CardEvento from "@/components/CardEvento";
 import Navbar from "@/components/Navbar";
 
 interface Profile {
+  id: string;
   nome: string;
   descricao: string;
   instituicao: string;
-  foto: string | File;
+  foto: string;
+  email: string;
 }
 
 interface Evento {
@@ -21,6 +25,15 @@ interface Evento {
   nome: string;
   descricao: string;
   data: string;
+  userId: string;
+}
+
+interface Projeto {
+  id: string;
+  nome: string;
+  descricao: string;
+  imagem: string;
+  userId: string;
 }
 
 interface Experiencia {
@@ -29,6 +42,7 @@ interface Experiencia {
   instituicao: string;
   periodo: string;
   local: string;
+  userId: string;
 }
 
 interface Formacao {
@@ -37,38 +51,31 @@ interface Formacao {
   instituicao: string;
   periodo: string;
   local: string;
+  userId: string;
 }
 
 interface Post {
   id: string;
   citacao: string;
   referencia: string;
+  userId: string;
 }
 
-const CardEvento = ({ nome, descricao, data }: { nome: string; descricao: string; data: string }) => (
-  <div className="bg-white rounded-lg shadow-md overflow-hidden mx-2 p-4" style={{ width: "17rem" }}>
-    <div className="flex items-start gap-3">
-      <div className="bg-blue-100 text-blue-800 rounded-lg p-2 min-w-[60px] text-center">
-        <div className="font-bold">{data.split('/')[0]}</div>
-        <div className="text-xs">{data.split('/')[1]}/{data.split('/')[2]}</div>
-      </div>
-      <div>
-        <h5 className="text-lg font-semibold mb-1">{nome}</h5>
-        <p className="text-sm text-gray-700">{descricao}</p>
-      </div>
-    </div>
-  </div>
-);
-
 export default function ProfessorPortfolio() {
+  const { data: session } = useSession();
+  const [loading, setLoading] = useState(true);
+  
   const [profile, setProfile] = useState<Profile>({
-    nome: "Nome do professor",
-    descricao: "Descrição breve sobre o professor",
-    instituicao: "Instituição de ensino",
-    foto: "/default-profile.png"
+    id: '',
+    nome: "",
+    descricao: "",
+    instituicao: "",
+    foto: "/default-profile.png",
+    email: ""
   });
 
-  const [eventosDisponiveis, setEventosDisponiveis] = useState<Evento[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [projetos, setProjetos] = useState<Projeto[]>([]);
   const [experiencias, setExperiencias] = useState<Experiencia[]>([]);
   const [formacoes, setFormacoes] = useState<Formacao[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -78,97 +85,246 @@ export default function ProfessorPortfolio() {
   const [editMode, setEditMode] = useState<{section: string, id: string | null, editing: boolean}>({section: '', id: null, editing: false});
   const [formData, setFormData] = useState<any>({});
 
-  const projetos = [
-    { imagem: "/proj1.jpg", nome: "Tecnologia da Informação", descricao: "Curso de introdução e especialização em TI.", cargahoraria: "80 horas" },
-    { imagem: "/proj2.jpg", nome: "Física", descricao: "Projeto de pesquisa e desenvolvimento em física aplicada.", cargahoraria: "120 horas" },
-    { imagem: "/proj3.jpg", nome: "Química", descricao: "Curso focado em experimentos e teoria química avançada.", cargahoraria: "100 horas" },
-    { imagem: "/proj4.jpg", nome: "Matemática", descricao: "Projeto de inovação em métodos de ensino matemático.", cargahoraria: "90 horas" },
-    { imagem: "/proj5.jpg", nome: "História", descricao: "Curso de história mundial e metodologias de pesquisa histórica.", cargahoraria: "70 horas" },
-  ];
+  // Buscar dados do usuário
+  const fetchUserData = async (userId: string) => {
+    try {
+      setLoading(true);
+      
+      const [profileRes, eventosRes, projetosRes, experienciasRes, formacoesRes, postsRes] = await Promise.all([
+        fetch(`/api/professor/${userId}`),
+        fetch(`/api/eventos?userId=${userId}`),
+        fetch(`/api/projetos?userId=${userId}`),
+        fetch(`/api/experiencias?userId=${userId}`),
+        fetch(`/api/formacoes?userId=${userId}`),
+        fetch(`/api/posts?userId=${userId}`)
+      ]);
 
-  useEffect(() => {
-    // Simulação de dados da API
-    setEventosDisponiveis([
-      { id: '1', nome: 'Conferência Internacional de Tecnologia', descricao: 'Palestra sobre inovações em educação digital', data: '15/05/2024' },
-      { id: '2', nome: 'Workshop de Desenvolvimento Web', descricao: 'Oficina prática para estudantes', data: '22/06/2024' },
-      { id: '3', nome: 'Simpósio de Pesquisa Científica', descricao: 'Apresentação de trabalhos acadêmicos', data: '10/08/2024' }
-    ]);
+      const profileData = await profileRes.json();
+      const eventosData = await eventosRes.json();
+      const projetosData = await projetosRes.json();
+      const experienciasData = await experienciasRes.json();
+      const formacoesData = await formacoesRes.json();
+      const postsData = await postsRes.json();
+      
+      setProfile(profileData);
+      setEventos(eventosData);
+      setProjetos(projetosData);
+      setExperiencias(experienciasData);
+      setFormacoes(formacoesData);
+      setPosts(postsData);
+      
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setExperiencias([
-      { id: '1', cargo: 'Professor Titular', instituicao: 'Universidade Federal', periodo: '2018 - Presente', local: 'São Paulo, SP' },
-      { id: '2', cargo: 'Pesquisador', instituicao: 'Instituto de Tecnologia', periodo: '2015 - 2018', local: 'Campinas, SP' }
-    ]);
+  // Atualizar perfil
+  const updateProfile = async (updatedProfile: Profile) => {
+    try {
+      const response = await fetch(`/api/professor/${updatedProfile.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedProfile),
+      });
+      
+      if (!response.ok) throw new Error('Erro ao atualizar perfil');
+      return await response.json();
+    } catch (error) {
+      console.error("Erro ao atualizar perfil:", error);
+      throw error;
+    }
+  };
 
-    setFormacoes([
-      { id: '1', nivel: 'Doutorado em Ciência da Computação', instituicao: 'USP', periodo: '2012 - 2016', local: 'São Paulo, SP' },
-      { id: '2', nivel: 'Mestrado em Engenharia de Software', instituicao: 'UNICAMP', periodo: '2010 - 2012', local: 'Campinas, SP' }
-    ]);
-
-    // Posts de exemplo
-    setPosts([
-      { id: '1', citacao: "A educação é a arma mais poderosa que você pode usar para mudar o mundo.", referencia: "Nelson Mandela" },
-      { id: '2', citacao: "O sucesso é a soma de pequenos esforços repetidos dia após dia.", referencia: "Robert Collier" },
-      { id: '3', citacao: "A tecnologia é apenas uma ferramenta. Para levar as crianças a trabalhar juntas e motivá-las, o professor é o mais importante.", referencia: "Bill Gates" },
-      { id: '4', citacao: "Ensinar não é transferir conhecimento, mas criar as possibilidades para a sua própria produção ou a sua construção.", referencia: "Paulo Freire" },
-      { id: '5', citacao: "O aprendizado nunca esgota a mente.", referencia: "Leonardo da Vinci" },
-      { id: '6', citacao: "A criatividade é a inteligência se divertindo.", referencia: "Albert Einstein" },
-      { id: '7', citacao: "Educação não é preparação para a vida; educação é a vida em si.", referencia: "John Dewey" }
-    ]);
-  }, []);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setProfile({
-          ...profile,
-          foto: event.target?.result as string
+  // Upload de foto
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      const formData = new FormData();
+      formData.append('file', e.target.files[0]);
+      formData.append('userId', profile.id);
+      
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
         });
-      };
-      reader.readAsDataURL(file);
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          const updatedProfile = {
+            ...profile,
+            foto: data.fileUrl
+          };
+          setProfile(updatedProfile);
+          await updateProfile(updatedProfile);
+        }
+      } catch (error) {
+        console.error("Erro ao fazer upload da imagem:", error);
+      }
     }
   };
 
-  const handleSaveExperiencia = () => {
-    if (editMode.id && editMode.editing) {
-      setExperiencias(experiencias.map(exp => 
-        exp.id === editMode.id ? formData : exp
-      ));
-    } else {
-      setExperiencias([...experiencias, {
-        ...formData,
-        id: Date.now().toString()
-      }]);
+  // Salvar perfil
+  const handleSaveProfile = async () => {
+    try {
+      const updatedProfile = await updateProfile(profile);
+      setProfile(updatedProfile);
+      setEditProfile(false);
+    } catch (error) {
+      console.error("Erro ao salvar perfil:", error);
     }
-    setEditMode({section: '', id: null, editing: false});
-    setFormData({});
   };
 
-  const handleSaveFormacao = () => {
-    if (editMode.id && editMode.editing) {
-      setFormacoes(formacoes.map(form => 
-        form.id === editMode.id ? formData : form
-      ));
-    } else {
-      setFormacoes([...formacoes, {
-        ...formData,
-        id: Date.now().toString()
-      }]);
+  // Operações CRUD para experiências
+  const handleSaveExperiencia = async () => {
+    try {
+      const url = editMode.id 
+        ? `/api/experiencias/${editMode.id}`
+        : '/api/experiencias';
+      
+      const method = editMode.id ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          userId: profile.id
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Erro ao salvar experiência');
+      
+      const savedData = await response.json();
+      
+      if (editMode.id) {
+        setExperiencias(experiencias.map(exp => 
+          exp.id === editMode.id ? savedData : exp
+        ));
+      } else {
+        setExperiencias([...experiencias, savedData]);
+      }
+      
+      setEditMode({section: '', id: null, editing: false});
+      setFormData({});
+    } catch (error) {
+      console.error("Erro ao salvar experiência:", error);
     }
-    setEditMode({section: '', id: null, editing: false});
-    setFormData({});
   };
 
-  const handleSavePost = () => {
-    setPosts([...posts, {
-      ...formData,
-      id: Date.now().toString()
-    }]);
-    setEditMode({section: '', id: null, editing: false});
-    setFormData({});
+  const handleDeleteExperiencia = async (id: string) => {
+    try {
+      const response = await fetch(`/api/experiencias/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error('Erro ao deletar experiência');
+      
+      setExperiencias(experiencias.filter(exp => exp.id !== id));
+    } catch (error) {
+      console.error("Erro ao deletar experiência:", error);
+    }
   };
 
+  // Operações CRUD para formações
+  const handleSaveFormacao = async () => {
+    try {
+      const url = editMode.id 
+        ? `/api/formacoes/${editMode.id}`
+        : '/api/formacoes';
+      
+      const method = editMode.id ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          userId: profile.id
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Erro ao salvar formação');
+      
+      const savedData = await response.json();
+      
+      if (editMode.id) {
+        setFormacoes(formacoes.map(form => 
+          form.id === editMode.id ? savedData : form
+        ));
+      } else {
+        setFormacoes([...formacoes, savedData]);
+      }
+      
+      setEditMode({section: '', id: null, editing: false});
+      setFormData({});
+    } catch (error) {
+      console.error("Erro ao salvar formação:", error);
+    }
+  };
+
+  const handleDeleteFormacao = async (id: string) => {
+    try {
+      const response = await fetch(`/api/formacoes/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error('Erro ao deletar formação');
+      
+      setFormacoes(formacoes.filter(form => form.id !== id));
+    } catch (error) {
+      console.error("Erro ao deletar formação:", error);
+    }
+  };
+
+  // Operações CRUD para posts
+  const handleSavePost = async () => {
+    try {
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...formData,
+          userId: profile.id
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Erro ao salvar post');
+      
+      const savedData = await response.json();
+      setPosts([...posts, savedData]);
+      setEditMode({section: '', id: null, editing: false});
+      setFormData({});
+    } catch (error) {
+      console.error("Erro ao salvar post:", error);
+    }
+  };
+
+  const handleDeletePost = async (id: string) => {
+    try {
+      const response = await fetch(`/api/posts/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error('Erro ao deletar post');
+      
+      setPosts(posts.filter(post => post.id !== id));
+    } catch (error) {
+      console.error("Erro ao deletar post:", error);
+    }
+  };
+
+  // Carregar mais/menos posts
   const loadMorePosts = () => {
     setVisiblePosts(prev => prev + 3);
   };
@@ -177,15 +333,51 @@ export default function ProfessorPortfolio() {
     setVisiblePosts(3);
   };
 
+  useEffect(() => {
+    if (session?.user?.email) {
+      fetch(`/api/usuario?email=${session.user.email}`)
+        .then(res => res.json())
+        .then(data => data.id && fetchUserData(data.id))
+        .catch(err => console.error("Erro ao buscar ID do usuário:", err));
+    }
+  }, [session]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-4">
+        <Navbar />
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return (
+      <div className="container mx-auto p-4">
+        <Navbar />
+        <div className="flex justify-center items-center h-screen">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Acesso não autorizado</h1>
+            <p className="mb-4">Você precisa estar logado para acessar esta página</p>
+            <Button onClick={() => window.location.href = '/login'}>Ir para página de login</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 space-y-12">
       <Navbar />
+      
       {/* Seção Perfil */}
       <div className="bg-white p-8 rounded-lg shadow-md relative">
         <div className="flex items-start gap-8">
           <div className="relative group">
             <img
-              src={typeof profile.foto === 'string' ? profile.foto : URL.createObjectURL(profile.foto)}
+              src={profile.foto || "/default-profile.png"}
               alt="Foto do professor"
               className="w-48 h-48 rounded-full cursor-pointer object-cover border-4 border-gray-100"
             />
@@ -228,11 +420,12 @@ export default function ProfessorPortfolio() {
               <h1 className="text-3xl font-bold text-gray-900">{profile.nome}</h1>
               <p className="text-xl text-blue-600 font-medium">{profile.instituicao}</p>
               <p className="text-gray-700 text-lg">{profile.descricao}</p>
+              <p className="text-gray-500 text-sm">Email: {profile.email || session.user?.email}</p>
             </div>
           )}
         </div>
         <Button 
-          onClick={() => setEditProfile(!editProfile)}
+          onClick={editProfile ? handleSaveProfile : () => setEditProfile(true)}
           className="absolute top-6 right-6"
           variant="outline"
           size="sm"
@@ -241,7 +434,39 @@ export default function ProfessorPortfolio() {
         </Button>
       </div>
 
-      {/* Seção Posts - Feed expansível */}
+      {/* Seção Projetos */}
+      <div className="container space-y-4">
+        <div className="mt-20">
+          <h1 className="px-8 text-left text-3xl font-bold">Projetos</h1>
+          <Carrossel linhas={1}>
+            {projetos.map((projeto) => (
+              <CardProjeto 
+                key={projeto.id}
+                nome={projeto.nome}
+                descricao={projeto.descricao}
+                imagem={projeto.imagem}
+              />
+            ))}
+          </Carrossel>
+        </div>
+      </div>
+
+      {/* Seção Eventos */}
+      <div className="mt-20">
+        <h1 className="px-8 text-left text-3xl font-bold">Eventos</h1>
+        <Carrossel linhas={1}>
+          {eventos.map((evento) => (
+            <CardEvento 
+              key={evento.id}
+              nome={evento.nome}
+              descricao={evento.descricao}
+              data={evento.data}
+            />
+          ))}
+        </Carrossel>
+      </div>
+
+      {/* Seção Posts */}
       <div className="mt-8">
         <div className="flex justify-between items-center mb-6 px-4">
           <h1 className="text-3xl font-bold">Publicações</h1>
@@ -282,9 +507,19 @@ export default function ProfessorPortfolio() {
         {posts.length > 0 ? (
           <div className="space-y-6">
             {posts.slice(0, visiblePosts).map(post => (
-              <div key={post.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div key={post.id} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 group relative">
                 <blockquote className="italic text-gray-800 text-lg">"{post.citacao}"</blockquote>
                 <p className="mt-4 text-sm text-gray-600 font-medium">{post.referencia}</p>
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleDeletePost(post.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Remover
+                  </Button>
+                </div>
               </div>
             ))}
             
@@ -313,28 +548,6 @@ export default function ProfessorPortfolio() {
             Nenhuma publicação adicionada ainda
           </div>
         )}
-      </div>
-
-      {/* Seção Projetos */}
-      <div className="container space-y-4">
-        <div className="mt-20">
-          <h1 className="px-8 text-left text-3xl font-bold">Projetos</h1>
-          <Carrossel linhas={1}>
-            {projetos.map((projeto, index) => (
-              <CardProjeto key={index} {...projeto} />
-            ))}
-          </Carrossel>
-        </div>
-      </div>
-
-      {/* Seção Eventos */}
-      <div className="mt-20">
-        <h1 className="px-8 text-left text-3xl font-bold">Eventos</h1>
-        <Carrossel linhas={1}>
-          {eventosDisponiveis.map(evento => (
-            <CardEvento key={evento.id} {...evento} />
-          ))}
-        </Carrossel>
       </div>
 
       {/* Seção Experiências */}
@@ -411,7 +624,7 @@ export default function ProfessorPortfolio() {
                     variant="ghost" 
                     size="sm"
                     className="text-red-500 hover:text-red-700"
-                    onClick={() => setExperiencias(experiencias.filter(e => e.id !== exp.id))}
+                    onClick={() => handleDeleteExperiencia(exp.id)}
                   >
                     Remover
                   </Button>
@@ -502,7 +715,7 @@ export default function ProfessorPortfolio() {
                     variant="ghost" 
                     size="sm"
                     className="text-red-500 hover:text-red-700"
-                    onClick={() => setFormacoes(formacoes.filter(f => f.id !== form.id))}
+                    onClick={() => handleDeleteFormacao(form.id)}
                   >
                     Remover
                   </Button>
