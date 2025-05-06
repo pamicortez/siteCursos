@@ -13,6 +13,26 @@ import {
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
+const categoria: Record<string, string> = {
+  Agricultura: "Agricultura",
+  Silvicultura: "Silvicultura",
+  PescaEVeterinaria: "Pesca e Veterinária",
+  ArtesEHumanidades: "Artes e Humanidades",
+  CienciasSociais: "Ciências Sociais",
+  ComunicacaoEInformacao: "Comunicação e Informação",
+  CienciasNaturais: "Ciências Naturais",
+  MatematicaEEstatistica: "Matemática e Estatística",
+  ComputacaoETecnologiaDaInformacao: "Computação e Tecnologia da Informação",
+  Engenharia: "Engenharia",
+  ProducaoEConstrucao: "Produção e Construção",
+  SaudeEBemEstar: "Saúde e Bem-Estar",
+  Educacao: "Educação",
+  NegociosAdministracaoEDireito: "Negócios, Administração e Direito",
+  Servicos: "Serviços",
+  ProgramasBasicos: "Programas Básicos"
+};
+
+
 
 export default function DetalhesCurso() {
 
@@ -54,7 +74,7 @@ export default function DetalhesCurso() {
                 <h1 className="text-5xl font-bold pt-12 pb-10 px-10 text-left">{curso.titulo} </h1>
                 <p className="px-10 text-justify" >{curso.descricao}</p>
                 <div className="flex">
-                    <Badge className="ml-10 mr-2 my-5">{curso.categoria}</Badge>
+                    <Badge className="ml-10 mr-2 my-5">{categoria[curso.categoria]}</Badge>
                 </div>
             </div>
 
