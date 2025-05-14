@@ -1,8 +1,9 @@
 "use client";
 
 import {useSession} from "next-auth/react"
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
+import { getSession } from "next-auth/react";
 
 interface LoginProps {
   logo: string;
@@ -13,8 +14,8 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [erro, setErro] = useState("");
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
   const { data: session, status } = useSession();
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,26 +25,34 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
       password,
     });
 
-    if (result?.error) {
-      setErro("Usuário ou senha inválidos");
-      console.log(result.error);
-    } else {
+    if (result?.ok){
       const nome = session?.user.name;
       const id = session?.user.id;
-    
-      alert(`Login efetuado com sucesso!\nNome: ${nome}\nID: ${id}`);
+      setJustLoggedIn(true);
       setErro("");
-      if (result?.url) {
+      if (result.url) {
+        
         window.location.href = "/home";
         //window.location.href = result.url; // Redireciona para a URL fornecida
       } else {
         // Caso não tenha a URL no resultado, redireciona diretamente
         window.location.href = "/home";
       }
+
+    } else{
+      setErro("Usuário ou senha inválidos");
+      console.log(result?.error);
     }
 
   };
 
+  useEffect(() => {
+    if (justLoggedIn && session?.user?.id && session?.user?.name) {
+      alert(`Login realizado com sucesso!\nNome: ${session.user.name}\nID: ${session.user.id}`);
+      setJustLoggedIn(false); // impede múltiplos alerts
+    }
+  }, [justLoggedIn, session]);
+  
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-6 mb-6 md:grid-cols-2">
