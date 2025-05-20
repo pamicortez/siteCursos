@@ -1,5 +1,7 @@
 
 "use client"
+import 'dotenv/config'
+
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
@@ -368,12 +370,16 @@ export default function Evento() {
     }
   };
 
+
+
   const handleConfirmCancel = () => {
     setEventoData({
       title: '',
       description: '',
       startDate: '',
       endDate: '',
+      startTime: '',
+      endTime: '',
       category: '',
       image: '',
     });
@@ -488,6 +494,32 @@ export default function Evento() {
               />
             </div>
           </div>
+
+<div className="grid gap-8 mb-8 md:grid-cols-2">
+  <div className="grid items-center gap-1.5">
+    <Label htmlFor="startTime">Hora de início do evento*</Label>
+    <Input
+      type="time"
+      id="startTime"
+      name="startTime"
+      value={eventoData.startTime}
+      onChange={handleChange}
+      required
+    />
+  </div>
+
+  <div className="grid items-center gap-1.5">
+    <Label htmlFor="endTime">Hora de término do evento</Label>
+    <Input
+      type="time"
+      id="endTime"
+      name="endTime"
+      value={eventoData.endTime}
+      onChange={handleChange}
+    />
+  </div>
+</div>
+
 
           <div className="grid gap-8 mb-8 md:grid-cols-2">
             <div className="grid items-center gap-1.5">
