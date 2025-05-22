@@ -5,6 +5,7 @@ import { Menu, X, User, Search, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Logo from "./Logo";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { signOut } from "next-auth/react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -184,7 +185,7 @@ const Navbar = () => {
                   </div>
                   <a href="/profile" onClick={(e) => handleNavigation('/profile', e)} className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">Your Profile</a>
                   <a href="/settings" onClick={(e) => handleNavigation('/settings', e)} className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">Settings</a>
-                  <button className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">Sign out</button>
+                  <a onClick={() => signOut({ callbackUrl: "/login" })} className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"> Sign out </a>
                 </div>
               </div>
             </div>)}
