@@ -43,7 +43,7 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [showImageCropper, setShowImageCropper] = useState(false)
   const [createdUserId, setCreatedUserId] = useState<string | null>(null)
-  //const [userCreated, setUserCreated] = useState(false)
+  const [userCreated, setUserCreated] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const [formData, setFormData] = useState<SignUpFormData>({
@@ -159,9 +159,15 @@ export default function SignUpPage() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, 3))
+      // Se estivermos na etapa 3, criar a conta antes de ir para a próxima etapa
+      if (currentStep === 3) {
+        await handleCreateAccount()
+        // handleCreateAccount já gerencia o setCurrentStep(4) após sucesso
+      } else {
+        setCurrentStep((prev) => Math.min(prev + 1, 4))
+      }
     }
   }
 
@@ -169,11 +175,7 @@ export default function SignUpPage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!validateStep(currentStep)) return
-
+  const handleCreateAccount = async () => {
     setLoading(true)
     try {
       // Filtrar arrays vazios e preparar dados para o backend
@@ -190,15 +192,14 @@ export default function SignUpPage() {
         publicacoes: formData.publicacoes.filter((pub) => pub.descricao.trim() !== "" || pub.link.trim() !== ""),
         carreira: formData.carreira.filter((exp) => exp.nome.trim() !== ""),
       }
-
+  
       const response = await axios.post("/api/auth/signup", filteredData)
-
+  
       if (response.status === 201) {
-        alert("Conta criada com sucesso! Você pode fazer login agora.")
-        //router.push("/login")
+        alert("Conta criada com sucesso!")
         setCreatedUserId(response.data.user.id.toString())
-        //setUserCreated(true)
-        setLoading(false)
+        setUserCreated(true)
+        setCurrentStep(4) // Ir para a etapa da foto após sucesso
       }
     } catch (error: any) {
       console.error("Erro ao criar conta:", error)
@@ -206,6 +207,15 @@ export default function SignUpPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    // Esta função pode ser simplificada ou removida se não for mais necessária
+  }
+
+  const handleFinish = () => {
+    router.push("/login")
   }
 
   if (status === "loading") {
@@ -216,7 +226,7 @@ export default function SignUpPage() {
     )
   }
 
-  const stepTitles = ["Informações Básicas", "Formação Acadêmica", "Experiência e Links"]
+  const stepTitles = ["Informações Básicas", "Formação Acadêmica", "Experiência e Links", "Foto do Perfil"]
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -230,7 +240,7 @@ export default function SignUpPage() {
 
           {/* Progress Bar */}
           <div className="flex items-center justify-center mt-6">
-            {[1, 2, 3].map((step) => (
+            {[1, 2, 3, 4].map((step) => (
               <React.Fragment key={step}>
                 <div
                   className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
@@ -239,7 +249,7 @@ export default function SignUpPage() {
                 >
                   {step}
                 </div>
-                {step < 3 && <div className={`w-16 h-1 mx-2 ${step < currentStep ? "bg-blue-600" : "bg-gray-200"}`} />}
+                {step < 4 && <div className={`w-16 h-1 mx-2 ${step < currentStep ? "bg-blue-600" : "bg-gray-200"}`} />}
               </React.Fragment>
             ))}
           </div>
@@ -254,8 +264,6 @@ export default function SignUpPage() {
           {currentStep === 1 && (
             <div className="space-y-4">
               <h3 className="text-xl font-semibold mb-4 text-gray-800">Informações Básicas</h3>
-
-
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -444,32 +452,8 @@ export default function SignUpPage() {
           {/* Step 3: Experience and Links */}
           {currentStep === 3 && (
             <div className="space-y-6">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800">Foto do Perfil</h3>
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">Experiência e Links (Opcional)</h3>
 
-                            {/* Foto de Perfil */}
-                            <div className="flex justify-center mb-6">
-                <div className="relative group">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border-2 border-dashed border-gray-300">
-                    {formData.fotoPerfil ? (
-                      <img
-                        src={formData.fotoPerfil || "/placeholder.svg"}
-                        alt="Foto de perfil"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="text-gray-400 text-4xl">👤</div>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowImageCropper(true)}
-                    className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Camera className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-              <h2 className="text-xl font-semibold mb-4 text-gray-800">Experiência e Links (Opcional)</h2>
               {/* Links */}
               <div>
                 <div className="flex items-center justify-between mb-3">
@@ -631,10 +615,54 @@ export default function SignUpPage() {
             </div>
           )}
 
+          {/* Step 4: Profile Photo */}
+          {currentStep === 4 && (
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">Foto do Perfil</h3>
+
+              {/* Foto de Perfil */}
+              <div className="flex justify-center mb-6">
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center border-2 border-dashed border-gray-300">
+                    {formData.fotoPerfil ? (
+                      <img
+                        src={formData.fotoPerfil || "/placeholder.svg"}
+                        alt="Foto de perfil"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-12 h-12 text-gray-400" />
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowImageCropper(true)}
+                    className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Camera className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="text-center">
+                <p className="text-gray-600 mb-4">
+                  Adicione uma foto de perfil para completar seu cadastro. Esta etapa é opcional.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowImageCropper(true)}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                >
+                  Escolher Foto
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Navigation Buttons */}
           <div className="flex justify-between pt-6 border-t border-gray-200">
             <div>
-              {currentStep > 1 && (
+              {currentStep > 1 && currentStep < 4 && (
                 <button
                   type="button"
                   onClick={handlePrevious}
@@ -646,21 +674,31 @@ export default function SignUpPage() {
             </div>
 
             <div className="space-x-3">
-              {currentStep < 3 ? (
+              {currentStep === 4 ? (
+                <button
+                  type="button"
+                  onClick={handleFinish}
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                >
+                  Sair
+                </button>
+              ) : currentStep === 3 ? (
+                <button
+                  type="submit"
+                  disabled={loading}
+                  onClick={handleNext}
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  
+                  {loading ? "Criando..." : "Criar Conta"}
+                </button>
+              ) : (
                 <button
                   type="button"
                   onClick={handleNext}
                   className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
                 >
                   Próximo
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? "Criando conta..." : "Criar Conta"}
                 </button>
               )}
             </div>
@@ -679,7 +717,7 @@ export default function SignUpPage() {
       </div>
 
       {/* Modal do Image Cropper */}
-      {showImageCropper && createdUserId &&(
+      {showImageCropper && userCreated && createdUserId && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
@@ -698,5 +736,5 @@ export default function SignUpPage() {
         </div>
       )}
     </div>
-  );
+  )
 }
