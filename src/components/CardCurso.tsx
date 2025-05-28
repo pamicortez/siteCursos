@@ -3,21 +3,19 @@ import { cn } from "@/lib/utils";
 
 interface CardCursoProps {
   imagem: string;
-  nome: string;
+  titulo: string;  // Mudança: nome -> titulo
   descricao: string;
-  cargahoraria: string;
+  cargaHoraria: number;  // Mudança: cargahoraria -> cargaHoraria (number)
 }
 
-const CardCurso: React.FC<CardCursoProps> = ({ imagem, nome, descricao, cargahoraria }) => {
+const CardCurso: React.FC<CardCursoProps> = ({ imagem, titulo, descricao, cargaHoraria }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden" style={{ width: "17rem", margin: "0 auto" }}>
-      <img src={imagem} className="w-full h-[150px] object-cover" alt={nome} />
+      <img src={imagem} className="w-full h-[150px] object-cover" alt={titulo} />
       <div className="p-4">
-        <h5 className="text-xl font-semibold mb-2">{nome}</h5>
+        <h5 className="text-xl font-semibold mb-2">{titulo}</h5>
         <p className="text-base text-gray-700 mb-2">{descricao}</p>
-        <p className="text-sm text-gray-500 mb-3">{cargahoraria}</p>
-        
-
+        <p className="text-sm text-gray-500 mb-3">{cargaHoraria}h</p>
       </div>
     </div>
   );

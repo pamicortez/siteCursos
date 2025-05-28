@@ -12,6 +12,9 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
   const [carrosselWidth, setCarrosselWidth] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Verifica se a quantidade de filhos é menor que 4 e força linhas = 1
+  const actualLinhas = children.length < 4 ? 1 : linhas;
+
   // Usa useLayoutEffect para medir a largura inicial do carrossel
   useLayoutEffect(() => {
     if (carrosselRef.current) {
@@ -37,7 +40,7 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
 
   // Se for mobile, exibe 1 item por slide; caso contrário, exibe 3
   const actualColumns = isMobile ? 1 : 3;
-  const itemsPerSlide = linhas * actualColumns;
+  const itemsPerSlide = actualLinhas * actualColumns;
   const slides: React.ReactNode[][] = [];
   
   for (let i = 0; i < children.length; i += itemsPerSlide) {
@@ -47,7 +50,7 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
   const totalSlides = slides.length;
   // Se mobile, cada card terá a largura total do carrossel; senão, divide pela quantidade de colunas
   const cardWidth = isMobile ? carrosselWidth : carrosselWidth / actualColumns;
-  const cardHeight = isMobile ? 100 : 100 / linhas;
+  const cardHeight = isMobile ? 100 : 100 / actualLinhas;
 
   const nextSlide = () => {
     setIndex((prevIndex) => (prevIndex + 1) % totalSlides);
