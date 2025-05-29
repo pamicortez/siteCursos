@@ -62,8 +62,13 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
 
   return (
     <div className="carrossel-container" ref={carrosselRef} style={{ width: "100%" }}>
-      <button className="carrossel-btn left" onClick={prevSlide}>
-        {"<"}
+      {/* Botão Anterior */}
+      <button 
+        onClick={prevSlide}
+        className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center font-bold text-gray-700 hover:bg-gray-50 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 z-10"
+        style={{ left: '10px' }}
+      >
+        &lt;
       </button>
 
       <div className="carrossel">
@@ -94,8 +99,13 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
         </div>
       </div>
 
-      <button className="carrossel-btn right" onClick={nextSlide}>
-        {">"}
+      {/* Botão Próximo */}
+      <button 
+        onClick={nextSlide}
+        className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center font-bold text-gray-700 hover:bg-gray-50 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 z-10"
+        style={{ right: '10px' }}
+      >
+        &gt;
       </button>
     </div>
   );

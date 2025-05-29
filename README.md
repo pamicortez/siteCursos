@@ -80,6 +80,20 @@ Siga os passos abaixo para rodar o projeto em sua máquina local.
    git clone https://github.com/pamicortez/siteCursos.git
    cd siteCursos
    ```
+
+   Nessa pasta crie um arquivo ".env" manualmente com o seguinte conteúdo (substitua "senha" pela sua senha do Postgres):
+   ```bash
+   DATABASE_URL="postgresql://postgres:senha@localhost:5432/siteCursos"
+   ```
+   Ou faça isso por linha de comando usando (Linux, Mac e Git Bash (Windows)):
+    ```bash
+   echo 'DATABASE_URL="postgresql://postgres:senha@localhost:5432/siteCursos"' > .env
+   ```
+   Ou no Windows (Prompt de Comando — CMD):
+    ```bash
+   echo DATABASE_URL="postgresql://postgres:senha@localhost:5432/siteCursos" > .env
+   ```
+
 2. **Instale as dependências**  
     Execute o seguinte comando:
 
