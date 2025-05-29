@@ -94,7 +94,7 @@ export default function DetalhesCurso() {
              {curso.linkApostila && (
                 <a
                   href={curso.linkApostila}
-                  download="apostila.pdf"
+                  download={`apostila_${curso.titulo}.pdf`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
@@ -127,7 +127,7 @@ export default function DetalhesCurso() {
                 )}
 
                 {aula.linkPdf && (
-                  <a href={aula.linkPdf} target="_blank" rel="noopener noreferrer" download="slide.pdf">
+                  <a href={aula.linkPdf} target="_blank" rel="noopener noreferrer" download={`${aula.titulo}.pdf`}>
                     <Images />
                   </a>
                 )}

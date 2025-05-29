@@ -299,15 +299,18 @@ export default function Curso() {
 
             <div>
                 <label className="block mb-2 text-sm font-medium text-gray-900">Categoria</label>
-                <CreatableSelect name="categoria"
-                isClearable
-                styles={customStyles}
-                options={options}
-                value={selectedOption}
-                onChange={setSelectedOption}
-                onCreateOption={handleCreate}
-                placeholder="Selecione ou crie..."
-                required />
+                <Select name="categoria">
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Escolha..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="Opção 1">Opção 1</SelectItem>
+                      <SelectItem value="Opção 2">Opção 2</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+
             </div>
 
           </div>
@@ -328,7 +331,7 @@ export default function Curso() {
                 <Label htmlFor="avaliação">Método de Avaliação</Label>
                 <Select name="avaliacao">
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="" />
+                    <SelectValue placeholder="Escolha..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -388,5 +391,3 @@ export default function Curso() {
     
   );
 }
-// add link inscrição como um campo, pegar o idprojeto e idusuario (se der), corrigir o bug nos campos de aula
-// quando eu clico p add aula depois de ja ter preenchido tudo, tá dando post pra api
