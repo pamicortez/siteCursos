@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import CardCursoWithButton from "@/components/CardCursoWithButton";
 import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";
-import { notFound } from 'next/navigation';
+import { useSession } from "next-auth/react";
 
 interface Projeto {
   id: number;
@@ -38,11 +38,20 @@ interface Projeto {
 
 const ProjetoHome: React.FC = () => {
   const router = useRouter(); 
+  const { data: session, status } = useSession();
   const [isOwner, setIsOwner] = useState(false);
   const [projeto, setProjeto] = useState<Projeto | null>(null);
   const { id } = useParams();
   const [refreshKey, setRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Verificar autenticação
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
+
 
   const handleCursoDeleted = () => {
     setRefreshKey(prev => prev + 1);
@@ -113,11 +122,10 @@ const ProjetoHome: React.FC = () => {
         }
         setProjeto(data);
   
-        const usuarioLogadoId = 1; // <--- Ajusta 
-        const coordenador = data.projetoUsuario.find(
-          (user) => user.idUsuario === usuarioLogadoId
+        const isProjectOwner = data.projetoUsuario.some(
+          user => Number(user.idUsuario) === Number(session?.user?.id)
         );
-        setIsOwner(!!coordenador);
+        setIsOwner(isProjectOwner);;
       } catch (error) {
         console.error("Erro ao buscar projeto:", error);
         setError("Erro interno, tente mais tarde"); 

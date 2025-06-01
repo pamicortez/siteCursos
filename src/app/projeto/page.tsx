@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { Trash2 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
+import { useSession } from "next-auth/react";
+import ImageCropper from "@/components/ui/ImageCropperBase64";
 
 type Collaborator = {
   name: string;
@@ -85,9 +87,8 @@ export default function Projeto() {
     image: '',
   });
 
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([
-    { name: '', role: '' },
-  ]);
+  const [collaborators, setCollaborators] = useState<Array<{ name: string; role: string }>>([]);
+
 
   const [cargosColaborador, setCargosColaborador] = useState<string[]>([]);
   const [cargo, setCargo] = useState<string>("Coordenador");
@@ -104,6 +105,12 @@ export default function Projeto() {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<ColaboradorFromAPI[]>([]);
   const [suggestions, setSuggestions] = useState<{index: number, names: string[]} | null>(null);
+  const { data: session, status } = useSession();
+  const [showImageCropper, setShowImageCropper] = useState(false);
+  const [tempImage, setTempImage] = useState<string | null>(null); // base64 da imagem original
+  
+
+
 
   useEffect(() => {
     const fetchCargosColaborador = async () => {
@@ -139,6 +146,11 @@ export default function Projeto() {
   }, []);
 
   useEffect(() => {
+    if (status === "loading") return; // espera até o status estar pronto
+
+    if (status !== "authenticated") {
+      router.push("/404"); // ou /home, /login, etc.
+    }
     if (projectId) {
       setIsEditMode(true);
       fetchProjectData(projectId);
@@ -151,6 +163,18 @@ export default function Projeto() {
       if (!response.ok) throw new Error('Projeto não encontrado');
 
       const data = await response.json();
+
+      
+      const isProjectOwner = data.projetoUsuario?.some
+      ((user: any) =>
+          Number(user.idUsuario) === Number(session?.user?.id) 
+      );
+      console.log(isProjectOwner, data)
+      // Redireciona se não for dono nem estiver logado
+      if (!isProjectOwner) {
+        router.push("/home");
+      }
+
       setProjectData({
         title: data.titulo,
         description: data.descricao,
@@ -163,6 +187,7 @@ export default function Projeto() {
       if (data.colaboradores) {
         setCollaborators(data.colaboradores);
       }
+
     } catch (error) {
       console.error("Erro ao carregar projeto:", error);
     }
@@ -196,20 +221,16 @@ export default function Projeto() {
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setProjectData(prevState => ({
-          ...prevState,
-          image: base64String 
-        }));
-      };
-      
-      reader.readAsDataURL(file);
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setTempImage(base64); // salva imagem original pra passar pro cropper
+      setShowImageCropper(true); // abre o modal
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleCollaboratorNameChange = (index: number, value: string) => {
@@ -255,6 +276,12 @@ export default function Projeto() {
   };
 
   const addCollaborator = useCallback(() => {
+    const last = collaborators[collaborators.length - 1];
+
+    if (last && (!last.name.trim() || !last.role.trim())) {
+      alert("Preencha o nome e o cargo do colaborador antes de adicionar outro.");
+    return;
+  }
     setCollaborators([...collaborators, { name: '', role: '' }]);
   }, [collaborators]);
 
@@ -274,6 +301,15 @@ export default function Projeto() {
     setSuggestions(null);
   };
 
+  function validateCollaborators() {
+    for (const collaborator of collaborators) {
+      if (!collaborator.name.trim() || !collaborator.role.trim()) {
+        alert("Todos os colaboradores devem ter nome e cargo preenchidos.");
+        return false;
+      }
+    }
+    return true;
+  }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -282,6 +318,10 @@ export default function Projeto() {
       ...colab,
       name: colab.name.trim().replace(/\s+/g, ' '), 
     }));
+    
+    if (!validateCollaborators()) {
+      return; // Interrompe se houver campos vazios
+    }
 
     const requestBody = {
       titulo: projectData.title,
@@ -295,7 +335,7 @@ export default function Projeto() {
         categoria: colaborador.role,
         nome: colaborador.name.trim() // Garante que não há espaços extras
       })),
-      ...(isEditMode ? {} : { usuarioId: 1 })
+      ...(isEditMode ? {} : { usuarioId:   Number(session?.user?.id) })
     };
     
     console.log(requestBody)
@@ -520,6 +560,10 @@ export default function Projeto() {
                 + Adicionar colaborador
               </Button>
             </div>
+            {collaborators.length === 0 && (
+              <p className="text-gray-500">Nenhum colaborador adicionado.</p>
+            )}
+
             {collaborators.map((collaborator, index) => (
               <div key={index} className="grid gap-6 md:grid-cols-2 items-end">
                 <div className="grid items-center gap-1.5 relative">
@@ -605,6 +649,35 @@ export default function Projeto() {
         confirmText="OK"
         variant={resultDialog.isError ? 'destructive' : 'default'}
       />
+
+        {/* Modal do Image Cropper */}
+            {showImageCropper && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                  <div className="p-6">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-semibold">Alterar Foto de Perfil</h3>
+                      <button
+                        onClick={() => setShowImageCropper(false)}
+                        className="text-gray-400 hover:text-gray-600 text-2xl"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <ImageCropper
+                        imageSrc={tempImage} // imagem original
+                        onUploadSuccess={(base64) => {
+                          setProjectData(prev => ({
+                            ...prev,
+                            image: base64, // salva imagem cortada
+                          }));
+                          setShowImageCropper(false);
+                        }}
+                      />
+                  </div>
+                </div>
+              </div>
+            )}
     </div>
   );
 }
