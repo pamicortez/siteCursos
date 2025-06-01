@@ -45,13 +45,6 @@ const ProjetoHome: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  // Verificar autenticação
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    }
-  }, [status, router]);
-
 
   const handleCursoDeleted = () => {
     setRefreshKey(prev => prev + 1);
@@ -112,7 +105,9 @@ const ProjetoHome: React.FC = () => {
           setIsOwner(true); // Como é só teste, assume que é dono
           return;
         }
-  
+
+        if (status === "loading") return;
+
         const res = await fetch(`http://localhost:3000/api/projeto?id=${id}`);
         if (!res.ok) throw new Error("Erro na requisição");
         const data: Projeto = await res.json();
@@ -123,9 +118,10 @@ const ProjetoHome: React.FC = () => {
         setProjeto(data);
   
         const isProjectOwner = data.projetoUsuario.some(
-          user => Number(user.idUsuario) === Number(session?.user?.id)
+          user => Number(user.idUsuario) === Number(session?.user?.id)          
         );
-        setIsOwner(isProjectOwner);;
+        console.log(isProjectOwner)
+        setIsOwner(isProjectOwner);
       } catch (error) {
         console.error("Erro ao buscar projeto:", error);
         setError("Erro interno, tente mais tarde"); 
@@ -133,7 +129,7 @@ const ProjetoHome: React.FC = () => {
     };
   
     fetchProjeto();
-  }, [id, refreshKey]);
+  },[id, refreshKey, status, session]);
   
 
   const handleAdicionarCurso = () => {

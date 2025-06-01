@@ -34,7 +34,9 @@ const Navbar = () => {
   
   const [hasUser, setHasUser] = useState(false);
   const [currentPath, setCurrentPath] = useState('/');
-  const categories = ["Informática", "Português", "Ciências"];
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  
   
   // Carregar dados do usuário logado
   useEffect(() => {
@@ -104,6 +106,26 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [userMenuOpen, categoryMenuOpen]);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/enums/categoriaCurso");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar categorias de projeto");
+        }
+        const data = await response.json();
+        setCategories(data); 
+      } catch (error) {
+        console.error("Erro:", error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+  
+    fetchCategories();
+  }, []);
+  
+
   const handleCategoryMouseEnter = () => {
     if (categoryTimeout) {
       clearTimeout(categoryTimeout);
@@ -144,15 +166,7 @@ const Navbar = () => {
 
   return (
     <>
-      {!hasUser && status !== "loading" && (
-        <div className="bg-black text-white py-2 text-center text-sm w-full fixed top-0 z-50">
-          Deseja cadastrar seus cursos? Entre em contato através de{" "}
-          <a href="mailto:email01@gmail.com" className="underline hover:text-gray-200">
-            email01@gmail.com
-          </a>
-        </div>
-      )}
-      
+     
       <nav
         className={cn(
           "fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md",
@@ -182,19 +196,19 @@ const Navbar = () => {
 
                 {/* Categories Dropdown Menu */}
                 <div 
-                  className={cn(
-                    "absolute left-0 mt-2 w-48 top-full rounded-md bg-gray-800 py-2 shadow-lg ring-1 ring-gray-700 focus:outline-none transition-all duration-200 ease-in-out",
-                    categoryMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-                  )}
+                className={cn(
+                  "absolute left-0 mt-2 w-max top-full rounded-md bg-gray-800 py-2 shadow-lg ring-1 ring-gray-700 focus:outline-none transition-all duration-200 ease-in-out",
+                  categoryMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+                )}
                 >
                   {categories.map((category, index) => (
                     <a 
-                      key={index}
-                      href={`/category/${category.toLowerCase()}`}
-                      className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
-                    >
-                      {category}
-                    </a>
+                    key={index}
+                    href={`/category/${category.toLowerCase()}`}
+                    className="block whitespace-nowrap px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                  >
+                    {category}
+                  </a>
                   ))}
                 </div>
               </div>
@@ -247,13 +261,20 @@ const Navbar = () => {
                     <div className="font-medium">{usuario?.Nome || "Carregando..."}</div>
                     <div className="text-xs text-gray-400">{usuario?.email || "..."}</div>
                   </div>
-                  <a href="/profile" onClick={(e) => handleNavigation('/profile', e)} className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">Your Profile</a>
-                  <a href="/settings" onClick={(e) => handleNavigation('/settings', e)} className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">Settings</a>
+                  <a href="/profile" onClick={(e) => handleNavigation('/profile', e)} className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700">Perfil</a>
+                  {usuario?.tipo === 'Super' && (
+                      <a
+                        href="/userManagement"
+                        onClick={(e) => handleNavigation('/pages/userManagement', e)}
+                        className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                      >
+                        Gerenciar Usuários
+                      </a>)}
                   <button 
                     onClick={handleSignOut}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
                   >
-                    Sign out
+                    Sair
                   </button>
                 </div>
               </div>
