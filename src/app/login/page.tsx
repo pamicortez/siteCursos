@@ -10,7 +10,6 @@ export default function Home() {
 
   return (
     <div>
-    <Navbar />
     <Login logo={"/Brasao_da_UEFS.png"} />
   </div>
   );

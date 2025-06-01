@@ -36,7 +36,7 @@ const Navbar = () => {
   const [currentPath, setCurrentPath] = useState('/');
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  
+  const [navClass, setNavClass] = useState('fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md top-0');
   
   // Carregar dados do usuário logado
   useEffect(() => {
@@ -61,6 +61,10 @@ const Navbar = () => {
 
     fetchUsuario();
   }, [session, status]);
+
+    useEffect(() => {
+    setNavClass(prev => prev.replace('top-0', 'top-6'));
+  }, []);
   
   useEffect(() => {
     setCurrentPath(window.location.pathname);
@@ -168,13 +172,12 @@ const Navbar = () => {
     <>
      
       <nav
-        className={cn(
-          "fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md",
-          hasUser ? "top-0" : "top-6",
-          scrolled
-            ? "backdrop-blur-xl bg-gray-900/80 border-b border-gray-700 py-4"
-            : "bg-gray-900 py-6"
-        )}
+      className={cn(
+        "fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md top-0", // <-- aqui o top-0 fixo
+        scrolled
+          ? "backdrop-blur-xl bg-gray-900/80 border-b border-gray-700 py-4"
+          : "bg-gray-900 py-6"
+      )}
       >
         <div className="container mx-auto px-6 md:px-8">
           <div className="flex items-center">
