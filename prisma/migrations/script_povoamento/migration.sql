@@ -14,7 +14,7 @@ VALUES
 INSERT INTO "Curso" (titulo, imagem, descricao, categoria, "cargaHoraria", "linkInscricao", vagas, bibliografia, metodologia, "metodoAvaliacao", "idProjeto", "idUsuario", "createdAt", "updatedAt")
 VALUES
 ('Curso de IA', 'https://example.com/curso1.jpg', 'Curso sobre inteligência artificial', 'ComputacaoETecnologiaDaInformacao', 40, 'https://inscricao.com/curso1', 50, 'Bibliografia AI', 'Metodologia prática', 'Provas e projetos', 1, 1, NOW(), NOW()),
-('Curso de Biotecnologia', 'https://example.com/curso2.jpg', 'Curso sobre biotecnologia', 'Engenharia', 35, 'https://inscricao.com/curso2', 30, 'Bibliografia Bio', 'Aulas expositivas', 'Trabalhos e provas', 2, 2, NOW(), NOW());
+('Curso de Biotecnologia', 'https://example.com/curso2.jpg', 'Curso sobre biotecnologia', 'CienciasNaturais', 35, 'https://inscricao.com/curso2', 30, 'Bibliografia Bio', 'Aulas expositivas', 'Trabalhos e provas', 2, 2, NOW(), NOW());
 
 -- Inserindo aulas
 INSERT INTO "Aula" (titulo, "linkPdf", "linkVideo", "idCurso", "createdAt", "updatedAt")
