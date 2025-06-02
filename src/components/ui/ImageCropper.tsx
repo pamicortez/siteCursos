@@ -6,12 +6,24 @@ import { getCroppedImg } from "@/lib/cropImage";
 import axios from "axios";
 import { Slider } from "@/components/ui/slider";
 
+// Enum para os tipos de entidade
+export enum ImageCropperType {
+  Usuario = "Usuario",
+  Projeto = "Projeto",
+  Curso = "Curso"
+}
+
 interface ImageCropperProps {
   userId: string;
+  type?: ImageCropperType;
   onUploadSuccess: (base64: string) => void;
 }
 
-export default function ImageCropper({ userId, onUploadSuccess }: ImageCropperProps) {
+export default function ImageCropper({ 
+  userId, 
+  type = ImageCropperType.Usuario, 
+  onUploadSuccess 
+}: ImageCropperProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -21,6 +33,36 @@ export default function ImageCropper({ userId, onUploadSuccess }: ImageCropperPr
   const ASPECT_RATIO = 630 / 335;
   const MIN_WIDTH = 630;
   const MIN_HEIGHT = 335;
+
+  // Configurações baseadas no tipo
+  const getApiConfig = () => {
+    switch (type) {
+      case ImageCropperType.Usuario:
+        return {
+          endpoint: `/api/usuario?id=${userId}`,
+          imageField: 'fotoPerfil',
+          entityName: 'usuário'
+        };
+      case ImageCropperType.Projeto:
+        return {
+          endpoint: `/api/projeto?id=${userId}`,
+          imageField: 'imagem',
+          entityName: 'projeto'
+        };
+      case ImageCropperType.Curso:
+        return {
+          endpoint: `/api/curso?id=${userId}`,
+          imageField: 'imagem',
+          entityName: 'curso'
+        };
+      default:
+        return {
+          endpoint: `/api/usuario?id=${userId}`,
+          imageField: 'fotoPerfil',
+          entityName: 'usuário'
+        };
+    }
+  };
 
   const onCropComplete = (_: any, croppedPixels: any) => {
     setCroppedAreaPixels(croppedPixels);
@@ -58,6 +100,7 @@ export default function ImageCropper({ userId, onUploadSuccess }: ImageCropperPr
     }
   
     setIsLoading(true);
+    const apiConfig = getApiConfig();
     
     try {
       console.log("Iniciando crop da imagem...");
@@ -73,10 +116,14 @@ export default function ImageCropper({ userId, onUploadSuccess }: ImageCropperPr
         return;
       }
 
-      console.log("Enviando para API...");
-      const response = await axios.patch(`/api/usuario?id=${userId}`, {
-        fotoPerfil: croppedImageBase64, // Mudança aqui: usar fotoPerfil direto
-      }, {
+      console.log(`Enviando para API do ${apiConfig.entityName}...`);
+      
+      // Preparar o corpo da requisição baseado no campo de imagem
+      const requestBody = {
+        [apiConfig.imageField]: croppedImageBase64
+      };
+
+      const response = await axios.patch(apiConfig.endpoint, requestBody, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -84,11 +131,11 @@ export default function ImageCropper({ userId, onUploadSuccess }: ImageCropperPr
       });
   
       if (response.status === 200) {
-        alert("Foto de perfil atualizada!");
+        alert(`Imagem do ${apiConfig.entityName} atualizada!`);
         onUploadSuccess(croppedImageBase64);
         handleCancel(); // Limpar o formulário após sucesso
       } else {
-        alert("Erro ao atualizar a foto de perfil.");
+        alert(`Erro ao atualizar a imagem do ${apiConfig.entityName}.`);
       }
     } catch (error: any) {
       console.error("Erro completo:", error);
@@ -100,7 +147,7 @@ export default function ImageCropper({ userId, onUploadSuccess }: ImageCropperPr
       } else if (error.response?.status === 400) {
         alert(`Erro de validação: ${error.response?.data?.error || "Dados inválidos"}`);
       } else if (error.response?.status === 404) {
-        alert("Usuário não encontrado.");
+        alert(`${apiConfig.entityName.charAt(0).toUpperCase() + apiConfig.entityName.slice(1)} não encontrado(a).`);
       } else if (error.code === 'ECONNABORTED') {
         alert("Timeout: A operação demorou muito para ser concluída. Tente novamente.");
       } else {
@@ -118,8 +165,14 @@ export default function ImageCropper({ userId, onUploadSuccess }: ImageCropperPr
     setCrop({ x: 0, y: 0 });
   };
 
+  const apiConfig = getApiConfig();
+
   return (
     <div className="space-y-4">
+      <div className="text-sm text-gray-600 mb-2">
+        Atualizando imagem do {apiConfig.entityName}
+      </div>
+      
       <input 
         type="file" 
         accept="image/jpeg,image/jpg,image/png,image/webp" 
