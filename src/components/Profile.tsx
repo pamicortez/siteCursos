@@ -44,6 +44,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [showImageCropper, setShowImageCropper] = useState(false);
+  const [isModalClosing, setIsModalClosing] = useState(false);
   const [formData, setFormData] = useState({
     Nome: "",
     email: "",
@@ -110,7 +111,15 @@ export default function ProfilePage() {
 
   const handleImageUploadSuccess = (newImageBase64: string) => {
     setUsuario(prev => prev ? { ...prev, fotoPerfil: newImageBase64 } : null);
-    setShowImageCropper(false);
+    handleCloseModal();
+  };
+
+  const handleCloseModal = () => {
+    setIsModalClosing(true);
+    setTimeout(() => {
+      setShowImageCropper(false);
+      setIsModalClosing(false);
+    }, 700); // Duração da animação de fade out
   };
 
   const formatDate = (dateString: string) => {
@@ -374,16 +383,34 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Modal do Image Cropper */}
+      {/* Modal do Image Cropper com Animações */}
       {showImageCropper && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div 
+          className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-700 ease-in-out ${
+            isModalClosing 
+              ? 'bg-slate-600/0 backdrop-blur-none opacity-0' 
+              : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
+          }`}
+          style={{
+            backdropFilter: isModalClosing ? 'blur(0px)' : 'blur(8px)',
+            background: isModalClosing 
+              ? 'rgba(71, 85, 105, 0)' 
+              : 'rgba(71, 85, 105, 0.4)'
+          }}
+        >
+          <div 
+            className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-700 ease-in-out ${
+              isModalClosing 
+                ? 'scale-95 opacity-0 translate-y-4' 
+                : 'scale-100 opacity-100 translate-y-0'
+            }`}
+          >
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">Alterar Foto de Perfil</h3>
                 <button
-                  onClick={() => setShowImageCropper(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                  onClick={handleCloseModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl transition-colors duration-200"
                 >
                   ×
                 </button>

@@ -113,6 +113,13 @@ Siga os passos abaixo para rodar o projeto em sua máquina local.
     npx prisma generate
     ```
 
+    Caso queira resetar os dados de testes anteriores no seu banco de dados, caso contrário, pule essa etapa.
+    (**CUIDADO: isso irá apagar todos os dados do seu banco de dados local**):
+
+    ```sh
+    npx prisma migrate reset
+    ```
+
     Para visualizar o banco de dados com Prisma Studio:
 
     ```sh

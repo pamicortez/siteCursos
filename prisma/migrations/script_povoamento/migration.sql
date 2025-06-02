@@ -1,8 +1,8 @@
 -- Inserindo usuários
 INSERT INTO "Usuario" (email, "fotoPerfil", senha, "Nome", "Titulacao", "instituicaoEnsino", "formacaoAcademica", "resumoPessoal", "createdAt", "updatedAt")
 VALUES
-('jose@email.com', '/prof1.jpg', 'senha123', 'José Machado', 'Doutor', 'Universidade X', 'Engenharia de Software', 'Pesquisador na área de IA', NOW(), NOW()),
-('julia@email.com', '/prof2.jpg', 'senha123', 'Júlia Souza', 'Mestre', 'Universidade Y', 'Ciência da Computação', 'Especialista em segurança digital', NOW(), NOW());
+('jose@email.com', '/prof1.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'José Machado', 'Doutor', 'Universidade X', 'Engenharia de Software', 'Pesquisador na área de IA', NOW(), NOW()),
+('julia@email.com', '/prof2.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Júlia Souza', 'Mestre', 'Universidade Y', 'Ciência da Computação', 'Especialista em segurança digital', NOW(), NOW());
 
 -- Inserindo projetos
 INSERT INTO "Projeto" (titulo, imagem, descricao, categoria, "dataInicio", "dataFim", "createdAt", "updatedAt")
@@ -13,8 +13,8 @@ VALUES
 -- Inserindo cursos
 INSERT INTO "Curso" (titulo, imagem, descricao, categoria, "cargaHoraria", "linkInscricao", vagas, bibliografia, metodologia, "metodoAvaliacao", "idProjeto", "idUsuario", "createdAt", "updatedAt")
 VALUES
-('Curso de IA', 'https://example.com/curso1.jpg', 'Curso sobre inteligência artificial', 'ComputacaoETecnologiaDaInformacao', 40, 'https://inscricao.com/curso1', 50, 'Bibliografia AI', 'Metodologia prática', 'Provas e projetos', 1, 1, NOW(), NOW()),
-('Curso de Biotecnologia', 'https://example.com/curso2.jpg', 'Curso sobre biotecnologia', 'CienciasNaturais', 35, 'https://inscricao.com/curso2', 30, 'Bibliografia Bio', 'Aulas expositivas', 'Trabalhos e provas', 2, 2, NOW(), NOW());
+('Curso de IA', '/proj1.jpg', 'Curso sobre inteligência artificial', 'ComputacaoETecnologiaDaInformacao', 40, 'https://inscricao.com/curso1', 50, 'Bibliografia AI', 'Metodologia prática', 'Provas e projetos', 1, 1, NOW(), NOW()),
+('Curso de Biotecnologia', '/proj3.jpg', 'Curso sobre biotecnologia', 'CienciasNaturais', 35, 'https://inscricao.com/curso2', 30, 'Bibliografia Bio', 'Aulas expositivas', 'Trabalhos e provas', 2, 2, NOW(), NOW());
 
 -- Inserindo aulas
 INSERT INTO "Aula" (titulo, "linkPdf", "linkVideo", "idCurso", "createdAt", "updatedAt")

@@ -45,6 +45,7 @@ export default function SignUpPage() {
   const [createdUserId, setCreatedUserId] = useState<string | null>(null)
   const [userCreated, setUserCreated] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isModalClosing, setIsModalClosing] = useState(false)
 
   const [formData, setFormData] = useState<SignUpFormData>({
     Nome: "",
@@ -135,7 +136,7 @@ export default function SignUpPage() {
       ...prev,
       fotoPerfil: newImageBase64,
     }))
-    setShowImageCropper(false)
+    handleCloseModal()
   }
 
   const validateStep = (step: number): boolean => {
@@ -192,9 +193,9 @@ export default function SignUpPage() {
         publicacoes: formData.publicacoes.filter((pub) => pub.descricao.trim() !== "" || pub.link.trim() !== ""),
         carreira: formData.carreira.filter((exp) => exp.nome.trim() !== ""),
       }
-  
+
       const response = await axios.post("/api/auth/signup", filteredData)
-  
+
       if (response.status === 201) {
         alert("Conta criada com sucesso!")
         setCreatedUserId(response.data.user.id.toString())
@@ -207,6 +208,14 @@ export default function SignUpPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleCloseModal = () => {
+    setIsModalClosing(true)
+    setTimeout(() => {
+      setShowImageCropper(false)
+      setIsModalClosing(false)
+    }, 700) // Duração da animação de fade out
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -243,9 +252,8 @@ export default function SignUpPage() {
             {[1, 2, 3, 4].map((step) => (
               <React.Fragment key={step}>
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-                    step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
-                  }`}
+                  className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
+                    }`}
                 >
                   {step}
                 </div>
@@ -276,9 +284,8 @@ export default function SignUpPage() {
                     name="Nome"
                     value={formData.Nome}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.Nome ? "border-red-500" : "border-gray-300"
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.Nome ? "border-red-500" : "border-gray-300"
+                      }`}
                     placeholder="Digite seu nome completo"
                   />
                   {errors.Nome && <p className="text-red-500 text-xs mt-1">{errors.Nome}</p>}
@@ -294,9 +301,8 @@ export default function SignUpPage() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.email ? "border-red-500" : "border-gray-300"
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? "border-red-500" : "border-gray-300"
+                      }`}
                     placeholder="seu@email.com"
                   />
                   {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -313,9 +319,8 @@ export default function SignUpPage() {
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${
-                        errors.password ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${errors.password ? "border-red-500" : "border-gray-300"
+                        }`}
                       placeholder="Mínimo 8 caracteres"
                     />
                     <button
@@ -344,9 +349,8 @@ export default function SignUpPage() {
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${
-                        errors.confirmPassword ? "border-red-500" : "border-gray-300"
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${errors.confirmPassword ? "border-red-500" : "border-gray-300"
+                        }`}
                       placeholder="Repita a senha"
                     />
                     <button
@@ -382,9 +386,8 @@ export default function SignUpPage() {
                     name="Titulacao"
                     value={formData.Titulacao}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.Titulacao ? "border-red-500" : "border-gray-300"
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.Titulacao ? "border-red-500" : "border-gray-300"
+                      }`}
                   >
                     <option value="Bacharel">Bacharel</option>
                     <option value="Licenciado">Licenciado</option>
@@ -405,9 +408,8 @@ export default function SignUpPage() {
                     name="instituicaoEnsino"
                     value={formData.instituicaoEnsino}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.instituicaoEnsino ? "border-red-500" : "border-gray-300"
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.instituicaoEnsino ? "border-red-500" : "border-gray-300"
+                      }`}
                     placeholder="Nome da sua instituição"
                   />
                   {errors.instituicaoEnsino && <p className="text-red-500 text-xs mt-1">{errors.instituicaoEnsino}</p>}
@@ -423,9 +425,8 @@ export default function SignUpPage() {
                     name="formacaoAcademica"
                     value={formData.formacaoAcademica}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.formacaoAcademica ? "border-red-500" : "border-gray-300"
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.formacaoAcademica ? "border-red-500" : "border-gray-300"
+                      }`}
                     placeholder="Ex: Ciência da Computação, Engenharia..."
                   />
                   {errors.formacaoAcademica && <p className="text-red-500 text-xs mt-1">{errors.formacaoAcademica}</p>}
@@ -634,19 +635,12 @@ export default function SignUpPage() {
                       <User className="w-12 h-12 text-gray-400" />
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowImageCropper(true)}
-                    className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Camera className="w-6 h-6" />
-                  </button>
                 </div>
               </div>
 
               <div className="text-center">
                 <p className="text-gray-600 mb-4">
-                  Adicione uma foto de perfil para completar seu cadastro. Esta etapa é opcional.
+                  Adicione uma foto de perfil para completar seu cadastro.
                 </p>
                 <button
                   type="button"
@@ -689,7 +683,7 @@ export default function SignUpPage() {
                   onClick={handleNext}
                   className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  
+
                   {loading ? "Criando..." : "Criar Conta"}
                 </button>
               ) : (
@@ -718,14 +712,30 @@ export default function SignUpPage() {
 
       {/* Modal do Image Cropper */}
       {showImageCropper && userCreated && createdUserId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-700 ease-in-out ${isModalClosing
+              ? 'bg-slate-600/0 backdrop-blur-none opacity-0'
+              : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
+            }`}
+          style={{
+            backdropFilter: isModalClosing ? 'blur(0px)' : 'blur(8px)',
+            background: isModalClosing
+              ? 'rgba(71, 85, 105, 0)'
+              : 'rgba(71, 85, 105, 0.4)'
+          }}
+        >
+          <div
+            className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-700 ease-in-out ${isModalClosing
+                ? 'scale-95 opacity-0 translate-y-4'
+                : 'scale-100 opacity-100 translate-y-0'
+              }`}
+          >
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-semibold">Escolher Foto de Perfil</h3>
                 <button
-                  onClick={() => setShowImageCropper(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                  onClick={handleCloseModal}
+                  className="text-gray-400 hover:text-gray-600 text-2xl transition-colors duration-200"
                 >
                   ×
                 </button>
