@@ -434,25 +434,25 @@ async function main() {
             titulo: 'Workshop de Python Avançado',
             descricao: 'Workshop prático sobre técnicas avançadas em Python.',
             data: new Date('2024-07-15'),
-            linkParticipacao: 'https://evento.com/python-workshop',
+            linkParticipacao: '/event1.jpg',
         },
         {
             titulo: 'Hackathon de Desenvolvimento Web',
             descricao: 'Competição de desenvolvimento de aplicações web.',
             data: new Date('2024-08-20'),
-            linkParticipacao: 'https://evento.com/web-hackathon',
+            linkParticipacao: '/event2.jpg',
         },
         {
             titulo: 'Conferência de UX Design',
             descricao: 'Tendências e práticas em UX/UI Design.',
             data: new Date('2024-09-05'),
-            linkParticipacao: 'https://evento.com/ux-conference',
+            linkParticipacao: '/event3.jpg',
         },
         {
             titulo: 'Seminário de Agricultura 4.0',
             descricao: 'Tecnologias emergentes na agricultura.',
             data: new Date('2024-10-10'),
-            linkParticipacao: 'https://evento.com/agro-seminario',
+            linkParticipacao: '/event2.jpg',
         },
     ];
 

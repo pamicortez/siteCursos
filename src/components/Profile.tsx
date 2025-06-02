@@ -1,50 +1,82 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import axios from "axios";
-import ImageCropper from "@/components/ui/ImageCropper";
+import type React from "react"
+import { useState, useEffect } from "react"
+import Carrossel from '@/components/Carrossel';
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import ImageCropper from "@/components/ui/ImageCropper"
+import CardEvento from "@/components/CardEvento"
+import CardProjeto from '@/components/CardProjeto';
 
 interface Usuario {
-  id: number;
-  email: string;
-  fotoPerfil: string;
-  Nome: string;
-  Titulacao: string;
-  instituicaoEnsino: string;
-  formacaoAcademica: string;
-  resumoPessoal: string;
-  tipo: string;
-  createdAt: string;
+  id: number
+  email: string
+  fotoPerfil: string
+  Nome: string
+  Titulacao: string
+  instituicaoEnsino: string
+  formacaoAcademica: string
+  resumoPessoal: string
+  tipo: string
+  createdAt: string
   link: Array<{
-    id: number;
-    link: string;
-    tipo: string;
-  }>;
+    id: number
+    link: string
+    tipo: string
+  }>
   publicacao: Array<{
-    id: number;
-    descricao: string;
-    link: string;
-  }>;
+    id: number
+    descricao: string
+    link: string
+  }>
   carreira: Array<{
-    id: number;
-    nome: string;
-    descricao: string;
-    categoria: string;
-    dataInicio: string;
-    dataFim: string;
-  }>;
+    id: number
+    nome: string
+    descricao: string
+    categoria: string
+    dataInicio: string
+    dataFim: string
+  }>
+}
+
+interface Projeto {
+  id: number
+  titulo: string
+  imagem: string
+  descricao: string
+  categoria: string
+  dataInicio: string
+  dataFim: string
+}
+
+interface Evento {
+  id: number
+  titulo: string
+  descricao: string
+  data: string
+  linkParticipacao: string
+  imagemEvento: Array<{
+    id: number
+    link: string
+  }>
+  eventoUsuario: Array<{
+    id: number
+    tipoParticipacao: string
+  }>
 }
 
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [projetos, setProjetos] = useState<Projeto[]>([]);
+  const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [showImageCropper, setShowImageCropper] = useState(false);
   const [isModalClosing, setIsModalClosing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     Nome: "",
     email: "",
@@ -53,6 +85,31 @@ export default function ProfilePage() {
     formacaoAcademica: "",
     resumoPessoal: "",
   });
+
+  // Função auxiliar para fazer requests com tratamento de erro
+  const fetchWithErrorHandling = async (url: string) => {
+    try {
+      const response = await fetch(url);
+
+      // Verifica se a resposta é bem-sucedida
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Verifica o Content-Type para garantir que é JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text();
+        console.error("Response is not JSON:", text);
+        throw new Error("Response is not valid JSON");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error fetching ${url}:`, error);
+      throw error;
+    }
+  };
 
   // Redirect se não estiver logado
   useEffect(() => {
@@ -66,18 +123,20 @@ export default function ProfilePage() {
     const fetchUsuario = async () => {
       if (session?.user?.id) {
         try {
-          const response = await axios.get(`/api/usuario?id=${session.user.id}`);
-          setUsuario(response.data);
+          setError(null);
+          const data = await fetchWithErrorHandling(`/api/usuario?id=${session.user.id}`);
+          setUsuario(data);
           setFormData({
-            Nome: response.data.Nome || "",
-            email: response.data.email || "",
-            Titulacao: response.data.Titulacao || "",
-            instituicaoEnsino: response.data.instituicaoEnsino || "",
-            formacaoAcademica: response.data.formacaoAcademica || "",
-            resumoPessoal: response.data.resumoPessoal || "",
+            Nome: data.Nome || "",
+            email: data.email || "",
+            Titulacao: data.Titulacao || "",
+            instituicaoEnsino: data.instituicaoEnsino || "",
+            formacaoAcademica: data.formacaoAcademica || "",
+            resumoPessoal: data.resumoPessoal || "",
           });
         } catch (error) {
           console.error("Erro ao carregar usuário:", error);
+          setError("Erro ao carregar dados do usuário");
         } finally {
           setLoading(false);
         }
@@ -86,6 +145,51 @@ export default function ProfilePage() {
 
     fetchUsuario();
   }, [session]);
+
+  // Carregar projetos do usuário - CORRIGIDO: usando endpoint correto baseado no schema
+  useEffect(() => {
+    const fetchProjetos = async () => {
+      if (session?.user?.id) {
+        try {
+          // Busca projetos através da tabela de relacionamento projetoUsuario
+          const data = await fetchWithErrorHandling(`/api/usuario/${session.user.id}/projetos`);
+          setProjetos(Array.isArray(data) ? data : []);
+        } catch (error) {
+          console.error("Erro ao carregar projetos:", error);
+          // Em caso de erro 404, define array vazio
+          setProjetos([]);
+        }
+      }
+    };
+
+    fetchProjetos();
+  }, [session]);
+
+  // Carregar eventos do usuário - CORRIGIDO: usando endpoint correto baseado no schema
+  useEffect(() => {
+    const fetchEventos = async () => {
+      if (session?.user?.id) {
+        try {
+          // Busca eventos através da tabela de relacionamento eventoUsuario
+          const data = await fetchWithErrorHandling(`/api/usuario/${session.user.id}/eventos`);
+          setEventos(Array.isArray(data) ? data : []);
+        } catch (error) {
+          console.error("Erro ao carregar eventos:", error);
+          // Em caso de erro 404, define array vazio
+          setEventos([]);
+        }
+      }
+    };
+
+    fetchEventos();
+  }, [session]);
+
+  useEffect(() => {
+    console.log("Debug - Projetos:", projetos);
+    console.log("Debug - Eventos:", eventos);
+    console.log("Debug - Usuario:", usuario);
+  }, [projetos, eventos, usuario]);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -97,15 +201,31 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     try {
-      const response = await axios.patch(`/api/usuario?id=${session?.user?.id}`, formData);
-      if (response.status === 200) {
-        setUsuario(prev => prev ? { ...prev, ...formData } : null);
-        setEditMode(false);
-        alert("Perfil atualizado com sucesso!");
+      const response = await fetch(`/api/usuario?id=${session?.user?.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
+
+      // Verifica se a resposta é JSON válida
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        await response.json(); // Consome a resposta JSON
+      }
+
+      setUsuario(prev => prev ? { ...prev, ...formData } : null);
+      setEditMode(false);
+      alert("Perfil atualizado com sucesso!");
     } catch (error: any) {
       console.error("Erro ao atualizar perfil:", error);
-      alert(error.response?.data?.error || "Erro ao atualizar perfil");
+      alert(error.message || "Erro ao atualizar perfil");
     }
   };
 
@@ -122,8 +242,25 @@ export default function ProfilePage() {
     }, 700); // Duração da animação de fade out
   };
 
+  const isValidTipoParticipacao = (tipo: string): tipo is "Ouvinte" | "Palestrante" | "Organizador" => {
+    return ["Ouvinte", "Palestrante", "Organizador"].includes(tipo);
+  };
+
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    try {
+      return new Date(dateString).toLocaleDateString('pt-BR');
+    } catch (error) {
+      console.error("Erro ao formatar data:", error);
+      return "Data inválida";
+    }
+  };
+
+  const handleProjetoClick = (projetoId: number) => {
+    router.push(`/projeto/${projetoId}`);
+  };
+
+  const handleEventoClick = (eventoId: number) => {
+    router.push(`/evento/${eventoId}`);
   };
 
   if (status === "loading" || loading) {
@@ -134,11 +271,34 @@ export default function ProfilePage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Erro</h2>
+          <p className="text-gray-700">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!usuario) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-700">Usuário não encontrado</h2>
+          <button
+            onClick={() => router.push("/login")}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+          >
+            Voltar ao Login
+          </button>
         </div>
       </div>
     );
@@ -156,7 +316,7 @@ export default function ProfilePage() {
                 <>
                   <button
                     onClick={handleSave}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                    className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-600 transition"
                   >
                     Salvar
                   </button>
@@ -170,7 +330,7 @@ export default function ProfilePage() {
               ) : (
                 <button
                   onClick={() => setEditMode(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                  className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-600 transition"
                 >
                   Editar Perfil
                 </button>
@@ -187,7 +347,7 @@ export default function ProfilePage() {
               <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
                 {usuario.fotoPerfil ? (
                   <img
-                    src={usuario.fotoPerfil}
+                    src={usuario.fotoPerfil || "/placeholder.svg"}
                     alt="Foto de perfil"
                     className="w-full h-full object-cover"
                   />
@@ -209,17 +369,83 @@ export default function ProfilePage() {
               <p className="text-gray-600 mb-1">{usuario.email}</p>
               <p className="text-gray-600 mb-1">{usuario.Titulacao}</p>
               <p className="text-gray-600 mb-1">{usuario.instituicaoEnsino}</p>
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                usuario.tipo === 'Normal' ? 'bg-green-100 text-green-800' :
+              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${usuario.tipo === 'Normal' ? 'bg-green-100 text-green-800' :
                 usuario.tipo === 'Super' ? 'bg-blue-100 text-blue-800' :
-                usuario.tipo === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
-                'bg-red-100 text-red-800'
-              }`}>
+                  usuario.tipo === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                }`}>
                 {usuario.tipo}
               </span>
             </div>
           </div>
         </div>
+
+        {/* Carrossel de Projetos */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">
+            Meus Projetos ({projetos.length})
+          </h3>
+          {projetos.length > 0 ? (
+
+            <Carrossel>
+              {projetos.map((projeto) => (
+                <CardProjeto
+                  key={projeto.id}
+                  imagem={projeto.imagem || '/default-projeto.png'}
+                  titulo={projeto.titulo}
+                  descricao={projeto.descricao}
+                />
+              ))}
+            </Carrossel>
+
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>Nenhum projeto encontrado</p>
+              <p className="text-sm">Debug: Array length = {projetos.length}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Carrossel de Eventos */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">
+            Meus Eventos ({eventos.length})
+          </h3>
+          {eventos.length > 0 ? (
+
+            <Carrossel>
+              {eventos.map((evento: any) => (
+                <div key={evento.id} className="flex-shrink-0 w-80 h-full mt-1">
+                  <div className="h-112">
+                    <CardEvento
+                      idEvento={evento.id}
+                      titulo={evento.titulo}
+                      descricao={evento.descricao}
+                      data={evento.data}
+                      linkParticipacao={evento.linkParticipacao || '#'}
+                      imagens={evento.imagemEvento?.map((img: any) => img.link) || []}
+                      isOwner={true}
+                      tipoParticipacao={
+                        evento.eventoUsuario?.[0]?.tipoParticipacao &&
+                          isValidTipoParticipacao(evento.eventoUsuario[0].tipoParticipacao)
+                          ? evento.eventoUsuario[0].tipoParticipacao
+                          : undefined
+                      }
+                      onEventoDeleted={() => window.location.reload()}
+                    />
+                  </div>
+                </div>
+              ))}
+            </Carrossel>
+
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>Nenhum evento encontrado</p>
+              <p className="text-sm">Debug: Array length = {eventos.length}</p>
+            </div>
+          )}
+        </div>
+
 
         {/* Formulário de Edição */}
         {editMode && (
@@ -298,9 +524,11 @@ export default function ProfilePage() {
         {/* Informações Adicionais - Apenas Visualização */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Links */}
-          {usuario.link && usuario.link.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-xl font-semibold mb-4">Links</h3>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-xl font-semibold mb-4">
+              Links ({usuario?.link?.length || 0})
+            </h3>
+            {usuario?.link && usuario.link.length > 0 ? (
               <div className="space-y-2">
                 {usuario.link.map((link) => (
                   <div key={link.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
@@ -316,8 +544,13 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p>Nenhum link cadastrado</p>
+                <p className="text-sm">Debug: {usuario?.link ? `Array length = ${usuario.link.length}` : 'Array is null/undefined'}</p>
+              </div>
+            )}
+          </div>
 
           {/* Publicações */}
           {usuario.publicacao && usuario.publicacao.length > 0 && (
@@ -350,9 +583,8 @@ export default function ProfilePage() {
                   <div key={exp.id} className="border-l-4 border-blue-500 pl-4">
                     <div className="flex justify-between items-start mb-1">
                       <h4 className="font-semibold text-gray-800">{exp.nome}</h4>
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        exp.categoria === 'acadêmica' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                      }`}>
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${exp.categoria === 'acadêmica' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                        }`}>
                         {exp.categoria}
                       </span>
                     </div>
@@ -385,25 +617,23 @@ export default function ProfilePage() {
 
       {/* Modal do Image Cropper com Animações */}
       {showImageCropper && (
-        <div 
-          className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-700 ease-in-out ${
-            isModalClosing 
-              ? 'bg-slate-600/0 backdrop-blur-none opacity-0' 
-              : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
-          }`}
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-700 ease-in-out ${isModalClosing
+            ? 'bg-slate-600/0 backdrop-blur-none opacity-0'
+            : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
+            }`}
           style={{
             backdropFilter: isModalClosing ? 'blur(0px)' : 'blur(8px)',
-            background: isModalClosing 
-              ? 'rgba(71, 85, 105, 0)' 
+            background: isModalClosing
+              ? 'rgba(71, 85, 105, 0)'
               : 'rgba(71, 85, 105, 0.4)'
           }}
         >
-          <div 
-            className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-700 ease-in-out ${
-              isModalClosing 
-                ? 'scale-95 opacity-0 translate-y-4' 
-                : 'scale-100 opacity-100 translate-y-0'
-            }`}
+          <div
+            className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-700 ease-in-out ${isModalClosing
+              ? 'scale-95 opacity-0 translate-y-4'
+              : 'scale-100 opacity-100 translate-y-0'
+              }`}
           >
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
