@@ -6,37 +6,55 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const userId = Number(params.id);
-    
+    // Aguardar os parâmetros antes de usar
+    const resolvedParams = await params;
+    const userId = Number(resolvedParams.id);
+
     if (isNaN(userId)) {
       return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
     }
 
-    // Busca projetos do usuário através da tabela de relacionamento
-    const projetosUsuario = await prisma.projetoUsuario.findMany({
-      where: { 
+    // Buscar projetos do usuário
+    const projetos = await prisma.projetoUsuario.findMany({
+      where: {
         idUsuario: userId,
-        deletedAt: null 
+        deletedAt: null, // Apenas projetos não deletados
       },
       include: {
         projeto: {
           include: {
-            projetoUsuario: { include: { usuario: true } },
+            projetoUsuario: {
+              include: {
+                usuario: true
+              }
+            },
             curso: true,
-            projetoColaborador: { include: { colaborador: true } },
+            projetoColaborador: {
+              include: {
+                colaborador: true
+              }
+            }
           }
         }
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
 
-    // Extrai apenas os projetos
-    const projetos = projetosUsuario.map(pu => pu.projeto);
+    // Transformar os dados para retornar apenas os projetos com informações do usuário
+    const projetosFormatados = projetos.map(projetoUsuario => ({
+      ...projetoUsuario.projeto,
+      funcaoUsuario: projetoUsuario.funcao,
+      isOwner: projetoUsuario.funcao === 'Coordenador'
+    }));
 
-    return NextResponse.json(projetos);
+    return NextResponse.json(projetosFormatados);
+
   } catch (error) {
     console.error('Erro ao buscar projetos do usuário:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor' }, 
+      { error: 'Erro interno do servidor' },
       { status: 500 }
     );
   }

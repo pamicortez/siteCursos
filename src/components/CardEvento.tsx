@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ConfirmationModal } from "./ConfirmationModal";
 import { useRouter } from "next/navigation"; 
+import { useSession } from "next-auth/react"
 
 interface CardEventoProps {
   idEvento: number;
@@ -15,6 +16,7 @@ interface CardEventoProps {
   isOwner: boolean;
   tipoParticipacao?: 'Ouvinte' | 'Palestrante' | 'Organizador';
   onEventoDeleted?: () => void;
+  maxCaracteres?: number; // Opcional, padrão será 74
 }
 
 const CardEvento: React.FC<CardEventoProps> = ({
@@ -26,11 +28,19 @@ const CardEvento: React.FC<CardEventoProps> = ({
   imagens,
   isOwner,
   tipoParticipacao,
-  onEventoDeleted
+  onEventoDeleted,
+  maxCaracteres = 74 
 }) => {
   const router = useRouter(); 
+  const { data: session, status } = useSession();
+  const isLoggedIn = status === "authenticated" && session?.user;
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const truncateText = (text: string, maxLength: number) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength).trim() + '...';
+  };
 
   // Formatar a data do evento
   const formatarData = (dataEvento: string | Date) => {
@@ -49,7 +59,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
   const isBase64 = primeiraImagem?.startsWith('data:image');
   const imageSrc = primeiraImagem 
     ? (isBase64 ? primeiraImagem : primeiraImagem?.startsWith('/') ? primeiraImagem : `/api/images?url=${encodeURIComponent(primeiraImagem)}`)
-    : '/evento-default.jpg'; // Imagem padrão para eventos
+    : '/evento1.jpg'; // Imagem padrão para eventos
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -118,7 +128,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
             className="w-full h-full object-cover"
             alt={titulo} 
             onError={(e) => {
-              (e.target as HTMLImageElement).src = '/evento-default.jpg';
+              (e.target as HTMLImageElement).src = '/event1.jpg';
             }}
           />
         </div>
@@ -137,12 +147,13 @@ const CardEvento: React.FC<CardEventoProps> = ({
           </div>
           
           <div className="h-12 mb-2 flex-shrink-0">
-            <p className="text-sm text-gray-700 line-clamp-3 overflow-hidden">{descricao}</p>
+            <p className="text-sm text-gray-700 line-clamp-2 overflow-hidden">{truncateText(descricao, maxCaracteres)}</p>
           </div>
           
           <p className="text-xs text-gray-500 mb-3 font-medium flex-shrink-0">{formatarData(data)}</p>
           
           {/* Botão de participação sempre visível */}
+          {isLoggedIn && (
           <div className="mb-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             <button 
               className="w-full bg-gray-900 hover:bg-gray-600 text-white py-2 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
@@ -151,6 +162,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
               Participar do Evento
             </button>
           </div>
+          )}
           
           {/* Botões de ação para proprietários */}
           {isOwner && (

@@ -1,59 +1,67 @@
 "use client"
 
-import React, { useEffect, useState } from "react";
-import CardCursoWithButton from "@/components/CardCursoWithButton";
-import { Button } from "@/components/ui/button";
-import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import type React from "react"
+import { useEffect, useState } from "react"
+import CardCursoWithButton from "@/components/CardCursoWithButton"
+import { Button } from "@/components/ui/button"
+import { useParams, useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 
 interface Projeto {
-  id: number;
-  titulo: string;
-  imagem: string;
-  descricao: string;
-  categoria: string;
-  dataInicio: string;
-  dataFim: string;
+  id: number
+  titulo: string
+  imagem: string
+  descricao: string
+  categoria: string
+  dataInicio: string
+  dataFim: string
   projetoUsuario: {
-    id: number;
-    idProjeto: number;
-    idUsuario: number;
-    funcao: string;
+    id: number
+    idProjeto: number
+    idUsuario: number
+    funcao: string
     usuario: {
-      Nome: string;
+      Nome: string
     }
-  }[];
-  curso: any[];
+  }[]
+  curso: any[]
   projetoColaborador: {
-    id: number;
-    categoria: string;
-    idProjeto: number;
-    idColaborador: number;
+    id: number
+    categoria: string
+    idProjeto: number
+    idColaborador: number
     colaborador: {
-      id: number;
-      nome: string;
-    };
-  }[];
+      id: number
+      nome: string
+    }
+  }[]
 }
 
 const ProjetoHome: React.FC = () => {
-  const router = useRouter(); 
-  const { data: session, status } = useSession();
-  const [isOwner, setIsOwner] = useState(false);
-  const [projeto, setProjeto] = useState<Projeto | null>(null);
-  const { id } = useParams();
-  const [refreshKey, setRefreshKey] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-
+  const router = useRouter()
+  const { data: session, status } = useSession()
+  const [isOwner, setIsOwner] = useState(false)
+  const [projeto, setProjeto] = useState<Projeto | null>(null)
+  const { id } = useParams()
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const handleCursoDeleted = () => {
-    setRefreshKey(prev => prev + 1);
-  };
+    setRefreshKey((prev) => prev + 1)
+  }
 
   useEffect(() => {
     const fetchProjeto = async () => {
       try {
-        setError(null);
+        setError(null)
+        setLoading(true)
+
+        // Debug: Verificar o ID recebido
+        console.log("🔍 Debug fetchProjeto:")
+        console.log("- id:", id)
+        console.log("- typeof id:", typeof id)
+
         if (id === "TESTEINTERNO") {
           const projetoFalso: Projeto = {
             id: 999,
@@ -69,197 +77,266 @@ const ProjetoHome: React.FC = () => {
                 idProjeto: 999,
                 idUsuario: 1,
                 funcao: "Coordenador",
-                usuario: {Nome: "Fulano"}
-              }
+                usuario: { Nome: "Fulano" },
+              },
             ],
             projetoColaborador: [
-              { 
+              {
                 id: 1,
                 categoria: "Instrutor",
                 idProjeto: 999,
                 idColaborador: 1,
                 colaborador: {
                   id: 1,
-                  nome: "Maria Oliveira"
-                }
+                  nome: "Maria Oliveira",
+                },
               },
-              { 
+              {
                 id: 2,
                 categoria: "Tutor",
                 idProjeto: 999,
                 idColaborador: 2,
                 colaborador: {
                   id: 2,
-                  nome: "Carlos Souza"
-                }
-              }
+                  nome: "Carlos Souza",
+                },
+              },
             ],
             curso: [
-              { id:1, imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas" },
-              { id:2, imagem: "/prof3.jpg", nome: "Inglês", descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.", cargahoraria: "60 horas" },
-              { id:3, imagem: "/prof4.jpg", nome: "Sistemas Embarcados", descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.", cargahoraria: "80 horas" },
-              { id:4, imagem: "/prof5.jpg", nome: "C/C++", descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.", cargahoraria: "70 horas" }
-            ]
-          };;
-          setProjeto(projetoFalso);
-          setIsOwner(true); // Como é só teste, assume que é dono
-          return;
+              {
+                id: 1,
+                imagem: "/proj1.jpg",
+                nome: "Python",
+                descricao: "Curso intensivo de programação em Python para iniciantes e avançados.",
+                cargahoraria: "40 horas",
+              },
+              {
+                id: 2,
+                imagem: "/prof3.jpg",
+                nome: "Inglês",
+                descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.",
+                cargahoraria: "60 horas",
+              },
+              {
+                id: 3,
+                imagem: "/prof4.jpg",
+                nome: "Sistemas Embarcados",
+                descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.",
+                cargahoraria: "80 horas",
+              },
+              {
+                id: 4,
+                imagem: "/prof5.jpg",
+                nome: "C/C++",
+                descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.",
+                cargahoraria: "70 horas",
+              },
+            ],
+          }
+          setProjeto(projetoFalso)
+          setIsOwner(true)
+          setLoading(false)
+          return
         }
 
-        if (status === "loading") return;
+        if (status === "loading") return
 
-        const res = await fetch(`http://localhost:3000/api/projeto?id=${id}`);
-        if (!res.ok) throw new Error("Erro na requisição");
-        const data: Projeto = await res.json();
-
-        if (!data || !data.projetoUsuario || data.projetoUsuario.length === 0) {
-          router.push('/404'); 
+        // Validar se o ID é válido
+        if (!id || isNaN(Number(id))) {
+          console.error("❌ ID inválido:", id)
+          router.push("/404")
+          return
         }
-        setProjeto(data);
-  
-        const isProjectOwner = data.projetoUsuario.some(
-          user => Number(user.idUsuario) === Number(session?.user?.id)          
-        );
-        console.log(isProjectOwner)
-        setIsOwner(isProjectOwner);
+
+        console.log("📡 Fazendo fetch para:", `/api/projeto?id=${id}`)
+        const res = await fetch(`/api/projeto?id=${id}`)
+
+        console.log("📡 Response status:", res.status)
+
+        if (!res.ok) {
+          if (res.status === 404) {
+            console.error("❌ Projeto não encontrado")
+            router.push("/404")
+            return
+          }
+          throw new Error(`Erro na requisição: ${res.status}`)
+        }
+
+        const data: Projeto = await res.json()
+        console.log("📦 Dados recebidos:", data)
+
+        // Verificar se o projeto existe (apenas verificar se tem ID)
+        if (!data || !data.id) {
+          console.error("❌ Projeto não encontrado nos dados")
+          router.push("/404")
+          return
+        }
+
+        setProjeto(data)
+
+        // Verificar se o usuário é proprietário (apenas se estiver logado)
+        if (session?.user?.id && data.projetoUsuario) {
+          const isProjectOwner = data.projetoUsuario.some((user) => Number(user.idUsuario) === Number(session.user.id))
+          console.log("👤 É proprietário:", isProjectOwner)
+          setIsOwner(isProjectOwner)
+        }
       } catch (error) {
-        console.error("Erro ao buscar projeto:", error);
-        setError("Erro interno, tente mais tarde"); 
+        console.error("❌ Erro ao buscar projeto:", error)
+        setError("Erro interno, tente mais tarde")
+      } finally {
+        setLoading(false)
       }
-    };
-  
-    fetchProjeto();
-  },[id, refreshKey, status, session]);
-  
+    }
+
+    fetchProjeto()
+  }, [id, refreshKey, status, session, router])
 
   const handleAdicionarCurso = () => {
-    router.push(`/curso/criar?idProjeto=${id}`);
-  };
+    router.push(`/curso/criar?idProjeto=${id}`)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-2">
+        <div className="text-center py-10">
+          <p className="text-red-600 text-lg font-medium">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!projeto) {
+    return (
+      <div className="container mx-auto px-4 py-2">
+        <p className="text-center text-gray-500">Projeto não encontrado</p>
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-2">
-      {error ? (
-        <div className="text-center py-10">
-          <p className="text-red-600 text-lg font-medium">{error}</p>
-        </div>
-      ) : projeto ? (
-        <>
-          <div className="flex justify-between items-center my-4">
-            <h1 className="text-3xl font-bold">{projeto.titulo}</h1>
-            {isOwner && (
-              <Button
-                type="button"
-                className="bg-black text-white hover:bg-gray-800 text-base"
-                onClick={handleAdicionarCurso}
-              >
-                + Adicionar Curso
-              </Button>
-            )}
-          </div>
+      <div className="flex justify-between items-center my-4">
+        <h1 className="text-3xl font-bold">{projeto.titulo}</h1>
+        {isOwner && (
+          <Button
+            type="button"
+            className="bg-black text-white hover:bg-gray-800 text-base"
+            onClick={handleAdicionarCurso}
+          >
+            + Adicionar Curso
+          </Button>
+        )}
+      </div>
 
-          <p className="text-xl text-gray-700 mb-6">{projeto.descricao}</p>
+      <p className="text-xl text-gray-700 mb-6">{projeto.descricao}</p>
 
-          <div className="mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-lg">
-                  <strong>Data de Início:</strong>{" "}
-                  {new Date(projeto.dataInicio).toLocaleDateString()}
-                </p>
-              </div>
-              <div>
-                <p className="text-lg">
-                  <strong>Data de Finalização:</strong>{" "}
-                  {new Date(projeto.dataFim).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-lg">
-                  <strong>Coordenador:</strong>{" "}
-                  {
-                    // Primeiro verifica em projetoUsuario
-                    projeto.projetoUsuario.find((u) => u.funcao === "Coordenador")?.idUsuario ??
-                    // Se não encontrar, verifica em projetoColaborador
-                    projeto.projetoColaborador.find((c) => c.categoria === "Coordenador")?.colaborador.nome ??
-                    "Não informado"
-                  }
-                </p>
-              </div>
-              <div>
-                <p className="text-lg">
-                  <strong>Categoria:</strong> {projeto.categoria}
-                </p>
-              </div>
-            </div>
-
+      <div className="mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-              <strong className="text-lg">Colaboradores:</strong>
-              <ul className="list-disc pl-5 mt-2 text-base">
-                {projeto.projetoColaborador.length === 0 && !projeto.projetoUsuario.some(u => u.funcao !== "Coordenador") ? (
-                  <li>Nenhum colaborador</li>
-                ) : (
-                  <>
-                    {/* Lista de colaboradores externos */}
-                    {projeto.projetoColaborador.map((colab, index) => (
-                      <li key={`colab-${index}`}>
-                        {colab.colaborador.nome} - {colab.categoria}
-                      </li>
-                    ))}
-                    
-                    {/* Usuários do sistema que não são coordenadores */}
-                    {projeto.projetoUsuario
-                      .filter(u => u.funcao !== "Coordenador")
-                      .map((user, index) => (
-                        <li key={`user-${index}`}>
-                          {user.usuario.Nome} - {user.funcao}
-                        </li>
-                      ))
-                    }
-                  </>
-                )}
-              </ul>
-            </div>'
+            <p className="text-lg">
+              <strong>Data de Início:</strong> {new Date(projeto.dataInicio).toLocaleDateString()}
+            </p>
           </div>
+          <div>
+            <p className="text-lg">
+              <strong>Data de Finalização:</strong> {new Date(projeto.dataFim).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
 
-          <hr
-            style={{
-              border: "none",
-              borderTop: "1px solid #e5e7eb",
-              margin: "24px 0",
-            }}
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <p className="text-lg">
+              <strong>Coordenador:</strong>{" "}
+              {
+                // Primeiro verifica em projetoUsuario
+                projeto.projetoUsuario?.find((u) => u.funcao === "Coordenador")?.usuario?.Nome ??
+                  // Se não encontrar, verifica em projetoColaborador
+                  projeto.projetoColaborador?.find((c) => c.categoria === "Coordenador")?.colaborador?.nome ??
+                  "Não informado"
+              }
+            </p>
+          </div>
+          <div>
+            <p className="text-lg">
+              <strong>Categoria:</strong> {projeto.categoria}
+            </p>
+          </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-10">
-            {projeto.curso.length > 0 ? (
-              projeto.curso.map((curso, index) => (
-                <div key={index} className="m-0 p-0 flex">
-                  <CardCursoWithButton
-                    key={`${curso.nome}-${index}`}
-                    idCurso={curso.id} 
-                    imagem={curso.imagem}
-                    nome={curso.nome}
-                    descricao={curso.descricao}
-                    cargahoraria={curso.cargahoraria}
-                    isOwner={isOwner}
-                    onCursoDeleted={handleCursoDeleted}
-                  />
-                </div>
-              ))
+        <div>
+          <strong className="text-lg">Colaboradores:</strong>
+          <ul className="list-disc pl-5 mt-2 text-base">
+            {(!projeto.projetoColaborador || projeto.projetoColaborador.length === 0) &&
+            (!projeto.projetoUsuario || !projeto.projetoUsuario.some((u) => u.funcao !== "Coordenador")) ? (
+              <li>Nenhum colaborador</li>
             ) : (
-              <p className="col-span-3 text-center text-gray-500">
-                Nenhum curso cadastrado.
-              </p>
-            )}
-          </div>
-        </>
-      ) : (
-        <p className="text-center text-gray-500">Carregando projeto...</p>
-      )}
-    </div>
-  );
-};
+              <>
+                {/* Lista de colaboradores externos */}
+                {projeto.projetoColaborador?.map((colab, index) => (
+                  <li key={`colab-${index}`}>
+                    {colab.colaborador.nome} - {colab.categoria}
+                  </li>
+                ))}
 
-export default ProjetoHome;
+                {/* Usuários do sistema que não são coordenadores */}
+                {projeto.projetoUsuario
+                  ?.filter((u) => u.funcao !== "Coordenador")
+                  .map((user, index) => (
+                    <li key={`user-${index}`}>
+                      {user.usuario.Nome} - {user.funcao}
+                    </li>
+                  ))}
+              </>
+            )}
+          </ul>
+        </div>
+      </div>
+
+      <hr
+        style={{
+          border: "none",
+          borderTop: "1px solid #e5e7eb",
+          margin: "24px 0",
+        }}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-10">
+        {projeto.curso && projeto.curso.length > 0 ? (
+          projeto.curso.map((curso, index) => (
+            <div key={index} className="m-0 p-0 flex">
+              <CardCursoWithButton
+                key={`${curso.nome}-${index}`}
+                idCurso={curso.id}
+                imagem={curso.imagem}
+                nome={curso.nome}
+                descricao={curso.descricao}
+                cargahoraria={curso.cargahoraria}
+                isOwner={isOwner}
+                onCursoDeleted={handleCursoDeleted}
+              />
+            </div>
+          ))
+        ) : (
+          <p className="col-span-3 text-center text-gray-500">Nenhum curso cadastrado.</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default ProjetoHome

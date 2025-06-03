@@ -6,7 +6,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const userId = Number(params.id);
+    // Aguardar os parâmetros antes de usar
+    const resolvedParams = await params;
+    const userId = Number(resolvedParams.id);
     
     if (isNaN(userId)) {
       return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
@@ -25,13 +27,22 @@ export async function GET(
             imagemEvento: true,
           }
         }
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     });
 
-    // Extrai apenas os eventos
-    const eventos = eventosUsuario.map(eu => eu.evento);
+    // Extrai os eventos com informações adicionais do usuário
+    const eventosFormatados = eventosUsuario.map(eventoUsuario => ({
+      ...eventoUsuario.evento,
+      tipoParticipacao: eventoUsuario.tipoParticipacao,
+      isOwner: eventoUsuario.tipoParticipacao === 'Organizador',
+      // Adiciona as imagens como array de URLs para compatibilidade com o CardEvento
+      imagens: eventoUsuario.evento.imagemEvento.map(img => img.link)
+    }));
 
-    return NextResponse.json(eventos);
+    return NextResponse.json(eventosFormatados);
   } catch (error) {
     console.error('Erro ao buscar eventos do usuário:', error);
     return NextResponse.json(

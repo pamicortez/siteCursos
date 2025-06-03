@@ -48,6 +48,10 @@ interface Projeto {
   categoria: string
   dataInicio: string
   dataFim: string
+  projetoColaborador: Array<{
+    id: number
+    categoria: string
+  }>
 }
 
 interface Evento {
@@ -242,8 +246,13 @@ export default function ProfilePage() {
     }, 700); // Duração da animação de fade out
   };
 
+
   const isValidTipoParticipacao = (tipo: string): tipo is "Ouvinte" | "Palestrante" | "Organizador" => {
     return ["Ouvinte", "Palestrante", "Organizador"].includes(tipo);
+  };
+
+  const isValidCategoria = (tipo: string): tipo is "Coordenador" | "Colaborador" | "Bolsista" | "Voluntário" => {
+    return ["Coordenador", "Colaborador", "Bolsista", "Voluntário"].includes(tipo);
   };
 
   const formatDate = (dateString: string) => {
@@ -380,73 +389,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* Carrossel de Projetos */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">
-            Meus Projetos ({projetos.length})
-          </h3>
-          {projetos.length > 0 ? (
-
-            <Carrossel>
-              {projetos.map((projeto) => (
-                <CardProjeto
-                  key={projeto.id}
-                  imagem={projeto.imagem || '/default-projeto.png'}
-                  titulo={projeto.titulo}
-                  descricao={projeto.descricao}
-                />
-              ))}
-            </Carrossel>
-
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <p>Nenhum projeto encontrado</p>
-              <p className="text-sm">Debug: Array length = {projetos.length}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Carrossel de Eventos */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">
-            Meus Eventos ({eventos.length})
-          </h3>
-          {eventos.length > 0 ? (
-
-            <Carrossel>
-              {eventos.map((evento: any) => (
-                <div key={evento.id} className="flex-shrink-0 w-80 h-full mt-1">
-                  <div className="h-112">
-                    <CardEvento
-                      idEvento={evento.id}
-                      titulo={evento.titulo}
-                      descricao={evento.descricao}
-                      data={evento.data}
-                      linkParticipacao={evento.linkParticipacao || '#'}
-                      imagens={evento.imagemEvento?.map((img: any) => img.link) || []}
-                      isOwner={true}
-                      tipoParticipacao={
-                        evento.eventoUsuario?.[0]?.tipoParticipacao &&
-                          isValidTipoParticipacao(evento.eventoUsuario[0].tipoParticipacao)
-                          ? evento.eventoUsuario[0].tipoParticipacao
-                          : undefined
-                      }
-                      onEventoDeleted={() => window.location.reload()}
-                    />
-                  </div>
-                </div>
-              ))}
-            </Carrossel>
-
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <p>Nenhum evento encontrado</p>
-              <p className="text-sm">Debug: Array length = {eventos.length}</p>
-            </div>
-          )}
-        </div>
-
-
         {/* Formulário de Edição */}
         {editMode && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -521,6 +463,88 @@ export default function ProfilePage() {
           </div>
         )}
 
+        {/* Carrossel de Projetos */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">
+            Meus Projetos ({projetos.length})
+          </h3>
+          {projetos.length > 0 ? (
+            <Carrossel>
+              {projetos.map((projeto) => (
+                <div
+                  key={projeto.id}
+                  onClick={() => handleProjetoClick(projeto.id)}
+                  className="flex-shrink-0 w-80 h-full hover:scale-105 transition-transform duration-300 cursor-pointer"
+                >
+                  <CardProjeto
+                    idProjeto={projeto.id}
+                    imagem={projeto.imagem}
+                    titulo={projeto.titulo}
+                    descricao={projeto.descricao}
+                    categoria={projeto.categoria}
+                    dataInicio={projeto.dataInicio}
+                    dataFim={projeto.dataFim}
+                    isOwner={true}
+                    funcaoUsuario={
+                      projeto.projetoColaborador?.[0]?.categoria &&
+                        isValidCategoria(projeto.projetoColaborador[0].categoria)
+                        ? projeto.projetoColaborador[0].categoria
+                        : undefined
+                    }
+                    onProjetoDeleted={() => window.location.reload()}
+                  />
+                </div>
+              ))}
+            </Carrossel>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>Nenhum projeto encontrado</p>
+              <p className="text-sm">Debug: Array length = {projetos.length}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Carrossel de Eventos */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">
+            Meus Eventos ({eventos.length})
+          </h3>
+          {eventos.length > 0 ? (
+
+            <Carrossel>
+              {eventos.map((evento: any) => (
+                <div key={evento.id} className="flex-shrink-0 w-80 h-full mt-1">
+                  <div className="h-112">
+                    <CardEvento
+                      idEvento={evento.id}
+                      titulo={evento.titulo}
+                      descricao={evento.descricao}
+                      data={evento.data}
+                      linkParticipacao={evento.linkParticipacao || '#'}
+                      imagens={evento.imagemEvento?.map((img: any) => img.link) || []}
+                      isOwner={true}
+                      tipoParticipacao={
+                        evento.eventoUsuario?.[0]?.tipoParticipacao &&
+                          isValidTipoParticipacao(evento.eventoUsuario[0].tipoParticipacao)
+                          ? evento.eventoUsuario[0].tipoParticipacao
+                          : undefined
+                      }
+                      onEventoDeleted={() => window.location.reload()}
+                    />
+                  </div>
+                </div>
+              ))}
+            </Carrossel>
+
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <p>Nenhum evento encontrado</p>
+              <p className="text-sm">Debug: Array length = {eventos.length}</p>
+            </div>
+          )}
+        </div>
+
+
         {/* Informações Adicionais - Apenas Visualização */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Links */}
@@ -529,7 +553,7 @@ export default function ProfilePage() {
               Links ({usuario?.link?.length || 0})
             </h3>
             {usuario?.link && usuario.link.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
                 {usuario.link.map((link) => (
                   <div key={link.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <span className="text-sm font-medium text-gray-600">{link.tipo}</span>
@@ -555,8 +579,8 @@ export default function ProfilePage() {
           {/* Publicações */}
           {usuario.publicacao && usuario.publicacao.length > 0 && (
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-xl font-semibold mb-4">Publicações</h3>
-              <div className="space-y-3">
+              <h3 className="text-xl font-semibold mb-4">Publicações ({usuario?.publicacao?.length || 0})</h3>
+              <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                 {usuario.publicacao.map((pub) => (
                   <div key={pub.id} className="p-3 bg-gray-50 rounded">
                     <p className="text-sm text-gray-700 mb-2">{pub.descricao}</p>
