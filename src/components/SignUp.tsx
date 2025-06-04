@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
-import { Eye, EyeOff, User, Mail, Lock, GraduationCap, Building, FileText, LinkIcon, Camera } from "lucide-react"
+import { Eye, EyeOff, User, Mail, Lock, GraduationCap, Building, FileText, LinkIcon, Camera } from 'lucide-react'
 import ImageCropper from "@/components/ui/ImageCropper"
 
 interface SignUpFormData {
@@ -465,7 +465,7 @@ export default function SignUpPage() {
                   <button
                     type="button"
                     onClick={() => addArrayItem("links")}
-                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                    className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-gray-700"
                   >
                     + Adicionar Link
                   </button>
@@ -494,7 +494,7 @@ export default function SignUpPage() {
                     <button
                       type="button"
                       onClick={() => removeArrayItem("links", index)}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      className="px-3 py-1 bg-black text-white rounded hover:bg-gray-700"
                     >
                       Remover
                     </button>
@@ -512,7 +512,7 @@ export default function SignUpPage() {
                   <button
                     type="button"
                     onClick={() => addArrayItem("publicacoes")}
-                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                    className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-gray-700"
                   >
                     + Adicionar Publicação
                   </button>
@@ -538,7 +538,7 @@ export default function SignUpPage() {
                       <button
                         type="button"
                         onClick={() => removeArrayItem("publicacoes", index)}
-                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                        className="px-3 py-1bg-black text-white rounded hover:bg-gray-700"
                       >
                         Remover
                       </button>
@@ -557,7 +557,7 @@ export default function SignUpPage() {
                   <button
                     type="button"
                     onClick={() => addArrayItem("carreira")}
-                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                    className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-gray-700"
                   >
                     + Adicionar Experiência
                   </button>
@@ -606,7 +606,7 @@ export default function SignUpPage() {
                     <button
                       type="button"
                       onClick={() => removeArrayItem("carreira", index)}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                      className="px-3 py-1 bg-black text-white rounded hover:bg-gray-700"
                     >
                       Remover Experiência
                     </button>
@@ -645,7 +645,7 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={() => setShowImageCropper(true)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                  className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
                 >
                   Escolher Foto
                 </button>
@@ -660,7 +660,7 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={handlePrevious}
-                  className="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition"
+                  className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition"
                 >
                   Anterior
                 </button>
@@ -672,7 +672,7 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={handleFinish}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                  className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
                 >
                   Sair
                 </button>
@@ -681,7 +681,7 @@ export default function SignUpPage() {
                   type="submit"
                   disabled={loading}
                   onClick={handleNext}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
 
                   {loading ? "Criando..." : "Criar Conta"}
@@ -690,7 +690,7 @@ export default function SignUpPage() {
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                  className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
                 >
                   Próximo
                 </button>
