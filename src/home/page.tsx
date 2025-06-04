@@ -35,6 +35,9 @@ interface Curso {
   imagem: string
   descricao: string
   cargaHoraria: number
+  categoria: string
+  vagas: number
+  linkInscricao: string
 }
 
 interface Evento {
@@ -228,11 +231,15 @@ const HomePage: React.FC = () => {
           <Carrossel linhas={linhas}>
             {cursos.map((curso) => (
               <CardCurso
-                key={curso.id}
+                idCurso={curso.id}
                 imagem={curso.imagem || "/default-curso.png"}
                 titulo={curso.titulo}
                 descricao={curso.descricao}
+                categoria={curso.categoria}
+                vagas={curso.vagas}
+                linkInscricao={curso.linkInscricao}
                 cargaHoraria={curso.cargaHoraria || 0}
+                isOwner={false}
               />
             ))}
           </Carrossel>

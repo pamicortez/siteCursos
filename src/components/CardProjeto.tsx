@@ -96,6 +96,69 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
     setShowDeleteModal(true)
   }
 
+  // Função para obter a cor do badge baseado na categoria (igual ao CardCurso)
+  const getCategoriaBadgeColor = (categoria: string) => {
+    switch (categoria) {
+      case "Agricultura":
+        return "bg-green-100 text-green-800"
+      case "Silvicultura":
+        return "bg-emerald-100 text-emerald-800"
+      case "PescaEVeterinaria":
+        return "bg-teal-100 text-teal-800"
+      case "ArtesEHumanidades":
+        return "bg-purple-100 text-purple-800"
+      case "CienciasSociais":
+        return "bg-pink-100 text-pink-800"
+      case "ComunicacaoEInformacao":
+        return "bg-blue-100 text-blue-800"
+      case "CienciasNaturais":
+        return "bg-cyan-100 text-cyan-800"
+      case "MatematicaEEstatistica":
+        return "bg-indigo-100 text-indigo-800"
+      case "ComputacaoETecnologiaDaInformacao":
+        return "bg-violet-100 text-violet-800"
+      case "Engenharia":
+        return "bg-orange-100 text-orange-800"
+      case "ProducaoEConstrucao":
+        return "bg-amber-100 text-amber-800"
+      case "SaudeEBemEstar":
+        return "bg-red-100 text-red-800"
+      case "Educacao":
+        return "bg-yellow-100 text-yellow-800"
+      case "NegociosAdministracaoEDireito":
+        return "bg-slate-100 text-slate-800"
+      case "Servicos":
+        return "bg-gray-100 text-gray-800"
+      case "ProgramasBasicos":
+        return "bg-stone-100 text-stone-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  // Função para formatar o nome da categoria para exibição (igual ao CardCurso)
+  const formatarCategoria = (categoria: string) => {
+    const categoriaMap: { [key: string]: string } = {
+      "Agricultura": "Agricultura",
+      "Silvicultura": "Silvicultura",
+      "PescaEVeterinaria": "Pesca e Veterinária",
+      "ArtesEHumanidades": "Artes e Humanidades",
+      "CienciasSociais": "Ciências Sociais",
+      "ComunicacaoEInformacao": "Comunicação e Informação",
+      "CienciasNaturais": "Ciências Naturais",
+      "MatematicaEEstatistica": "Matemática e Estatística",
+      "ComputacaoETecnologiaDaInformacao": "Computação e TI",
+      "Engenharia": "Engenharia",
+      "ProducaoEConstrucao": "Produção e Construção",
+      "SaudeEBemEstar": "Saúde e Bem-estar",
+      "Educacao": "Educação",
+      "NegociosAdministracaoEDireito": "Neg., Adm. e Direito",
+      "Servicos": "Serviços",
+      "ProgramasBasicos": "Programas Básicos"
+    }
+    return categoriaMap[categoria] || categoria
+  }
+
   // Função para obter a cor do badge baseado na função do usuário
   const getFuncaoBadgeColor = (funcao?: string) => {
     switch (funcao) {
@@ -158,9 +221,16 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
             )}
           </div>
 
-          {/* Categoria e Status */}
+          {/* Categoria e Status - Layout original */}
           <div className="flex justify-between items-center mb-2 flex-shrink-0">
-            <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">{categoria}</span>
+            <span
+              className={cn(
+                "px-2 py-1 rounded-full text-xs font-medium",
+                getCategoriaBadgeColor(categoria)
+              )}
+            >
+              {formatarCategoria(categoria)}
+            </span>
             <span
               className={cn(
                 "px-2 py-1 rounded-full text-xs font-medium",
@@ -177,7 +247,6 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
 
           <div className="h-12 mb-2 flex-shrink-0">
             <p className="text-sm text-gray-700 line-clamp-2 overflow-hidden">
-              {/* {truncateText(descricao, maxCaracteres)} */}
               {descricao}
             </p>
           </div>

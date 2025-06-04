@@ -59,7 +59,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
   const isBase64 = primeiraImagem?.startsWith('data:image');
   const imageSrc = primeiraImagem 
     ? (isBase64 ? primeiraImagem : primeiraImagem?.startsWith('/') ? primeiraImagem : `/api/images?url=${encodeURIComponent(primeiraImagem)}`)
-    : '/evento1.jpg'; // Imagem padrão para eventos
+    : '/event1.jpg'; // Imagem padrão para eventos
 
   const handleDelete = async () => {
     setIsDeleting(true);
