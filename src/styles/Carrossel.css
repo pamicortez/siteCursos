@@ -4,7 +4,7 @@
   justify-content: center;
   position: relative;
   width: 100%;
-  max-width: 1000px;
+  max-width: 1100px;
   margin: auto;
   overflow: hidden;
 }
@@ -23,7 +23,7 @@
   flex: 0 0 calc(100% / 3);
   display: flex;
   justify-content: center;
-  padding: 25px;
+  padding: 40px;
 }
 @media (max-width: 768px) {
   .carrossel-item {

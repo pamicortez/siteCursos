@@ -17,6 +17,58 @@ Este é um projeto [Next.js](https://nextjs.org) iniciado com [`create-next-app`
 2. **React.js**
 3. **JavaScript/TypeScript**
 4. **Vercel**
+5. **PostgreSQL**
+
+## 🚀 Instalação do PostgreSQL
+
+### Windows
+1. Acesse: https://www.postgresql.org/download/windows/
+2. Baixe e execute o instalador.
+3. Siga os passos:
+   - Defina uma senha para o usuário `postgres`.
+   - Porta padrão: `5432`.
+4. Finalize e utilize o pgAdmin ou o terminal `psql`.
+
+### MacOS (com Homebrew)
+```bash
+brew update
+brew install postgresql
+brew services start postgresql
+psql --version
+```
+
+### Linux (Ubuntu/Debian)
+```bash
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+```
+
+---
+
+## 🎯 Comandos básicos
+### Acessar o PostgreSQL
+```bash
+psql -U postgres
+```
+
+### Criar um banco de dados
+```sql
+CREATE DATABASE nome_do_banco;
+```
+
+### Criar um usuário
+```sql
+CREATE USER nome_com_senha WITH PASSWORD 'senha';
+```
+
+### Dar permissões
+```sql
+GRANT ALL PRIVILEGES ON DATABASE nome_do_banco TO nome_com_senha;
+```
+
+---
 
 ## 💻 Instruções para Rodar o Projeto Localmente
 
@@ -28,8 +80,58 @@ Siga os passos abaixo para rodar o projeto em sua máquina local.
    git clone https://github.com/pamicortez/siteCursos.git
    cd siteCursos
    ```
+   Nessa pasta crie um arquivo ".env" manualmente com o seguinte conteúdo (substitua "senha" pela sua senha do Postgres):
+   ```bash
+   DATABASE_URL="postgresql://postgres:senha@localhost:5432/siteCursos"
+   ```
+   Ou faça isso por linha de comando usando (Linux, Mac e Git Bash (Windows)):
+    ```bash
+   echo 'DATABASE_URL="postgresql://postgres:senha@localhost:5432/siteCursos"' > .env
+   ```
+   Ou no Windows (Prompt de Comando — CMD):
+    ```bash
+   echo DATABASE_URL="postgresql://postgres:senha@localhost:5432/siteCursos" > .env
+   ```
 
-2. **Inicie o servidor de desenvolvimento**  
+2. **Instale as dependências**  
+    Execute o seguinte comando:
+
+    ```sh
+    npm install
+    ```
+
+3. **Inicie o banco de dados**  
+    Para aplicar as alterações no banco de dados, utilize os seguintes comandos:
+
+    ```sh
+    npx prisma migrate dev 
+    ```
+
+    Para gerar o cliente Prisma:
+
+    ```sh
+    npx prisma generate
+    ```
+
+    Caso queira resetar os dados de testes anteriores no seu banco de dados, caso contrário, pule essa etapa.
+    (**CUIDADO: isso irá apagar todos os dados do seu banco de dados local**):
+
+    ```sh
+    npx prisma migrate reset
+    ```
+
+    Para visualizar o banco de dados com Prisma Studio:
+
+    ```sh
+    npx prisma studio
+    ```
+4. **Popule o banco de dados**  
+   Execute o seguinte comando:
+   ```bash
+   node .\prisma\expanded-seed.js
+   ```
+
+5. **Inicie o servidor de desenvolvimento**  
    Execute um dos seguintes comandos:
    ```bash
    npm run dev
@@ -41,8 +143,11 @@ Siga os passos abaixo para rodar o projeto em sua máquina local.
    bun dev
    ```
 
-3. **Abra no navegador**  
-   Acesse [http://localhost:3000](http://localhost:3000) para visualizar o projeto.
+6. **Abra no navegador**  
+   Acesse [http://localhost:3000](http://localhost:3000) para visualizar o Projeto.
+
+7. **Abra no navegador**  
+   Acesse [http://localhost:5555/](http://localhost:5555/) para visualizar o Banco de Dados com Prisma Studio.
 
 ## 🔧 Funcionalidades Implementadas
 

@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+      "target": "ES2017",                        // >= ES2015 (resolve os erros com #private)
+      "module": "CommonJS",
+      "esModuleInterop": true,                   // resolve o erro do bcryptjs
+      "forceConsistentCasingInFileNames": true,
+      "strict": true,
+      "skipLibCheck": true,
+      "resolveJsonModule": true,
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["src/*"]
+      }
+    },
+    "include": ["prisma/seed.ts"]
+  }
+  

@@ -1,104 +1,280 @@
-// src/app/home/page.tsx
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import Carrossel from "@/components/Carrossel";
-import CardProfessor from "@/components/CardProfessor";
-import CardProjeto from "@/components/CardProjeto";
-import CardCurso from "@/components/CardCurso";
+import type React from "react"
+import { useState, useEffect } from "react"
+import Carrossel from "@/components/Carrossel"
+import CardProfessor from "@/components/CardProfessor"
+import CardProjeto from "@/components/CardProjeto"
+import CardCurso from "@/components/CardCurso"
+import CardEvento from "@/components/CardEvento"
 
-const professores = [
-  { imagem: "/prof1.jpg", nome: "João Silva", descricao: "Especialista em IA." },
-  { imagem: "/prof2.jpg", nome: "Ana Souza", descricao: "Doutora em Big Data." },
-  { imagem: "/prof3.jpg", nome: "Carlos Mendes", descricao: "PhD em Robótica." },
-  { imagem: "/prof4.jpg", nome: "Mariana Lima", descricao: "Engenheira de Software." },
-  { imagem: "/prof5.jpg", nome: "Ricardo Santos", descricao: "Especialista em Redes." },
-  { imagem: "/prof1.jpg", nome: "João Silva", descricao: "Especialista em IA." },
-  { imagem: "/prof2.jpg", nome: "Ana Souza", descricao: "Doutora em Big Data." },
-  { imagem: "/prof3.jpg", nome: "Carlos Mendes", descricao: "PhD em Robótica." },
-  { imagem: "/prof4.jpg", nome: "Mariana Lima", descricao: "Engenheira de Software." },
-  { imagem: "/prof5.jpg", nome: "Ricardo Santos", descricao: "Especialista em Redes." }
-];
+interface Usuario {
+  id: number
+  Nome: string
+  fotoPerfil: string
+  resumoPessoal: string
+}
 
-const projetos = [
-  { imagem: "/proj1.jpg", nome: "Tecnologia da Informação", descricao: "Curso de introdução e especialização em TI.", cargahoraria: "80 horas" },
-  { imagem: "/proj2.jpg", nome: "Física", descricao: "Projeto de pesquisa e desenvolvimento em física aplicada.", cargahoraria: "120 horas" },
-  { imagem: "/proj3.jpg", nome: "Química", descricao: "Curso focado em experimentos e teoria química avançada.", cargahoraria: "100 horas" },
-  { imagem: "/proj4.jpg", nome: "Matemática", descricao: "Projeto de inovação em métodos de ensino matemático.", cargahoraria: "90 horas" },
-  { imagem: "/proj5.jpg", nome: "História", descricao: "Curso de história mundial e metodologias de pesquisa histórica.", cargahoraria: "70 horas" },
-  { imagem: "/proj1.jpg", nome: "Tecnologia da Informação", descricao: "Curso de introdução e especialização em TI.", cargahoraria: "80 horas" },
-  { imagem: "/proj2.jpg", nome: "Física", descricao: "Projeto de pesquisa e desenvolvimento em física aplicada.", cargahoraria: "120 horas" },
-  { imagem: "/proj3.jpg", nome: "Química", descricao: "Curso focado em experimentos e teoria química avançada.", cargahoraria: "100 horas" },
-  { imagem: "/proj4.jpg", nome: "Matemática", descricao: "Projeto de inovação em métodos de ensino matemático.", cargahoraria: "90 horas" },
-  { imagem: "/proj5.jpg", nome: "História", descricao: "Curso de história mundial e metodologias de pesquisa histórica.", cargahoraria: "70 horas" },
-  { imagem: "/proj1.jpg", nome: "Tecnologia da Informação", descricao: "Curso de introdução e especialização em TI.", cargahoraria: "80 horas" },
-  { imagem: "/proj2.jpg", nome: "Física", descricao: "Projeto de pesquisa e desenvolvimento em física aplicada.", cargahoraria: "120 horas" },
-  { imagem: "/proj3.jpg", nome: "Química", descricao: "Curso focado em experimentos e teoria química avançada.", cargahoraria: "100 horas" },
-  { imagem: "/proj4.jpg", nome: "Matemática", descricao: "Projeto de inovação em métodos de ensino matemático.", cargahoraria: "90 horas" },
-  { imagem: "/proj5.jpg", nome: "História", descricao: "Curso de história mundial e metodologias de pesquisa histórica.", cargahoraria: "70 horas" },
-  { imagem: "/proj1.jpg", nome: "Tecnologia da Informação", descricao: "Curso de introdução e especialização em TI.", cargahoraria: "80 horas" },
-  { imagem: "/proj2.jpg", nome: "Física", descricao: "Projeto de pesquisa e desenvolvimento em física aplicada.", cargahoraria: "120 horas" },
-  { imagem: "/proj3.jpg", nome: "Química", descricao: "Curso focado em experimentos e teoria química avançada.", cargahoraria: "100 horas" },
-  { imagem: "/proj4.jpg", nome: "Matemática", descricao: "Projeto de inovação em métodos de ensino matemático.", cargahoraria: "90 horas" },
-  { imagem: "/proj5.jpg", nome: "História", descricao: "Curso de história mundial e metodologias de pesquisa histórica.", cargahoraria: "70 horas" }
-];
+interface Projeto {
+  id: number
+  titulo: string
+  imagem: string
+  descricao: string
+  categoria: string
+  dataInicio: string
+  dataFim: string
+  projetoUsuario?: Array<{
+    funcao: string
+    idUsuario: number
+  }>
+}
 
-const cursos = [
-  { imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas" },
-  { imagem: "/prof2.jpg", nome: "React", descricao: "Curso prático de desenvolvimento com React para aplicações web.", cargahoraria: "50 horas" },
-  { imagem: "/prof3.jpg", nome: "Inglês", descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.", cargahoraria: "60 horas" },
-  { imagem: "/prof4.jpg", nome: "Sistemas Embarcados", descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.", cargahoraria: "80 horas" },
-  { imagem: "/prof5.jpg", nome: "C/C++", descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.", cargahoraria: "70 horas" },
-  { imagem: "/proj1.jpg", nome: "Python", descricao: "Curso intensivo de programação em Python para iniciantes e avançados.", cargahoraria: "40 horas" },
-  { imagem: "/prof2.jpg", nome: "React", descricao: "Curso prático de desenvolvimento com React para aplicações web.", cargahoraria: "50 horas" },
-  { imagem: "/prof3.jpg", nome: "Inglês", descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.", cargahoraria: "60 horas" },
-  { imagem: "/prof4.jpg", nome: "Sistemas Embarcados", descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.", cargahoraria: "80 horas" },
-  { imagem: "/prof5.jpg", nome: "C/C++", descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.", cargahoraria: "70 horas" }
-];
+interface Curso {
+  id: number
+  titulo: string
+  imagem: string
+  descricao: string
+  cargaHoraria: number
+  categoria: string
+  vagas: number
+  linkInscricao: string
+}
 
-export default function HomePage() {
-  const [linhas, setLinhas] = useState(2);
+interface Evento {
+  id: number
+  titulo: string
+  descricao: string
+  data: string
+  linkParticipacao: string
+  imagemEvento: Array<{
+    id: number
+    link: string
+  }>
+}
 
+const HomePage: React.FC = () => {
+  const [linhas, setLinhas] = useState(2)
+  const [usuarios, setUsuarios] = useState<Usuario[]>([])
+  const [projetos, setProjetos] = useState<Projeto[]>([])
+  const [eventos, setEventos] = useState<Evento[]>([])
+  const [cursos, setCursos] = useState<Curso[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Atualiza o número de linhas do carrossel de acordo com o tamanho da tela
   useEffect(() => {
     const handleResize = () => {
-      setLinhas(window.innerWidth < 768 ? 1 : 2);
-    };
+      setLinhas(window.innerWidth < 768 ? 1 : 2)
+    }
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    handleResize()
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setError(null)
+
+        // Buscar usuários
+        try {
+          const usuariosResponse = await fetch("/api/usuario")
+          if (usuariosResponse.ok) {
+            const usuariosData = await usuariosResponse.json()
+            setUsuarios(Array.isArray(usuariosData) ? usuariosData : [])
+          } else {
+            console.error("Erro ao buscar usuários:", usuariosResponse.status)
+          }
+        } catch (err) {
+          console.error("Erro ao buscar usuários:", err)
+        }
+
+        // Buscar projetos
+        try {
+          console.log("Tentando buscar projetos...")
+          const projetosResponse = await fetch("/api/projeto")
+          console.log("Response status:", projetosResponse.status)
+
+          if (projetosResponse.ok) {
+            const projetosData = await projetosResponse.json()
+            console.log("Projetos recebidos:", projetosData)
+            setProjetos(Array.isArray(projetosData) ? projetosData : [])
+          } else {
+            console.error("Erro ao buscar projetos:", projetosResponse.status, projetosResponse.statusText)
+            setProjetos([])
+          }
+        } catch (err) {
+          console.error("Erro ao buscar projetos:", err)
+          setProjetos([])
+        }
+
+        // Buscar cursos
+        try {
+          const cursosResponse = await fetch("/api/curso")
+          if (cursosResponse.ok) {
+            const cursosData = await cursosResponse.json()
+            setCursos(Array.isArray(cursosData) ? cursosData : [])
+          } else {
+            console.error("Erro ao buscar cursos:", cursosResponse.status)
+          }
+        } catch (err) {
+          console.error("Erro ao buscar cursos:", err)
+        }
+
+        // Buscar eventos
+        try {
+          console.log("Tentando buscar eventos...")
+          const eventosResponse = await fetch("/api/evento")
+          console.log("Response status eventos:", eventosResponse.status)
+
+          if (eventosResponse.ok) {
+            const eventosData = await eventosResponse.json()
+            console.log("Eventos recebidos:", eventosData)
+            setEventos(Array.isArray(eventosData) ? eventosData : [])
+          } else {
+            console.error("Erro ao buscar eventos:", eventosResponse.status, eventosResponse.statusText)
+            setEventos([])
+          }
+        } catch (err) {
+          console.error("Erro ao buscar eventos:", err)
+          setEventos([])
+        }
+      } catch (error) {
+        console.error("Erro geral ao buscar dados:", error)
+        setError("Erro ao carregar dados")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Erro</h2>
+          <p className="text-gray-700">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container space-y-4">
       <div className="mt-12">
         <h1 className="text-center text-3xl font-bold">Professores</h1>
-        <Carrossel>
-          {professores.map((professor, index) => (
-            <CardProfessor key={index} {...professor} />
-          ))}
-        </Carrossel>
+        {usuarios.length > 0 ? (
+          <Carrossel>
+            {usuarios.map((usuario) => (
+              <CardProfessor
+                key={usuario.id}
+                idProfessor={usuario.id}
+                imagem={usuario.fotoPerfil || "/default.png"}
+                nome={usuario.Nome}
+                descricao={usuario.resumoPessoal || "Sem descrição"}
+              />
+            ))}
+          </Carrossel>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>Nenhum professor encontrado</p>
+          </div>
+        )}
       </div>
 
       <div className="mt-20">
         <h1 className="px-8 text-left text-3xl font-bold">Projetos</h1>
-        <Carrossel linhas={linhas}>
-          {projetos.map((projeto, index) => (
-            <CardProjeto key={index} {...projeto} />
-          ))}
-        </Carrossel>
-
-      </div>    
+        {projetos.length > 0 ? (
+          <Carrossel linhas={linhas}>
+            {projetos.map((projeto) => (
+              <CardProjeto
+                key={projeto.id}
+                idProjeto={projeto.id}
+                imagem={projeto.imagem || "/default-projeto.png"}
+                titulo={projeto.titulo}
+                descricao={projeto.descricao}
+                categoria={projeto.categoria}
+                dataInicio={projeto.dataInicio}
+                dataFim={projeto.dataFim}
+                isOwner={false}
+              />
+            ))}
+          </Carrossel>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>Nenhum projeto encontrado</p>
+            <p className="text-sm">Debug: Tentando buscar de /api/projeto</p>
+          </div>
+        )}
+      </div>
 
       <div className="mt-20">
         <h1 className="px-8 text-left text-3xl font-bold">Cursos</h1>
-        <Carrossel linhas={linhas}>
-          {cursos.map((curso, index) => (
-            <CardCurso key={index} {...curso} />
-          ))}
-        </Carrossel>
-      </div>    
+        {cursos.length > 0 ? (
+          <Carrossel linhas={linhas}>
+            {cursos.map((curso) => (
+              <CardCurso
+                idCurso={curso.id}
+                imagem={curso.imagem || "/default-curso.png"}
+                titulo={curso.titulo}
+                descricao={curso.descricao}
+                categoria={curso.categoria}
+                vagas={curso.vagas}
+                linkInscricao={curso.linkInscricao}
+                cargaHoraria={curso.cargaHoraria || 0}
+                isOwner={false}
+              />
+            ))}
+          </Carrossel>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>Nenhum curso encontrado</p>
+          </div>
+        )}
+      </div>
 
+      <div className="mt-20">
+        <h1 className="px-8 text-left text-3xl font-bold">Eventos</h1>
+        {eventos.length > 0 ? (
+          <Carrossel linhas={linhas}>
+            {eventos.map((evento) => (
+              <CardEvento
+                key={evento.id}
+                idEvento={evento.id}
+                titulo={evento.titulo}
+                descricao={evento.descricao}
+                data={evento.data}
+                linkParticipacao={evento.linkParticipacao || "#"}
+                imagens={evento.imagemEvento?.map((img) => img.link) || ["/event1.jpg"]}
+                isOwner={false}
+              />
+            ))}
+          </Carrossel>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p>Nenhum evento encontrado</p>
+          </div>
+        )}
+      </div>
     </div>
-  );
+  )
 }
+
+export default HomePage

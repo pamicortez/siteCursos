@@ -12,6 +12,9 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
   const [carrosselWidth, setCarrosselWidth] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Verifica se a quantidade de filhos é menor que 4 e força linhas = 1
+  const actualLinhas = children.length < 4 ? 1 : linhas;
+
   // Usa useLayoutEffect para medir a largura inicial do carrossel
   useLayoutEffect(() => {
     if (carrosselRef.current) {
@@ -37,7 +40,7 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
 
   // Se for mobile, exibe 1 item por slide; caso contrário, exibe 3
   const actualColumns = isMobile ? 1 : 3;
-  const itemsPerSlide = linhas * actualColumns;
+  const itemsPerSlide = actualLinhas * actualColumns;
   const slides: React.ReactNode[][] = [];
   
   for (let i = 0; i < children.length; i += itemsPerSlide) {
@@ -47,7 +50,7 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
   const totalSlides = slides.length;
   // Se mobile, cada card terá a largura total do carrossel; senão, divide pela quantidade de colunas
   const cardWidth = isMobile ? carrosselWidth : carrosselWidth / actualColumns;
-  const cardHeight = isMobile ? 100 : 100 / linhas;
+  const cardHeight = isMobile ? 100 : 100 / actualLinhas;
 
   const nextSlide = () => {
     setIndex((prevIndex) => (prevIndex + 1) % totalSlides);
@@ -59,8 +62,13 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
 
   return (
     <div className="carrossel-container" ref={carrosselRef} style={{ width: "100%" }}>
-      <button className="carrossel-btn left" onClick={prevSlide}>
-        {"<"}
+      {/* Botão Anterior */}
+      <button 
+        onClick={prevSlide}
+        className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center font-bold text-gray-700 hover:bg-gray-50 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 z-10"
+        style={{ left: '10px' }}
+      >
+        &lt;
       </button>
 
       <div className="carrossel">
@@ -91,8 +99,13 @@ const Carrossel: React.FC<CarrosselProps> = ({ children, linhas = 1 }) => {
         </div>
       </div>
 
-      <button className="carrossel-btn right" onClick={nextSlide}>
-        {">"}
+      {/* Botão Próximo */}
+      <button 
+        onClick={nextSlide}
+        className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center font-bold text-gray-700 hover:bg-gray-50 hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 z-10"
+        style={{ right: '10px' }}
+      >
+        &gt;
       </button>
     </div>
   );
