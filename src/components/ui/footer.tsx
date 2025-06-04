@@ -19,6 +19,7 @@ interface Footer2Props {
   };
   tagline?: string;
   menuItems?: MenuItem[];
+  menuItems2?: MenuItem[];
   copyright?: string;
   bottomLinks?: {
     text: string;
@@ -38,8 +39,8 @@ const Footer2 = ({
     {
       title: "Site",
       links: [
-        { text: "Home", url: "#" },
-        { text: "Pesquisa", url: "#" },
+        { text: "Home", url: "/" },
+        { text: "Pesquisa", url: "/pages/search" },
         { text: "Sobre", url: "#" },
       ],
     },
@@ -48,10 +49,16 @@ const Footer2 = ({
     {
       title: "Desenvolvedores",
       links: [
-        { text: "Aluno 1", url: "#" },
-        { text: "Aluno 2", url: "#" },
-        { text: "Aluno 3", url: "#" },
-        { text: "...", url: "#" },
+        { text: "Alexsami Lopes", url: "https://github.com/alexsami-lopes" },
+        { text: "Cláudia", url: "https://github.com/clsf" },
+        { text: "Dermeval Neves", url: "https://github.com/Dermeval" },
+        { text: "Filipe Carvalho", url: "https://github.com/ripe-glv" },
+        { text: "Leticia Ribeiro", url: "https://github.com/leticiaribeiro7" },
+        { text: "Luis Fernando do Rosario Cintra", url: "https://github.com/fernandocintra2871" },
+        { text: "Nirvan Yang", url: "https://github.com/yxngnd" },
+        { text: "Vanderleicio", url: "https://github.com/Vanderleicio" },
+        { text: "Wagner Alexandre", url: "https://github.com/WagnerAlexandre" },
+        { text: "Washington Oliveira Júnior", url: "https://github.com/wlfoj" },
       ],
     },
   ],
