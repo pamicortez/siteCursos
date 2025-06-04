@@ -168,6 +168,30 @@ const Navbar = () => {
     }
   };
 
+    // Função para formatar o nome da categoria para exibição (igual ao CardCurso)
+    const formatarCategoria = (categoria: string) => {
+      const categoriaMap: { [key: string]: string } = {
+        "Agricultura": "Agricultura",
+        "Silvicultura": "Silvicultura",
+        "PescaEVeterinaria": "Pesca e Veterinária",
+        "ArtesEHumanidades": "Artes e Humanidades",
+        "CienciasSociais": "Ciências Sociais",
+        "ComunicacaoEInformacao": "Comunicação e Informação",
+        "CienciasNaturais": "Ciências Naturais",
+        "MatematicaEEstatistica": "Matemática e Estatística",
+        "ComputacaoETecnologiaDaInformacao": "Computação e TI",
+        "Engenharia": "Engenharia",
+        "ProducaoEConstrucao": "Produção e Construção",
+        "SaudeEBemEstar": "Saúde e Bem-estar",
+        "Educacao": "Educação",
+        "NegociosAdministracaoEDireito": "Neg., Adm. e Direito",
+        "Servicos": "Serviços",
+        "ProgramasBasicos": "Programas Básicos"
+      }
+      return categoriaMap[categoria] || categoria
+    }
+  
+
   return (
     <>
      
@@ -210,7 +234,7 @@ const Navbar = () => {
                     href={`/category/${category.toLowerCase()}`}
                     className="block whitespace-nowrap px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
                   >
-                    {category}
+                    {formatarCategoria(category)}
                   </a>
                   ))}
                 </div>
