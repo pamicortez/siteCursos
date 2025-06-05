@@ -1,7 +1,6 @@
 
 "use client"
-import 'dotenv/config'
-
+//import 'dotenv/config'
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
