@@ -1,11 +1,13 @@
 "use client"
 
 import React, {useState, useEffect} from 'react'
-import { useSearchParams, useRouter, notFound } from 'next/navigation';
-import CreatableSelect from 'react-select/creatable';
+import {useSession} from "next-auth/react"
+import { useSearchParams, useRouter, notFound, redirect } from 'next/navigation';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import ImageCropper from "@/components/ui/ImageCropper"
+
 import {
   Select,
   SelectContent,
@@ -27,23 +29,23 @@ type AulaType = {
 };
 
 enum Categoria {
-  Agricultura = "Agricultura",
-  Silvicultura = "Silvicultura",
-  PescaEVeterinaria = "Pesca e Veterinária",
-  ArtesEHumanidades = "Artes e Humanidades",
-  CienciasSociais = "Ciências Sociais",
-  ComunicacaoEInformacao = "Comunicação e Informação",
-  CienciasNaturais = "Ciências Naturais",
-  MatematicaEEstatistica = "Matemática e Estatística",
-  ComputacaoETecnologiaDaInformacao = "Computação e TI",
-  Engenharia = "Engenharia",
-  ProducaoEConstrucao = "Produção e Construção",
-  SaudeEBemEstar = "Saúde e Bem-Estar",
-  Educacao = "Educação",
-  NegociosAdministracaoEDireito = "Negócios, Administração e Direito",
-  Servicos = "Serviços",
-  ProgramasBasicos = "Programas Básicos",
+  SaudeEBemEstar = "Saúde e Bem-estar",
+  CienciasBiologicasENaturais = "Ciências Biológicas e Naturais",
+  TecnologiaEComputacao = "Tecnologia e Computação",
+  EngenhariaEProducao = "Engenharia e Produção",
+  CienciasSociaisENegocios = "Ciências Sociais Aplicadas e Negócios",
+  EducacaoEFormacao = "Educação e Formação de Professores",
+  CienciasExatas = "Ciências Exatas",
+  CienciasHumanas = "Ciências Humanas",
+  MeioAmbienteESustentabilidade = "Meio Ambiente e Sustentabilidade",
+  LinguagensELetrasEComunicacao = "Linguagens, Letras e Comunicação",
+  ArtesECultura = "Artes e Cultura",
+  CienciasAgrarias = "Ciências Agrárias",
+  PesquisaEInovacao = "Pesquisa e Inovação",
+  ServicosSociaisEComunitarios = "Serviços Sociais e Comunitários",
+  GestaoEPlanejamento = "Gestão e Planejamento",
 }
+
 
 
 export default function Curso() {
@@ -52,15 +54,21 @@ export default function Curso() {
   const idProjeto = searchParams.get('idProjeto')
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (!user) {
-  //     router.replace('/'); // (fazer isso tbm caso nao esteja logado)
-  //   }
-  // }, [idProjeto, router]);
+  const { data: session, status } = useSession();
+  console.log(session?.user.id)
+
+
 
   if (!idProjeto) {
     notFound(); // Retorna 404 se nao tiver o idProjeto
   }
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
 
   const categoriasOptions = Object.entries(Categoria).map(([value, label]) => ({
   value,
@@ -89,6 +97,12 @@ export default function Curso() {
     setAulas(updatedAulas);
   };
 
+  const categoriaOptions = Object.entries(Categoria).map(([key, value]) => ({
+    label: value,
+    value: key,
+  }));
+
+
 
 
   const addAula = () => {
@@ -103,34 +117,6 @@ export default function Curso() {
     setAulas(updatedAulas);
   };
 
-
-    const customStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: "white",
-      borderWidth: "1px",
-      borderRadius: "6px",
-      minHeight: "30px",
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: "white",
-      borderRadius: "6px",
-      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-    }),
-    option: (provided: any, state: { isFocused: any; }) => ({
-      ...provided,
-      backgroundColor: state.isFocused ? "#EEF2FF" : "white",
-      color: "#111827",
-      padding: "10px",
-      cursor: "pointer",
-    }),
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "#9CA3AF", // Cinza do Tailwind
-      fontSize: "14px",
-    }),
-  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -186,13 +172,13 @@ export default function Curso() {
     const data = {
       titulo: formData.get("titulo"),
       metodologia: formData.get("metodologia"),
-      categoria: selectedOption?.value, // Seleção feita com react-select
+      categoria: formData.get('categoria'),
       descricao: formData.get('descricao'),
       bibliografia: formData.get('bibliografia'),
       imagem: imagemBase64,
       aulas: aulasConvertidas,
-      idProjeto: Number(idProjeto), // recebe via query param ?idprojeto
-      idUsuario: 1, // como pegar
+      idProjeto: Number(idProjeto),
+      idUsuario: Number(session?.user.id),
       linkInscricao: formData.get('inscricao'),
       vagas: Number(formData.get('vagas')),
       metodoAvaliacao: formData.get('avaliacao'),
@@ -305,8 +291,11 @@ export default function Curso() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="Opção 1">Opção 1</SelectItem>
-                      <SelectItem value="Opção 2">Opção 2</SelectItem>
+                      {categoriaOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
@@ -319,7 +308,7 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="apostila">Apostila</Label>
-              <Input type="file" name="apostila"></Input>
+              <Input type="file" accept=".pdf" name="apostila"></Input>
             </div>
 
             <div className="grid items-center gap-1.5">
