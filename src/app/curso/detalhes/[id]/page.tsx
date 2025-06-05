@@ -45,7 +45,7 @@ export default function DetalhesCurso() {
 
   useEffect(() => {
     async function loadCurso() {
-      const res = await fetch(`http://localhost:3000/api/curso?id=${id}`);
+      const res = await fetch(`/api/curso?id=${id}`);
       const data = await res.json();
       setCurso(data);
     }

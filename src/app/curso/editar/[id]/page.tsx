@@ -63,7 +63,7 @@ export default function Curso() {
   useEffect(() => {
     async function loadCurso() {
       
-      const res = await fetch(`http://localhost:3000/api/curso?id=${id}`); 
+      const res = await fetch(`/api/curso?id=${id}`); 
 
       const data = await res.json();
       setCurso(data)
@@ -376,7 +376,7 @@ export default function Curso() {
                   <SelectContent>
                     <SelectGroup>
                       <SelectItem value="Provas e projetos">Provas e projetos</SelectItem>
-                      <SelectItem value="banana">Banana</SelectItem>
+                      <SelectItem value="Outro">Outro</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>

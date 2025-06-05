@@ -1,14 +1,14 @@
 -- Inserindo usuários
 INSERT INTO "Usuario" (email, "fotoPerfil", senha, "Nome", "Titulacao", "instituicaoEnsino", "formacaoAcademica", "resumoPessoal", "createdAt", "updatedAt")
 VALUES
-('joao@email.com', 'https://example.com/foto1.jpg', 'senha123', 'João Silva', 'Doutor', 'Universidade X', 'Engenharia de Software', 'Pesquisador na área de IA', NOW(), NOW()),
-('maria@email.com', 'https://example.com/foto2.jpg', 'senha456', 'Maria Souza', 'Mestre', 'Universidade Y', 'Ciência da Computação', 'Especialista em segurança digital', NOW(), NOW());
+('jose@email.com', '/prof1.jpg', 'senha123', 'José Machado', 'Doutor', 'Universidade X', 'Engenharia de Software', 'Pesquisador na área de IA', NOW(), NOW()),
+('julia@email.com', '/prof2.jpg', 'senha123', 'Júlia Souza', 'Mestre', 'Universidade Y', 'Ciência da Computação', 'Especialista em segurança digital', NOW(), NOW());
 
 -- Inserindo projetos
 INSERT INTO "Projeto" (titulo, imagem, descricao, categoria, "dataInicio", "dataFim", "createdAt", "updatedAt")
 VALUES
-('Projeto AI', 'https://example.com/projeto1.jpg', 'Projeto sobre inteligência artificial', 'Tecnologia', '2024-01-10', '2024-12-20', NOW(), NOW()),
-('Projeto Bio', 'https://example.com/projeto2.jpg', 'Projeto sobre biotecnologia', 'Ciências', '2024-02-15', '2024-11-30', NOW(), NOW());
+('Projeto AI', '/proj1.jpg', 'Projeto sobre inteligência artificial', 'Tecnologia', '2024-01-10', '2024-12-20', NOW(), NOW()),
+('Projeto Bio', '/proj3.jpg', 'Projeto sobre biotecnologia', 'Ciências', '2024-02-15', '2024-11-30', NOW(), NOW());
 
 -- Inserindo cursos
 INSERT INTO "Curso" (titulo, imagem, descricao, categoria, "cargaHoraria", "linkInscricao", vagas, bibliografia, metodologia, "metodoAvaliacao", "idProjeto", "idUsuario", "createdAt", "updatedAt")

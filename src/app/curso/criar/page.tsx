@@ -335,8 +335,8 @@ export default function Curso() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="apple">Apple</SelectItem>
-                      <SelectItem value="banana">Banana</SelectItem>
+                      <SelectItem value="Provas e projetos">Provas e projetos</SelectItem>
+                      <SelectItem value="Outro">Outro</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>

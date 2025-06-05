@@ -6,7 +6,7 @@ const Logo = () => {
       href="/" 
       className="flex items-center transition-all duration-300 ease-in-out hover:opacity-80"
     >
-      <span className="font-bold text-xl text-black uppercase tracking-wide">Nome do Site</span>
+      <span className="font-bold text-xl text-white uppercase tracking-wide">Nome do Site</span>
     </a>
   );
 };

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,14 +12,70 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2 } from 'lucide-react'; 
+import { Trash2 } from 'lucide-react';
+import { useRouter, useParams } from 'next/navigation';
 
 type Collaborator = {
   name: string;
   role: string;
 };
 
+type ColaboradorFromAPI = {
+  id: number;
+  nome: string;
+};
+
+function ConfirmationModal({ 
+  isOpen, 
+  onClose, 
+  onConfirm,
+  title,
+  message,
+  confirmText,
+  variant = 'default'
+}: { 
+  isOpen: boolean; 
+  onClose?: () => void; 
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText: string;
+  variant?: 'default' | 'destructive';
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200">
+        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        <p className="mb-6">{message}</p>
+        <div className="flex justify-end gap-4">
+          {onClose && (
+            <Button 
+              variant="outline"
+              onClick={onClose}
+            >
+              Continuar editando
+            </Button>
+          )}
+          <Button 
+            variant={variant}
+            onClick={onConfirm}
+          >
+            {confirmText}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Projeto() {
+  const router = useRouter();
+  const params = useParams();
+  const projectId = params?.id as string | undefined;
+
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [projectData, setProjectData] = useState({
     title: '',
     description: '',
@@ -30,8 +86,106 @@ export default function Projeto() {
   });
 
   const [collaborators, setCollaborators] = useState<Collaborator[]>([
-    { name: '', role: '' }, // Inicia com um colaborador vazio
+    { name: '', role: '' },
   ]);
+
+  const [cargosColaborador, setCargosColaborador] = useState<string[]>([]);
+  const [cargo, setCargo] = useState<string>("Coordenador");
+  const [loadingCargos, setLoadingCargos] = useState(true);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showResultDialog, setShowResultDialog] = useState(false);
+  const [resultDialog, setResultDialog] = useState({
+    title: '',
+    message: '',
+    isError: false,
+    projectId: null as string | null,
+  });
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<ColaboradorFromAPI[]>([]);
+  const [suggestions, setSuggestions] = useState<{index: number, names: string[]} | null>(null);
+
+  useEffect(() => {
+    const fetchCargosColaborador = async () => {
+      try {
+        const response = await fetch("/api/enums/colaboradorCategoria");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar cargos de colaborador");
+        }
+        const data = await response.json();
+        setCargosColaborador(data);
+      } catch (error) {
+        console.error("Erro:", error);
+      } finally {
+        setLoadingCargos(false);
+      }
+    };
+
+    const fetchColaboradores = async () => {
+      try {
+        const response = await fetch("/api/colaborador");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar colaboradores");
+        }
+        const data = await response.json();
+        setColaboradoresDisponiveis(data);
+      } catch (error) {
+        console.error("Erro ao buscar colaboradores:", error);
+      }
+    };
+
+    fetchCargosColaborador();
+    fetchColaboradores();
+  }, []);
+
+  useEffect(() => {
+    if (projectId) {
+      setIsEditMode(true);
+      fetchProjectData(projectId);
+    }
+  }, [projectId]);
+
+  const fetchProjectData = async (id: string) => {
+    try {
+      const response = await fetch(`/api/projeto?id=${id}`);
+      if (!response.ok) throw new Error('Projeto não encontrado');
+
+      const data = await response.json();
+      setProjectData({
+        title: data.titulo,
+        description: data.descricao,
+        startDate: data.dataInicio.split('T')[0],
+        endDate: data.dataFim ? data.dataFim.split('T')[0] : '',
+        category: data.categoria,
+        image: data.imagem,
+      });
+
+      if (data.colaboradores) {
+        setCollaborators(data.colaboradores);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar projeto:", error);
+    }
+  };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/enums/categoriaCurso");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar categorias de projeto");
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Erro:", error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+  
+    fetchCategories();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -44,42 +198,174 @@ export default function Projeto() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setProjectData(prevState => ({
-        ...prevState,
-        image: URL.createObjectURL(file),
-      }));
+      const reader = new FileReader();
+      
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        setProjectData(prevState => ({
+          ...prevState,
+          image: base64String 
+        }));
+      };
+      
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleCollaboratorChange = (index: number, field: string, value: string) => {
+  const handleCollaboratorNameChange = (index: number, value: string) => {
+    // Permite espaços entre palavras, mas remove espaços extras no início/final
+    const trimmedValue = value.trimStart(); // Mantém espaços no meio, mas remove no início
+    
+    // Verifica se há múltiplos espaços consecutivos e substitui por um único
+    const normalizedValue = trimmedValue.replace(/\s+/g, ' ');
+    
+    // Verifica se há mais de duas palavras (nome + sobrenome)
+    const wordCount = normalizedValue.split(' ').filter(word => word.length > 0).length;
+    if (wordCount > 2) {
+      return; // Não permite mais de dois nomes
+    }
+  
     const updatedCollaborators = [...collaborators];
     updatedCollaborators[index] = {
       ...updatedCollaborators[index],
-      [field]: value,
+      name: normalizedValue,
+    };
+    setCollaborators(updatedCollaborators);
+  
+    // Mostrar sugestões se houver texto
+    if (normalizedValue.length > 0) {
+      const matchedNames = colaboradoresDisponiveis
+        .filter(colab => colab.nome.toLowerCase().includes(normalizedValue.toLowerCase()))
+        .map(colab => colab.nome)
+        .slice(0, 5); // Limita a 5 sugestões
+      
+      setSuggestions(matchedNames.length > 0 ? {index, names: matchedNames} : null);
+    } else {
+      setSuggestions(null);
+    }
+  };
+
+  const handleCollaboratorRoleChange = (index: number, value: string) => {
+    const updatedCollaborators = [...collaborators];
+    updatedCollaborators[index] = {
+      ...updatedCollaborators[index],
+      role: value,
     };
     setCollaborators(updatedCollaborators);
   };
 
-  const addCollaborator = React.useCallback(() => {
+  const addCollaborator = useCallback(() => {
     setCollaborators([...collaborators, { name: '', role: '' }]);
   }, [collaborators]);
 
   const removeCollaborator = (index: number) => {
     const updatedCollaborators = collaborators.filter((_, i) => i !== index);
     setCollaborators(updatedCollaborators);
+    setSuggestions(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const selectSuggestion = (index: number, name: string) => {
+    const updatedCollaborators = [...collaborators];
+    updatedCollaborators[index] = {
+      ...updatedCollaborators[index],
+      name: name,
+    };
+    setCollaborators(updatedCollaborators);
+    setSuggestions(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({
-      ...projectData,
-      collaborators,
-    });
-    // Aqui lógica para salvar os dados
+
+    // Validação dos nomes dos colaboradores (remove espaços extras)
+    const validatedCollaborators = collaborators.map(colab => ({
+      ...colab,
+      name: colab.name.trim().replace(/\s+/g, ' '), 
+    }));
+
+    const requestBody = {
+      titulo: projectData.title,
+      imagem: projectData.image,
+      descricao: projectData.description,
+      categoria: projectData.category,
+      dataInicio: new Date(projectData.startDate).toISOString(),
+      dataFim: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
+      funcao: cargo,
+      colaboradores: validatedCollaborators.map(colaborador => ({
+        categoria: colaborador.role,
+        nome: colaborador.name.trim() // Garante que não há espaços extras
+      })),
+      ...(isEditMode ? {} : { usuarioId: 1 })
+    };
+    
+    console.log(requestBody)
+  
+    try {
+      const rout = isEditMode ? `/api/projeto?id=${projectId}` : "/api/projeto";
+      const response = await fetch(rout, {
+        method: isEditMode ? "PATCH" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        setResultDialog({
+          title: 'Sucesso!',
+          message: isEditMode ? 'Projeto atualizado com sucesso.' : 'Projeto criado com sucesso.',
+          isError: false,
+          projectId: data.id 
+        });
+      } else {
+        const errorData = await response.json();
+        console.error("Erro da API:", errorData);
+        setResultDialog({
+          title: 'Erro',
+          message: 'Erro ao salvar o projeto, tente novamente mais tarde.',
+          isError: true,
+          projectId: null
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      setResultDialog({
+        title: 'Erro',
+        message: 'Erro ao salvar o projeto, tente novamente mais tarde.',
+        isError: true,
+        projectId: null
+      });
+    } finally {
+      setShowResultDialog(true);
+    }
   };
 
-  const handleCancel = () => {
-    // Lógica para cancelar (limpar o formulário ou redirecionar)
+  const handleSuccessConfirm = () => {
+    if (resultDialog.projectId) {
+      router.push(`/projeto/${resultDialog.projectId}`);
+    } else {
+      setShowResultDialog(false);
+    }
+  };
+
+  const handleCancelClick = () => {
+    const hasData = projectData.title || 
+                   projectData.description || 
+                   projectData.startDate || 
+                   projectData.endDate || 
+                   projectData.category || 
+                   projectData.image || 
+                   collaborators.some(c => c.name || c.role);
+    
+    if (hasData) {
+      setShowCancelDialog(true);
+    } else {
+      router.push('/home');
+    }
+  };
+
+  const handleConfirmCancel = () => {
     setProjectData({
       title: '',
       description: '',
@@ -89,17 +375,21 @@ export default function Projeto() {
       image: '',
     });
     setCollaborators([{ name: '', role: '' }]);
-    console.log("Formulário cancelado");
+    setShowCancelDialog(false);
+    router.push('/home');
+  };
+
+  const handleContinueEditing = () => {
+    setShowCancelDialog(false);
   };
 
   return (
     <div className="flex justify-center">
       <form onSubmit={handleSubmit} className="w-full max-w-4xl px-4">
         <div className="py-12">
-          <h1 className="text-3xl font-bold mb-12 text-center">Criar Projeto</h1>
+          <h1 className="text-3xl font-bold mb-12 text-center">{isEditMode ? 'Editar Projeto' : 'Criar Projeto'}</h1>
 
-          {/* Linha 1: Título do projeto */}
-          <div className="grid gap-8 mb-8"> {/* Aumentei o gap para 8 */}
+          <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="title">Título do projeto*</Label>
               <Input
@@ -113,8 +403,7 @@ export default function Projeto() {
             </div>
           </div>
 
-          {/* Linha 2: Descrição do projeto */}
-          <div className="grid gap-8 mb-8"> {/* Aumentei o gap para 8 */}
+          <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="description">Descrição do projeto*</Label>
               <textarea
@@ -127,9 +416,38 @@ export default function Projeto() {
               />
             </div>
           </div>
+          
+          <div className="grid gap-8 mb-8">
+            <div className="grid items-center gap-1.5">
+              <Label className="text-sm font-medium text-gray-700">Meu cargo no projeto*</Label>
+              <div className="flex items-center space-x-6 mt-2">
+                <label className="inline-flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    className="h-4 w-4 accent-black border-gray-300 focus:ring-black cursor-pointer"
+                    name="cargo"
+                    value="Coordenador"
+                    checked={cargo === "Coordenador"}
+                    onChange={() => setCargo("Coordenador")}
+                  />
+                  <span className="text-sm text-gray-700">Coordenador</span>
+                </label>
+                <label className="inline-flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    className="h-4 w-4 accent-black border-gray-300 focus:ring-black cursor-pointer"
+                    name="cargo"
+                    value="Colaborador"
+                    checked={cargo === "Colaborador"}
+                    onChange={() => setCargo("Colaborador")}
+                  />
+                  <span className="text-sm text-gray-700">Colaborador</span>
+                </label>
+              </div>
+            </div>
+          </div>
 
-          {/* Linha 3: Datas de início e finalização */}
-          <div className="grid gap-8 mb-8 md:grid-cols-2"> {/* Aumentei o gap para 8 */}
+          <div className="grid gap-8 mb-8 md:grid-cols-2">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="startDate">Data de início do projeto*</Label>
               <Input
@@ -154,11 +472,11 @@ export default function Projeto() {
             </div>
           </div>
 
-          {/* Linha 4: Categoria e Imagem */}
-          <div className="grid gap-8 mb-8 md:grid-cols-2"> {/* Aumentei o gap para 8 */}
+          <div className="grid gap-8 mb-8 md:grid-cols-2">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="category">Categoria do projeto*</Label>
               <Select
+                value={projectData.category}
                 onValueChange={(value) => setProjectData(prevState => ({
                   ...prevState,
                   category: value,
@@ -169,9 +487,15 @@ export default function Projeto() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    <SelectItem value="informatica">Informática</SelectItem>
-                    <SelectItem value="design">Design</SelectItem>
-                    <SelectItem value="marketing">Marketing</SelectItem>
+                    {loadingCategories ? (
+                      <SelectItem value="loading" disabled>Carregando categorias...</SelectItem>
+                    ) : (
+                      categories.map((category) => (
+                        <SelectItem key={category} value={category}>
+                          {category}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -184,12 +508,12 @@ export default function Projeto() {
                 id="image"
                 name="image"
                 onChange={handleImageChange}
+                accept="image/png, image/jpeg, image/jpg, image/webp"
               />
             </div>
           </div>
 
-          {/* Linha 5: Colaboradores */}
-          <div className="grid gap-8 mb-8"> {/* Aumentei o gap para 8 */}
+          <div className="grid gap-8 mb-8">
             <div className="flex justify-between items-center">
               <Label>Colaboradores</Label>
               <Button type="button" onClick={addCollaborator} className="w-fit">
@@ -198,28 +522,46 @@ export default function Projeto() {
             </div>
             {collaborators.map((collaborator, index) => (
               <div key={index} className="grid gap-6 md:grid-cols-2 items-end">
-                <div className="grid items-center gap-1.5">
+                <div className="grid items-center gap-1.5 relative">
                   <Input
                     type="text"
                     placeholder="Nome do colaborador"
                     value={collaborator.name}
-                    onChange={(e) => handleCollaboratorChange(index, 'name', e.target.value)}
+                    onChange={(e) => handleCollaboratorNameChange(index, e.target.value)}
                   />
+                  {suggestions?.index === index && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
+                      {suggestions.names.map((name, i) => (
+                        <div 
+                          key={i}
+                          className="p-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => selectSuggestion(index, name)}
+                        >
+                          {name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
                   <Select
                     value={collaborator.role}
-                    onValueChange={(value) => handleCollaboratorChange(index, 'role', value)}
+                    onValueChange={(value) => handleCollaboratorRoleChange(index, value)}
                   >
                     <SelectTrigger className="flex-1">
                       <SelectValue placeholder="Selecione o cargo" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectItem value="coordenador">Coordenador(a)</SelectItem>
-                        <SelectItem value="colaborador">Colaborador(a)</SelectItem>
-                        <SelectItem value="bolsista">Bolsista</SelectItem>
-                        <SelectItem value="voluntario">Voluntário</SelectItem>
+                        {loadingCargos ? (
+                          <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                        ) : (
+                          cargosColaborador.map((cargo) => (
+                            <SelectItem key={cargo} value={cargo}>
+                              {cargo}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -229,22 +571,40 @@ export default function Projeto() {
                     onClick={() => removeCollaborator(index)}
                     className="text-black hover:text-black hover:bg-gray-100 p-2"
                   >
-                    <Trash2 className="h-4 w-4" /> {/* Ícone de lixeira */}
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Linha 6: Botões Cancelar (esquerda) e Salvar (direita) */}
-          <div className="flex justify-between mt-8"> {/* Adicionei margem superior */}
-            <Button type="button" variant="outline" onClick={handleCancel}>
+          <div className="flex justify-between mt-8">
+            <Button type="button" variant="outline" onClick={handleCancelClick}>
               Cancelar
             </Button>
             <Button type="submit">Salvar</Button>
           </div>
         </div>
       </form>
+
+      <ConfirmationModal
+        isOpen={showCancelDialog}
+        onClose={handleContinueEditing}
+        onConfirm={handleConfirmCancel}
+        title="Tem certeza que deseja cancelar?"
+        message="Todas as alterações não salvas serão perdidas."
+        confirmText="Sim, cancelar"
+        variant="destructive"
+      />
+
+      <ConfirmationModal
+        isOpen={showResultDialog}
+        onConfirm={handleSuccessConfirm}
+        title={resultDialog.title}
+        message={resultDialog.message}
+        confirmText="OK"
+        variant={resultDialog.isError ? 'destructive' : 'default'}
+      />
     </div>
   );
 }
