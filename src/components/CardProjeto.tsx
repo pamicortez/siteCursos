@@ -190,7 +190,7 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
   return (
     <>
       <div
-        className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-80 flex flex-col"
+        className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-90 flex flex-col"
         style={{ width: "14rem", margin: "0 auto" }}
         onClick={handleCardClick}
       >

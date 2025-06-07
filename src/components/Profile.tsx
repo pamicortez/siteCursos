@@ -71,6 +71,54 @@ interface Evento {
   }>
 }
 
+function ConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText,
+  variant = 'default'
+}: {
+  isOpen: boolean;
+  onClose?: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText: string;
+  variant?: 'default' | 'destructive';
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200">
+        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        <p className="mb-6">{message}</p>
+        <div className="flex justify-end gap-4">
+          {onClose && (
+            <button
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition"
+              onClick={onClose}
+            >
+              Continuar editando
+            </button>
+          )}
+          <button
+            className={`px-4 py-2 rounded-md transition ${variant === 'destructive'
+                ? 'bg-red-600 text-white hover:bg-red-700'
+                : 'bg-gray-900 text-white hover:bg-gray-700'
+              }`}
+            onClick={onConfirm}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -81,7 +129,13 @@ export default function ProfilePage() {
   const [editMode, setEditMode] = useState(false)
   const [showImageCropper, setShowImageCropper] = useState(false)
   const [isModalClosing, setIsModalClosing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  // const [error, setError] = useState<string | null>(null)
+  const [showResultDialog, setShowResultDialog] = useState(false)
+  const [resultDialog, setResultDialog] = useState({
+    title: '',
+    message: '',
+    isError: false,
+  })
   const [formData, setFormData] = useState({
     Nome: "",
     email: "",
@@ -138,7 +192,7 @@ export default function ProfilePage() {
     const fetchUsuario = async () => {
       if (session?.user?.id) {
         try {
-          setError(null)
+          //setError(null)
           const data = await fetchWithErrorHandling(`/api/usuario?id=${session.user.id}`)
           setUsuario(data)
           setFormData({
@@ -154,7 +208,13 @@ export default function ProfilePage() {
           })
         } catch (error) {
           console.error("Erro ao carregar usuário:", error)
-          setError("Erro ao carregar dados do usuário")
+          //setError("Erro ao carregar dados do usuário")
+          setResultDialog({
+            title: 'Erro',
+            message: "Erro ao carregar dados do usuário",
+            isError: true,
+          })
+          setShowResultDialog(true)
         } finally {
           setLoading(false)
         }
@@ -294,33 +354,61 @@ export default function ProfilePage() {
     }))
   }
 
+  const handleSuccessConfirm = () => {
+    setShowResultDialog(false)
+  }
+
   // FUNÇÃO CORRIGIDA - handleSave
   const handleSave = async () => {
     try {
       setLoading(true)
-      setError(null)
+      //setError(null)
 
       // Verificar se o usuário está autenticado
       if (!session?.user?.id) {
-        setError("Você precisa estar logado para editar seu perfil")
+        //setError("Você precisa estar logado para editar seu perfil")
+        setResultDialog({
+          title: 'Erro',
+          message: "Você precisa estar logado para editar seu perfil",
+          isError: true,
+        })
+        setShowResultDialog(true)
         return
       }
 
       // Validar dados básicos antes de enviar
       if (!formData.Nome.trim()) {
-        setError("Nome é obrigatório")
+        //setError("Nome é obrigatório")
+        setResultDialog({
+          title: 'Erro',
+          message: "Nome é obrigatório",
+          isError: true,
+        })
+        setShowResultDialog(true)
         return
       }
 
       if (!formData.email.trim()) {
-        setError("Email é obrigatório")
+        //setError("Email é obrigatório")
+        setResultDialog({
+          title: 'Erro',
+          message: "Email é obrigatório",
+          isError: true,
+        })
+        setShowResultDialog(true)
         return
       }
 
       // Validar formato do email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(formData.email)) {
-        setError("Email inválido")
+        //setError("Email inválido")
+        setResultDialog({
+          title: 'Erro',
+          message: "Email inválido",
+          isError: true,
+        })
+        setShowResultDialog(true)
         return
       }
 
@@ -402,18 +490,42 @@ export default function ProfilePage() {
         // Tratar diferentes códigos de status
         switch (response.status) {
           case 401:
-            setError("Sessão expirada. Faça login novamente.")
+            //setError("Sessão expirada. Faça login novamente.")
+            setResultDialog({
+              title: 'Erro',
+              message: "Sessão expirada. Faça login novamente.",
+              isError: true,
+            })
+            setShowResultDialog(true)
             // Opcional: redirecionar para login após um delay
             setTimeout(() => router.push("/login"), 2000)
             return
           case 403:
-            setError("Você não tem permissão para editar este perfil.")
+            //setError("Você não tem permissão para editar este perfil.")
+            setResultDialog({
+              title: 'Erro',
+              message: "Você não tem permissão para editar este perfil.",
+              isError: true,
+            })
+            setShowResultDialog(true)
             return
           case 409:
-            setError("Este email já está sendo usado por outro usuário.")
+            //setError("Este email já está sendo usado por outro usuário.")
+            setResultDialog({
+              title: 'Erro',
+              message: "Este email já está sendo usado por outro usuário.",
+              isError: true,
+            })
+            setShowResultDialog(true)
             return
           case 400:
-            setError(`Erro de validação: ${errorMessage}`)
+            //setError(`Erro de validação: ${errorMessage}`)
+            setResultDialog({
+              title: 'Erro',
+              message: `Erro de validação: ${errorMessage}`,
+              isError: true,
+            })
+            setShowResultDialog(true)
             return
           default:
             throw new Error(errorMessage)
@@ -443,22 +555,50 @@ export default function ProfilePage() {
       })
 
       setEditMode(false)
-      setError(null)
+      //setError(null)
 
-      // Mostrar mensagem de sucesso
-      alert("Perfil atualizado com sucesso!")
+      setResultDialog({
+        title: 'Sucesso!',
+        message: 'Perfil atualizado com sucesso.',
+        isError: false,
+      })
+      setShowResultDialog(true)
     } catch (error: any) {
       console.error("Erro ao atualizar perfil:", error)
 
       // Tratamento de erro mais específico
       if (error.name === "TypeError" && error.message.includes("fetch")) {
-        setError("Erro de conexão. Verifique sua internet e tente novamente.")
+        //setError("Erro de conexão. Verifique sua internet e tente novamente.")
+        setResultDialog({
+          title: 'Erro',
+          message: "Erro de conexão. Verifique sua internet e tente novamente.",
+          isError: true,
+        })
+        setShowResultDialog(true)
       } else if (error.message.includes("JSON")) {
-        setError("Erro no formato dos dados. Tente novamente.")
+        //setError("Erro no formato dos dados. Tente novamente.")
+        setResultDialog({
+          title: 'Erro',
+          message: "Erro no formato dos dados. Tente novamente.",
+          isError: true,
+        })
+        setShowResultDialog(true)
       } else if (error.message.includes("NetworkError") || error.message.includes("Failed to fetch")) {
-        setError("Erro de rede. Verifique sua conexão e tente novamente.")
+        //setError("Erro de rede. Verifique sua conexão e tente novamente.")
+        setResultDialog({
+          title: 'Erro',
+          message: "Erro de rede. Verifique sua conexão e tente novamente.",
+          isError: true,
+        })
+        setShowResultDialog(true)
       } else {
-        setError(error.message || "Erro ao atualizar perfil. Tente novamente.")
+        //setError(error.message || "Erro ao atualizar perfil. Tente novamente.")
+        setResultDialog({
+          title: 'Erro',
+          message: error.message || "Erro ao atualizar perfil. Tente novamente.",
+          isError: true,
+        })
+        setShowResultDialog(true)
       }
     } finally {
       setLoading(false)
@@ -511,22 +651,22 @@ export default function ProfilePage() {
     )
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Erro</h2>
-          <p className="text-gray-700">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      </div>
-    )
-  }
+  // if (error) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="text-center">
+  //         <h2 className="text-xl font-semibold text-red-600 mb-2">Erro</h2>
+  //         <p className="text-gray-700">{error}</p>
+  //         <button
+  //           onClick={() => window.location.reload()}
+  //           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+  //         >
+  //           Tentar novamente
+  //         </button>
+  //       </div>
+  //     </div>
+  //   )
+  // }
 
   if (!usuario) {
     return (
@@ -578,7 +718,7 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
-          {error && <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>}
+          {/* {error && <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>} */}
         </div>
 
         {/* Foto de Perfil e Informações Básicas */}
@@ -1079,6 +1219,14 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+      <ConfirmationModal
+        isOpen={showResultDialog}
+        onConfirm={handleSuccessConfirm}
+        title={resultDialog.title}
+        message={resultDialog.message}
+        confirmText="OK"
+        variant={resultDialog.isError ? 'destructive' : 'default'}
+      />
     </div>
   )
 }
