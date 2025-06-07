@@ -74,24 +74,42 @@ GRANT ALL PRIVILEGES ON DATABASE nome_do_banco TO nome_com_senha;
 
 Siga os passos abaixo para rodar o projeto em sua máquina local.
 
-1. **Clone o repositório para sua máquina local**  
+1. **Clone o repositório para sua máquina local. Em seguida crie o arquivo ".env"**  
    Abra o terminal e execute os comandos abaixo:
    ```bash
    git clone https://github.com/pamicortez/siteCursos.git
    cd siteCursos
    ```
+
    Nessa pasta crie um arquivo ".env" manualmente com o seguinte conteúdo (substitua "senha" pela sua senha do Postgres):
    ```bash
    DATABASE_URL="postgresql://postgres:senha@localhost:5432/siteCursos"
+   NEXTAUTH_SECRET="sua_chave_secreta_aqui"
    ```
+
+   Para gerar a chave secreta do NEXTAUTH_SECRET, execute:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+   ```
+   Copie o resultado e substitua "sua_chave_secreta_aqui" pela chave gerada.
+
    Ou faça isso por linha de comando usando (Linux, Mac e Git Bash (Windows)):
-    ```bash
+   ```bash
    echo 'DATABASE_URL="postgresql://postgres:senha@localhost:5432/siteCursos"' > .env
+   echo 'NEXTAUTH_SECRET="'$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")'"' >> .env
    ```
+
    Ou no Windows (Prompt de Comando — CMD):
-    ```bash
+   ```bash
    echo DATABASE_URL="postgresql://postgres:senha@localhost:5432/siteCursos" > .env
+   echo NEXTAUTH_SECRET="sua_chave_secreta_aqui" >> .env
    ```
+   Para Windows, execute separadamente o comando de geração da chave:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+   ```
+   E substitua "sua_chave_secreta_aqui" pela chave gerada.
+   
 
 2. **Instale as dependências**  
     Execute o seguinte comando:
@@ -135,11 +153,17 @@ Siga os passos abaixo para rodar o projeto em sua máquina local.
    Execute um dos seguintes comandos:
    ```bash
    npm run dev
-   # ou
+   ```
+   #### ou
+   ```bash
    yarn dev
-   # ou
+   ```
+   #### ou
+   ```bash
    pnpm dev
-   # ou
+   ```
+   #### ou
+   ```bash
    bun dev
    ```
 
