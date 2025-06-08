@@ -201,7 +201,7 @@ const CardCurso: React.FC<CardCursoProps> = ({
     <>
       <div
         className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-        style={{ width: "17rem", margin: "0 auto" }}
+        style={{ width: "14rem", margin: "0 auto" }}
         onClick={handleCardClick}
       >
         {/* Imagem com verificação e fallback */}

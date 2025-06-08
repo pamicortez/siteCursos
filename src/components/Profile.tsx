@@ -281,35 +281,6 @@ export default function ProfilePage() {
     }
   }, [status, session, router])
 
-  const debugSession = () => {
-    console.log("=== DEBUG SESSÃO ===")
-    console.log("Session status:", status)
-    console.log("Session data:", session)
-    console.log("User ID:", session?.user?.id)
-    console.log("Cookies:", document.cookie)
-    console.log("===================")
-  }
-
-  const checkSessionValidity = async () => {
-    try {
-      const response = await fetch("/api/auth/session", {
-        credentials: "include",
-      })
-
-      if (!response.ok) {
-        console.warn("Session check failed:", response.status)
-        return false
-      }
-
-      const sessionData = await response.json()
-      console.log("Session check result:", sessionData)
-      return !!sessionData?.user?.id
-    } catch (error) {
-      console.error("Error checking session:", error)
-      return false
-    }
-  }
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({

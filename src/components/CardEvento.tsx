@@ -153,7 +153,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
           <p className="text-xs text-gray-500 mb-3 font-medium flex-shrink-0">{formatarData(data)}</p>
           
           {/* Botão de participação sempre visível */}
-          {isLoggedIn && (
+          
           <div className="mb-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             <button 
               className="w-full bg-gray-900 hover:bg-gray-600 text-white py-2 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
@@ -162,7 +162,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
               Participar do Evento
             </button>
           </div>
-          )}
+         
           
           {/* Botões de ação para proprietários */}
           {isOwner && (
