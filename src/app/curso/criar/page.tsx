@@ -1,11 +1,13 @@
 "use client"
 
 import React, {useState, useEffect} from 'react'
+import {useSession} from "next-auth/react"
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
-import CreatableSelect from 'react-select/creatable';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import ImageCropper from "@/components/ui/ImageCropper"
+
 import {
   Select,
   SelectContent,
@@ -27,23 +29,23 @@ type AulaType = {
 };
 
 enum Categoria {
-  Agricultura = "Agricultura",
-  Silvicultura = "Silvicultura",
-  PescaEVeterinaria = "Pesca e Veterinária",
-  ArtesEHumanidades = "Artes e Humanidades",
-  CienciasSociais = "Ciências Sociais",
-  ComunicacaoEInformacao = "Comunicação e Informação",
-  CienciasNaturais = "Ciências Naturais",
-  MatematicaEEstatistica = "Matemática e Estatística",
-  ComputacaoETecnologiaDaInformacao = "Computação e TI",
-  Engenharia = "Engenharia",
-  ProducaoEConstrucao = "Produção e Construção",
-  SaudeEBemEstar = "Saúde e Bem-Estar",
-  Educacao = "Educação",
-  NegociosAdministracaoEDireito = "Negócios, Administração e Direito",
-  Servicos = "Serviços",
-  ProgramasBasicos = "Programas Básicos",
+  SaudeEBemEstar = "Saúde e Bem-estar",
+  CienciasBiologicasENaturais = "Ciências Biológicas e Naturais",
+  TecnologiaEComputacao = "Tecnologia e Computação",
+  EngenhariaEProducao = "Engenharia e Produção",
+  CienciasSociaisENegocios = "Ciências Sociais Aplicadas e Negócios",
+  EducacaoEFormacao = "Educação e Formação de Professores",
+  CienciasExatas = "Ciências Exatas",
+  CienciasHumanas = "Ciências Humanas",
+  MeioAmbienteESustentabilidade = "Meio Ambiente e Sustentabilidade",
+  LinguagensLetrasEComunicacao = "Linguagens, Letras e Comunicação",
+  ArtesECultura = "Artes e Cultura",
+  CienciasAgrarias = "Ciências Agrárias",
+  PesquisaEInovacao = "Pesquisa e Inovação",
+  ServicosSociaisEComunitarios = "Serviços Sociais e Comunitários",
+  GestaoEPlanejamento = "Gestão e Planejamento",
 }
+
 
 
 export default function Curso() {
@@ -52,15 +54,21 @@ export default function Curso() {
   const idProjeto = searchParams.get('idProjeto')
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (!user) {
-  //     router.replace('/'); // (fazer isso tbm caso nao esteja logado)
-  //   }
-  // }, [idProjeto, router]);
+  const { data: session, status } = useSession();
+
+
 
   if (!idProjeto) {
     notFound(); // Retorna 404 se nao tiver o idProjeto
   }
+
+  // Proteção da pagina, acesso apenas para usuarios autenticados
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
 
   const categoriasOptions = Object.entries(Categoria).map(([value, label]) => ({
   value,
@@ -68,17 +76,10 @@ export default function Curso() {
 }));
 
   const [options, setOptions] = useState<OptionType[]>(categoriasOptions);
-  const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [linkApostila, setLinkApostila] = useState<string | null>(null);
 
   const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", video: "", slide: null, podcast: "" }]);
-
-  const handleCreate = (inputValue: string) => {
-    const newOption = { value: inputValue.toLowerCase(), label: inputValue };
-    setOptions((prev) => [...prev, newOption]);
-    setSelectedOption(newOption);
-  };
 
   const handleInputChange = (index: number, field: keyof AulaType, value: string | File | null) => {
     const updatedAulas = [...aulas];
@@ -88,6 +89,12 @@ export default function Curso() {
     };
     setAulas(updatedAulas);
   };
+
+  const categoriaOptions = Object.entries(Categoria).map(([key, value]) => ({
+    label: value,
+    value: key,
+  }));
+
 
 
 
@@ -103,35 +110,7 @@ export default function Curso() {
     setAulas(updatedAulas);
   };
 
-
-    const customStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: "white",
-      borderWidth: "1px",
-      borderRadius: "6px",
-      minHeight: "30px",
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: "white",
-      borderRadius: "6px",
-      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-    }),
-    option: (provided: any, state: { isFocused: any; }) => ({
-      ...provided,
-      backgroundColor: state.isFocused ? "#EEF2FF" : "white",
-      color: "#111827",
-      padding: "10px",
-      cursor: "pointer",
-    }),
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "#9CA3AF", // Cinza do Tailwind
-      fontSize: "14px",
-    }),
-  };
-
+  // Submit do form completo
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -180,19 +159,18 @@ export default function Curso() {
     const apostilaFile = formData.get("apostila") as File | null;
 
     // Converte pra string base64
-    const slideBase64 = await fileToBase64(slideFile);
     const apostilaBase64 = await fileToBase64(apostilaFile)
 
     const data = {
       titulo: formData.get("titulo"),
       metodologia: formData.get("metodologia"),
-      categoria: selectedOption?.value, // Seleção feita com react-select
+      categoria: formData.get('categoria'),
       descricao: formData.get('descricao'),
       bibliografia: formData.get('bibliografia'),
       imagem: imagemBase64,
       aulas: aulasConvertidas,
-      idProjeto: Number(idProjeto), // recebe via query param ?idprojeto
-      idUsuario: 1, // como pegar
+      idProjeto: Number(idProjeto),
+      idUsuario: Number(session?.user.id),
       linkInscricao: formData.get('inscricao'),
       vagas: Number(formData.get('vagas')),
       metodoAvaliacao: formData.get('avaliacao'),
@@ -235,6 +213,13 @@ export default function Curso() {
               <Label htmlFor="titulo">Título</Label>
               <Input type="text" name="titulo"/>
             </div>
+{/* 
+            <ImageCropper
+                    userId={String(session?.user.id)}
+                    onUploadSuccess={(url) => {
+                      console.log("Imagem salva com sucesso:", url);
+                    }}
+            /> */}
 
             <div className="grid items-center gap-1.5">
                 <Label htmlFor="metodologia">Metodologia</Label>
@@ -284,7 +269,7 @@ export default function Curso() {
                   if (file) {
                     const reader = new FileReader();
                     reader.onloadend = () => {
-                      setImagemBase64(reader.result as string); // base64 com prefixo data:image/...
+                      setImagemBase64(reader.result as string);
                     };
                     reader.readAsDataURL(file); // Converte para base64
                   }
@@ -299,15 +284,21 @@ export default function Curso() {
 
             <div>
                 <label className="block mb-2 text-sm font-medium text-gray-900">Categoria</label>
-                <CreatableSelect name="categoria"
-                isClearable
-                styles={customStyles}
-                options={options}
-                value={selectedOption}
-                onChange={setSelectedOption}
-                onCreateOption={handleCreate}
-                placeholder="Selecione ou crie..."
-                required />
+                <Select name="categoria">
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Escolha..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {categoriaOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+
             </div>
 
           </div>
@@ -316,7 +307,7 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="apostila">Apostila</Label>
-              <Input type="file" name="apostila"></Input>
+              <Input type="file" accept=".pdf" name="apostila"></Input>
             </div>
 
             <div className="grid items-center gap-1.5">
@@ -328,7 +319,7 @@ export default function Curso() {
                 <Label htmlFor="avaliação">Método de Avaliação</Label>
                 <Select name="avaliacao">
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="" />
+                    <SelectValue placeholder="Escolha..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
@@ -388,5 +379,3 @@ export default function Curso() {
     
   );
 }
-// add link inscrição como um campo, pegar o idprojeto e idusuario (se der), corrigir o bug nos campos de aula
-// quando eu clico p add aula depois de ja ter preenchido tudo, tá dando post pra api
