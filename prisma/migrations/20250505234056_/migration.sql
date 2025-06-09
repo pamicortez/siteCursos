@@ -5,8 +5,8 @@
 
 */
 -- CreateEnum
-CREATE TYPE "categoriaCurso" AS ENUM ('Agricultura', 'Silvicultura', 'PescaEVeterinaria', 'ArtesEHumanidades', 'CienciasSociais', 'ComunicacaoEInformacao', 'CienciasNaturais', 'MatematicaEEstatistica', 'ComputacaoETecnologiaDaInformacao', 'Engenharia', 'ProducaoEConstrucao', 'SaudeEBemEstar', 'Educacao', 'NegociosAdministracaoEDireito', 'Servicos', 'ProgramasBasicos');
+-- CREATE TYPE "categoriaCurso" AS ENUM ('Agricultura', 'Silvicultura', 'PescaEVeterinaria', 'ArtesEHumanidades', 'CienciasSociais', 'ComunicacaoEInformacao', 'CienciasNaturais', 'MatematicaEEstatistica', 'ComputacaoETecnologiaDaInformacao', 'Engenharia', 'ProducaoEConstrucao', 'SaudeEBemEstar', 'Educacao', 'NegociosAdministracaoEDireito', 'Servicos', 'ProgramasBasicos');
 
 -- AlterTable
-ALTER TABLE "Curso" DROP COLUMN "categoria",
-ADD COLUMN     "categoria" "categoriaCurso" NOT NULL;
+-- ALTER TABLE "Curso" DROP COLUMN "categoria",
+-- ADD COLUMN     "categoria" "categoriaCurso" NOT NULL;

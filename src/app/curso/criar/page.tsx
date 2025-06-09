@@ -63,6 +63,7 @@ export default function Curso() {
     notFound(); // Retorna 404 se nao tiver o idProjeto
   }
 
+  // Proteção da pagina, acesso apenas para usuarios autenticados
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
@@ -76,17 +77,10 @@ export default function Curso() {
 }));
 
   const [options, setOptions] = useState<OptionType[]>(categoriasOptions);
-  const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [linkApostila, setLinkApostila] = useState<string | null>(null);
 
   const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", video: "", slide: null, podcast: "" }]);
-
-  const handleCreate = (inputValue: string) => {
-    const newOption = { value: inputValue.toLowerCase(), label: inputValue };
-    setOptions((prev) => [...prev, newOption]);
-    setSelectedOption(newOption);
-  };
 
   const handleInputChange = (index: number, field: keyof AulaType, value: string | File | null) => {
     const updatedAulas = [...aulas];
@@ -117,7 +111,7 @@ export default function Curso() {
     setAulas(updatedAulas);
   };
 
-
+  // Submit do form completo
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
@@ -166,7 +160,6 @@ export default function Curso() {
     const apostilaFile = formData.get("apostila") as File | null;
 
     // Converte pra string base64
-    const slideBase64 = await fileToBase64(slideFile);
     const apostilaBase64 = await fileToBase64(apostilaFile)
 
     const data = {
@@ -221,6 +214,13 @@ export default function Curso() {
               <Label htmlFor="titulo">Título</Label>
               <Input type="text" name="titulo"/>
             </div>
+{/* 
+            <ImageCropper
+                    userId={String(session?.user.id)}
+                    onUploadSuccess={(url) => {
+                      console.log("Imagem salva com sucesso:", url);
+                    }}
+            /> */}
 
             <div className="grid items-center gap-1.5">
                 <Label htmlFor="metodologia">Metodologia</Label>
@@ -270,7 +270,7 @@ export default function Curso() {
                   if (file) {
                     const reader = new FileReader();
                     reader.onloadend = () => {
-                      setImagemBase64(reader.result as string); // base64 com prefixo data:image/...
+                      setImagemBase64(reader.result as string);
                     };
                     reader.readAsDataURL(file); // Converte para base64
                   }
