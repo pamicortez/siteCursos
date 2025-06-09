@@ -159,11 +159,10 @@ const Navbar = () => {
     try {
       await signOut({
         redirect: true,
-        callbackUrl: '/login' // Redireciona para a página de login após logout
+        callbackUrl: '/login'
       });
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      // Fallback: redirecionar manualmente se houver erro
       window.location.href = '/login';
     }
   };
@@ -193,13 +192,16 @@ const Navbar = () => {
     return categoriaMap[categoria] || categoria
   }
 
+  // Função para fechar o menu mobile
+  const closeMobileMenu = () => {
+    setIsOpen(false);
+  };
 
   return (
     <>
-
       <nav
         className={cn(
-          "fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md top-0", // <-- aqui o top-0 fixo
+          "fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md top-0",
           scrolled
             ? "backdrop-blur-xl bg-gray-900/80 border-b border-gray-700 py-4"
             : "bg-gray-900 py-6"
@@ -327,90 +329,128 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         <div
           className={cn(
-            "fixed inset-0 bg-gray-900 z-40 flex flex-col justify-center items-center transition-all duration-500 ease-in-out md:hidden",
-            isOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-full pointer-events-none"
+            "fixed inset-0 bg-gray-900 z-50 transition-all duration-300 ease-in-out md:hidden overflow-y-auto",
+            isOpen ? "opacity-100 translate-x-0" : "opacity-0 translate-x-full pointer-events-none"
           )}
         >
-          {/* Mobile Search */}
-          <div className="w-full px-6 mb-6">
-            <div className="relative w-full">
-              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Search className="w-4 h-4 text-gray-400" />
-              </div>
-              <input
-                type="search"
-                className="block w-full p-2 pl-10 text-sm border border-gray-700 rounded-full bg-gray-800 text-gray-200 placeholder-gray-400"
-                placeholder="Pesquise aqui"
-              />
+          {/* Mobile Header com botão de fechar */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-700">
+            <div className="flex items-center">
+              <Logo />
             </div>
-          </div>
-
-          {/* Mobile User Info */}
-          {hasUser && usuario && (
-            <div className="w-full px-6 mb-6 text-center">
-              <div className="flex flex-col items-center mb-4">
-                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center mb-2">
-                  {usuario.fotoPerfil ? (
-                    <img
-                      src={usuario.fotoPerfil}
-                      alt="Foto de perfil"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-8 h-8 text-gray-200" />
-                  )}
-                </div>
-                <div className="text-gray-200 font-medium">{usuario.Nome}</div>
-                <div className="text-gray-400 text-sm">{usuario.email}</div>
-              </div>
-            </div>
-          )}
-
-          {/* Mobile Categories */}
-          <div className="w-full px-6 mb-6">
-            <div className="font-medium mb-2 text-gray-200">Categorias</div>
-            {categories.map((category, index) => (
-              <a
-                key={index}
-                href={`/category/${category.toLowerCase()}`}
-                className="block py-2 text-gray-400 hover:text-white"
-                onClick={() => setIsOpen(false)}
-              >
-                {category}
-              </a>
-            ))}
-          </div>
-
-          <div className="flex flex-col space-y-6 items-center">
-            <a
-              href="/profile"
-              className="text-xl font-medium transition-all duration-200 transform hover:scale-105 text-gray-400 hover:text-white"
-              onClick={(e) => {
-                handleNavigation('/profile', e);
-                setIsOpen(false);
-              }}
-            >
-              Profile
-            </a>
-            <a
-              href="/settings"
-              className="text-xl font-medium transition-all duration-200 transform hover:scale-105 text-gray-400 hover:text-white"
-              onClick={(e) => {
-                handleNavigation('/settings', e);
-                setIsOpen(false);
-              }}
-            >
-              Settings
-            </a>
             <button
-              onClick={handleSignOut}
-              className="text-xl font-medium transition-all duration-200 transform hover:scale-105 text-gray-400 hover:text-white"
+              onClick={closeMobileMenu}
+              className="text-gray-200 focus:outline-none transition-all duration-200 ease-in-out"
+              aria-label="Fechar Menu"
             >
-              Sign out
+              <X className="w-6 h-6" />
             </button>
+          </div>
+
+          {/* Mobile Content */}
+          <div className="flex flex-col h-full pt-4">
+            {/* Mobile Search */}
+            <div className="px-6 mb-6">
+              <div className="relative w-full">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search className="w-4 h-4 text-gray-400" />
+                </div>
+                <input
+                  type="search"
+                  className="block w-full p-3 pl-10 text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-600"
+                  placeholder="Pesquise aqui"
+                />
+              </div>
+            </div>
+
+            {/* Mobile User Info */}
+            {hasUser && usuario && (
+              <div className="px-6 mb-6">
+                <div className="flex items-center space-x-4 p-4 bg-gray-800 rounded-lg">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center flex-shrink-0">
+                    {usuario.fotoPerfil ? (
+                      <img
+                        src={usuario.fotoPerfil}
+                        alt="Foto de perfil"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-200" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-gray-200 font-medium truncate">{usuario.Nome}</div>
+                    <div className="text-gray-400 text-sm truncate">{usuario.email}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Mobile Categories */}
+            <div className="px-6 mb-6">
+              <div className="font-medium mb-3 text-gray-200 text-lg">Categorias</div>
+              <div className="space-y-1 max-h-40 overflow-y-auto">
+                {categories.map((category, index) => (
+                  <a
+                    key={index}
+                    href={`/category/${category.toLowerCase()}`}
+                    className="block py-2 px-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors"
+                    onClick={closeMobileMenu}
+                  >
+                    {formatarCategoria(category)}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile Menu Options */}
+            {hasUser && (
+              <div className="px-6 space-y-2 mb-6">
+                <a
+                  href="/profile"
+                  className="flex items-center space-x-3 py-3 px-4 text-gray-200 hover:bg-gray-800 rounded-lg transition-colors"
+                  onClick={(e) => {
+                    handleNavigation('/profile', e);
+                    closeMobileMenu();
+                  }}
+                >
+                  <User className="w-5 h-5" />
+                  <span>Perfil</span>
+                </a>
+                
+                {usuario?.tipo === 'Super' && (
+                  <a
+                    href="/userManagement"
+                    className="flex items-center space-x-3 py-3 px-4 text-gray-200 hover:bg-gray-800 rounded-lg transition-colors"
+                    onClick={(e) => {
+                      handleNavigation('/pages/userManagement', e);
+                      closeMobileMenu();
+                    }}
+                  >
+                    <User className="w-5 h-5" />
+                    <span>Gerenciar Usuários</span>
+                  </a>
+                )}
+                
+                <button
+                  onClick={() => {
+                    handleSignOut();
+                    closeMobileMenu();
+                  }}
+                  className="flex items-center space-x-3 py-3 px-4 text-gray-200 hover:bg-gray-800 rounded-lg transition-colors w-full text-left"
+                >
+                  <X className="w-5 h-5" />
+                  <span>Sair</span>
+                </button>
+              </div>
+            )}
+
+            {/* Espaço flexível para empurrar o conteúdo */}
+            <div className="flex-1"></div>
           </div>
         </div>
       </nav>
+
       <div
         className={cn(
           "w-full",
