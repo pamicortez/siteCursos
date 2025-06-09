@@ -2,7 +2,7 @@
 
 import React, {useState, useEffect} from 'react'
 import {useSession} from "next-auth/react"
-import { useSearchParams, useRouter, notFound, redirect } from 'next/navigation';
+import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -38,7 +38,7 @@ enum Categoria {
   CienciasExatas = "Ciências Exatas",
   CienciasHumanas = "Ciências Humanas",
   MeioAmbienteESustentabilidade = "Meio Ambiente e Sustentabilidade",
-  LinguagensELetrasEComunicacao = "Linguagens, Letras e Comunicação",
+  LinguagensLetrasEComunicacao = "Linguagens, Letras e Comunicação",
   ArtesECultura = "Artes e Cultura",
   CienciasAgrarias = "Ciências Agrárias",
   PesquisaEInovacao = "Pesquisa e Inovação",
@@ -55,7 +55,6 @@ export default function Curso() {
   const router = useRouter();
 
   const { data: session, status } = useSession();
-  console.log(session?.user.id)
 
 
 
