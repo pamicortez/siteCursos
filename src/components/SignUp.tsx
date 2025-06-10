@@ -122,13 +122,20 @@ export default function SignUpPage() {
       },
     ],
   })
+  // Após as outras declarações de useState
+  const [isClient, setIsClient] = useState(false)
+
+  // Adicione este useEffect logo após os outros useEffects
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Redirect se já estiver logado
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && isClient) {
       router.push("/profile")
     }
-  }, [status, router])
+  }, [status, router, isClient])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -295,7 +302,7 @@ export default function SignUpPage() {
     router.push("/login")
   }
 
-  if (status === "loading") {
+  if (status === "loading" || !isClient) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -306,17 +313,48 @@ export default function SignUpPage() {
   const stepTitles = ["Informações Básicas", "Formação Acadêmica", "Experiência e Links", "Foto do Perfil"]
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8 pt-32 md:pt-8">
       <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+
+
+        {/* Progress Bar Mobile - Fixo como navbar */}
+        <div className="fixed top-29 left-0 right-0 bg-white shadow-md z-39 md:hidden">
+          <div className="px-4 py-3">
+            <div className="text-center">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Criar Conta</h1>
+              <p className="text-gray-600 hidden md:block">Preencha os dados para criar sua conta</p>
+            </div>
+            <div className="flex items-center justify-center">
+              {[1, 2, 3, 4].map((step) => (
+                <React.Fragment key={step}>
+                  <div
+                    className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
+                      }`}
+                  >
+                    {step}
+                  </div>
+                  {step < 4 && (
+                    <div className={`w-8 h-1 mx-1 ${step < currentStep ? "bg-blue-600" : "bg-gray-200"}`} />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+            <div className="text-center mt-1">
+              <span className="text-xs text-gray-600">{stepTitles[currentStep - 1]}</span>
+            </div>
+          </div>
+        </div>
+
+
+        {/* Header - Apenas título no mobile, completo no desktop */}
+        <div className="hidden bg-white rounded-lg shadow-md p-6 mb-6 md:block">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Criar Conta</h1>
-            <p className="text-gray-600">Preencha os dados para criar sua conta</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Criar Conta</h1>
+            <p className="text-gray-600 hidden md:block">Preencha os dados para criar sua conta</p>
           </div>
 
-          {/* Progress Bar */}
-          <div className="flex items-center justify-center mt-6">
+          {/* Progress Bar - Visível apenas no desktop */}
+          <div className="hidden md:flex items-center justify-center mt-6">
             {[1, 2, 3, 4].map((step) => (
               <React.Fragment key={step}>
                 <div
@@ -329,10 +367,13 @@ export default function SignUpPage() {
               </React.Fragment>
             ))}
           </div>
-          <div className="text-center mt-2">
+          <div className="text-center mt-2 hidden md:block">
             <span className="text-sm text-gray-600">{stepTitles[currentStep - 1]}</span>
           </div>
         </div>
+
+
+
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
@@ -606,7 +647,7 @@ export default function SignUpPage() {
                       <button
                         type="button"
                         onClick={() => removeArrayItem("publicacoes", index)}
-                        className="px-3 py-1bg-black text-white rounded hover:bg-gray-700"
+                        className="px-3 py-1 bg-black text-white rounded hover:bg-gray-700"
                       >
                         Remover
                       </button>

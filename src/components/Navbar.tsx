@@ -7,6 +7,7 @@ import Logo from "./Logo";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSession, signOut } from "next-auth/react";
 import axios from "axios";
+import { useRouter } from 'next/navigation';
 
 interface Usuario {
   id: number;
@@ -37,6 +38,7 @@ const Navbar = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [navClass, setNavClass] = useState('fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md top-0');
+  const router = useRouter();
 
   // Carregar dados do usuário logado
   useEffect(() => {
@@ -152,18 +154,19 @@ const Navbar = () => {
 
   const handleNavigation = (path: string, e?: React.MouseEvent) => {
     e?.preventDefault();
-    window.location.href = path;
+    router.push(path);  // ✅ Usar router em vez de window.location
   };
 
   const handleSignOut = async () => {
     try {
       await signOut({
-        redirect: true,
-        callbackUrl: '/login'
+        redirect: false  // ✅ Desabilita redirecionamento automático
       });
+      // Usar router para navegação
+      router.push('/login');  // ✅ Preserva o host
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      window.location.href = '/login';
+      router.push('/login');
     }
   };
 
