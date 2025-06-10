@@ -6,7 +6,7 @@ import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import ImageCropper from "@/components/ui/ImageCropper"
+import ImageCropper from "@/components/ui/ImageCropperBase64"
 
 import {
   Select,
@@ -75,11 +75,11 @@ export default function Curso() {
   label,
 }));
 
-  const [options, setOptions] = useState<OptionType[]>(categoriasOptions);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
-  const [linkApostila, setLinkApostila] = useState<string | null>(null);
 
   const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", video: "", slide: null, podcast: "" }]);
+  const [showImageCropper, setShowImageCropper] = useState(false);
+  
 
   const handleInputChange = (index: number, field: keyof AulaType, value: string | File | null) => {
     const updatedAulas = [...aulas];
@@ -131,14 +131,13 @@ export default function Curso() {
     // remove aulas vazias (caso tenha clicado pra add uma nova e nao preencher)
     function removerAulasVazias(aulas: AulaType[]) {
       return aulas.filter((aula) => {
-        return Object.values(aula).every((valor) => {
-          if (typeof valor === "string") {
-            return valor.trim() !== "";
-          }
-          return valor !== null || valor !== undefined;
-        });
-      });
-    }
+           return (
+              aula.titulo.trim() !== "" ||
+              aula.video.trim() !== "" ||
+              aula.slide !== null ||
+              aula.podcast.trim() !== ""
+            );
+    })}
 
     const aulasFiltradas = removerAulasVazias(aulas)
 
@@ -202,6 +201,7 @@ export default function Curso() {
 }
 
   
+
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -213,13 +213,6 @@ export default function Curso() {
               <Label htmlFor="titulo">Título</Label>
               <Input type="text" name="titulo"/>
             </div>
-{/* 
-            <ImageCropper
-                    userId={String(session?.user.id)}
-                    onUploadSuccess={(url) => {
-                      console.log("Imagem salva com sucesso:", url);
-                    }}
-            /> */}
 
             <div className="grid items-center gap-1.5">
                 <Label htmlFor="metodologia">Metodologia</Label>
@@ -270,6 +263,8 @@ export default function Curso() {
                     const reader = new FileReader();
                     reader.onloadend = () => {
                       setImagemBase64(reader.result as string);
+                      setShowImageCropper(true);
+                      console.log("chegou aqui")
                     };
                     reader.readAsDataURL(file); // Converte para base64
                   }
@@ -375,6 +370,32 @@ export default function Curso() {
       </div>
       
       </form>
+
+              {/* Modal do Image Cropper */}
+                  {showImageCropper && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                      <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <div className="p-6">
+                          <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-semibold">Alterar Foto de Perfil</h3>
+                            <button
+                              onClick={() => setShowImageCropper(false)}
+                              className="text-gray-400 hover:text-gray-600 text-2xl"
+                            >
+                              ×
+                            </button>
+                          </div>
+                    <ImageCropper
+                        imageSrc={imagemBase64} // imagem original
+                        onUploadSuccess={(base64) => {
+                          setImagemBase64(base64);
+                          setShowImageCropper(false);
+                        }}
+                      />
+                        </div>
+                      </div>
+                    </div>
+                  )}
     </div>
     
   );
