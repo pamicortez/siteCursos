@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2 } from 'lucide-react';
+import { useSession } from "next-auth/react";
 import { useRouter, useParams } from 'next/navigation';
 
 type Collaborator = {
@@ -76,6 +77,7 @@ export default function Evento() {
   const router = useRouter();
   const params = useParams();
   const eventoId = params?.id as string | undefined;
+  
 
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [eventoData, setEventoData] = useState({
@@ -87,6 +89,7 @@ export default function Evento() {
     image: '',
     local: '',
   });
+console.log("estado inicial eventoData:", eventoData);
 
   const [collaborators, setCollaborators] = useState<Collaborator[]>([
     { name: '', role: '' },
@@ -106,7 +109,10 @@ export default function Evento() {
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<ColaboradorFromAPI[]>([]);
+  const { data: session, status } = useSession();
   const [suggestions, setSuggestions] = useState<{index: number, names: string[]} | null>(null);
+  const [showImageCropper, setShowImageCropper] = useState(false);
+  const [tempImage, setTempImage] = useState<string | null>(null); // 
 
   useEffect(() => {
     const fetchCargosColaborador = async () => {
@@ -292,14 +298,14 @@ export default function Evento() {
       imagem: eventoData.image,
       descricao: eventoData.description,
       categoria: eventoData.category,
-      dataInicio: new Date(eventotData.startDate).toISOString(),
-      dataFim: eventoData.endDate ? new Date(eventotData.endDate).toISOString() : null,
+      dataInicio: new Date(eventoData.startDate).toISOString(),
+      dataFim: eventoData.endDate ? new Date(eventoData.endDate).toISOString() : null,
       funcao: cargo,
       colaboradores: validatedCollaborators.map(colaborador => ({
         categoria: colaborador.role,
         nome: colaborador.name.trim() // Garante que não há espaços extras
       })),
-      ...(isEditMode ? {} : { usuarioId: 1 })
+     ...(isEditMode ? {} : { usuarioId:   Number(session?.user?.id) })
     };
     
     console.log(requestBody)
@@ -404,7 +410,7 @@ export default function Evento() {
                 type="text"
                 id="title"
                 name="title"
-                value={eventoData.title}
+                value={eventoData.title || ''}
                 onChange={handleChange}
                 required
               />
@@ -427,10 +433,10 @@ export default function Evento() {
 
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="description">Local do evento*</Label>
+              <Label htmlFor="local">Local do evento*</Label>
               <textarea
-                id="description"
-                name="description"
+                id="local"
+                name="local"
                 value={eventoData.local}
                 onChange={handleChange}
                 className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
