@@ -85,7 +85,7 @@ export default function Curso() {
 
   }, [id])
 
-    if ("4" != session?.user.id) {
+    if (curso.idUsuario != session?.user.id) {
     return (
       <div className="text-center py-20">
         <h2 className="text-2xl font-bold">Acesso Negado</h2>
