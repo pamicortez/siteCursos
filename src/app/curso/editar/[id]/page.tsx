@@ -440,6 +440,3 @@ export default function Curso() {
     
   );
 }
-
-// corrigir o setaulas
-// no select precisa ser um valor ja existente no selectitem

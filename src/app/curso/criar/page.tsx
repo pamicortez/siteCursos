@@ -102,7 +102,7 @@ export default function Curso() {
   const [showImageCropper, setShowImageCropper] = useState(false);
   
 
-  const handleInputChange = (index: number, field: keyof AulaType, value: string | File | null) => {
+  const handleAulasInputChange = (index: number, field: keyof AulaType, value: string | File | null) => {
     const updatedAulas = [...aulas];
     updatedAulas[index] = {
       ...updatedAulas[index],
@@ -380,22 +380,22 @@ export default function Curso() {
           <div key={index} className="flex justify-between gap-5 mb-6 md:grid-cols-5">
             <div className="grid items-center gap-1.5 w-xs">
               <Label htmlFor="titulo">Título</Label>
-              <Input type="text" value={aula.titulo} onChange={(e) => handleInputChange(index, 'titulo', e.target.value)}></Input>
+              <Input type="text" value={aula.titulo} onChange={(e) => handleAulasInputChange(index, 'titulo', e.target.value)}></Input>
             </div>
 
             <div className="grid items-center gap-1.5 w-xs">
               <Label htmlFor="video">Link do Vídeo</Label>
-              <Input type="text" value={aula.video} onChange={(e) => handleInputChange(index, 'video', e.target.value)}></Input>
+              <Input type="text" value={aula.video} onChange={(e) => handleAulasInputChange(index, 'video', e.target.value)}></Input>
             </div>
 
             <div className="grid items-center gap-1.5 w-xs">
               <Label htmlFor="slide">Slide</Label>
-              <Input type="file" onChange={(e) => handleInputChange(index, 'slide', e.target.files?.[0] || null)}></Input>
+              <Input type="file" onChange={(e) => handleAulasInputChange(index, 'slide', e.target.files?.[0] || null)}></Input>
             </div>
 
             <div className="grid items-center gap-1.5 w-xs">
               <Label htmlFor="podcast">Link do Podcast</Label>
-              <Input type="text" value={aula.podcast} onChange={(e) => handleInputChange(index, 'podcast', e.target.value)}></Input>
+              <Input type="text" value={aula.podcast} onChange={(e) => handleAulasInputChange(index, 'podcast', e.target.value)}></Input>
             </div>
             <div className="grid items-center mt-6 w-10">
               <Button
@@ -415,31 +415,31 @@ export default function Curso() {
       
       </form>
 
-              {/* Modal do Image Cropper */}
-                  {showImageCropper && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                      <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-6">
-                          <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-semibold">Ajustar Imagem</h3>
-                            <button
-                              onClick={() => setShowImageCropper(false)}
-                              className="text-gray-400 hover:text-gray-600 text-2xl"
-                            >
-                              ×
-                            </button>
-                          </div>
-                    <ImageCropper
-                        imageSrc={imagemBase64} // imagem original
-                        onUploadSuccess={(base64) => {
-                          setImagemBase64(base64);
-                          setShowImageCropper(false);
-                        }}
-                      />
-                        </div>
-                      </div>
-                    </div>
-                  )}
+      {/* Modal do Image Cropper */}
+          {showImageCropper && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold">Ajustar Imagem</h3>
+                    <button
+                      onClick={() => setShowImageCropper(false)}
+                      className="text-gray-400 hover:text-gray-600 text-2xl"
+                    >
+                      ×
+                    </button>
+                  </div>
+            <ImageCropper
+                imageSrc={imagemBase64} // imagem original
+                onUploadSuccess={(base64) => {
+                  setImagemBase64(base64);
+                  setShowImageCropper(false);
+                }}
+            />
+          </div>
+        </div>
+      </div>
+    )}
     </div>
     
   );
