@@ -56,6 +56,8 @@ export default function Curso() {
 
   const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", linkVideo: "", linkPdf: null, linkPodcast: "" }]);
   const [curso, setCurso] = useState([]);
+  const [loadingInitial, setLoadingInitial] = useState(true); // Novo estado para controle inicial de carregamento
+  
   
   const categoriasOptions = Object.entries(Categoria).map(([value, label]) => ({
   value,
@@ -65,47 +67,44 @@ export default function Curso() {
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    async function loadCurso() {
-      
-      const res = await fetch(`/api/curso?id=${id}`); 
-
-      const data = await res.json();
-      setCurso(data)
-      setAulas(data.aula);
-      setImagemBase64(data.imagem)
-      setLinkApostila(data.linkApostila)
-
-      console.log(data)
-    }
-    loadCurso()
 
     if (status === 'unauthenticated') {
       router.push('/login');
     }
 
-  }, [id])
+    async function loadCurso() {
+      
+        try {
+          const res = await fetch(`/api/curso?id=${id}`); 
 
-    if (curso.idUsuario != session?.user.id) {
-    return (
-      <div className="text-center py-20">
-        <h2 className="text-2xl font-bold">Acesso Negado</h2>
-        <p className="mt-4">Você não tem permissão para editar este curso.</p>
-        <Button onClick={() => window.history.back()} className="mt-6">Voltar</Button>
-      </div>
-    );
-  }
+          if (!res.ok) {
+            throw new Error('Falha ao carregar curso');
+          }
+
+          const data = await res.json();
+
+          setCurso(data)
+          setAulas(data.aula);
+          setImagemBase64(data.imagem)
+          setLinkApostila(data.linkApostila)
+
+        } catch (error) {
+            console.error("Erro ao carregar curso :", error);
+        } finally {
+            setLoadingInitial(false); // Marca o carregamento inicial como concluído
+        }
+    }
+    loadCurso()
+
+
+
+  }, [id])
 
   const [options, setOptions] = useState<OptionType[]>(categoriasOptions);
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [linkApostila, setLinkApostila] = useState<string | null>(null);
 
-
-  const handleCreate = (inputValue: string) => {
-    const newOption = { value: inputValue, label: inputValue };
-    setOptions((prev) => [...prev, newOption]);
-    setSelectedOption(newOption);
-  };
 
   const handleInputAulasChange = (index: number, field: keyof AulaType, value: string | File | null) => {
     const updatedAulas = [...aulas];
@@ -244,6 +243,28 @@ export default function Curso() {
     }
 }
 
+  if (loadingInitial) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold">Carregando...</h2>
+      </div>
+    );
+  }
+  
+
+  // Verifica se o projeto foi carregado e se o usuário é o dono
+  const isCourseOwner = curso?.idUsuario == session?.user.id
+  
+  if (!isCourseOwner) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold">Acesso Negado</h2>
+        <p className="mt-4">Você não tem permissão para criar curso nesse projeto.</p>
+        <Button onClick={() => window.history.back()} className="mt-6">Voltar</Button>
+      </div>
+    );
+  }
+
   
   return (
     <div>
@@ -268,7 +289,7 @@ export default function Curso() {
                   <SelectContent>
                     <SelectGroup>
                       <SelectItem value="Metodologia prática">Metodologia prática</SelectItem>
-                      <SelectItem value="Opção 2">Opção 2</SelectItem>
+                      <SelectItem value="Outro">Outro</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
