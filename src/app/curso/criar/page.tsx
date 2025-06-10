@@ -75,9 +75,7 @@ export default function Curso() {
   label,
 }));
 
-  const [options, setOptions] = useState<OptionType[]>(categoriasOptions);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
-  const [linkApostila, setLinkApostila] = useState<string | null>(null);
 
   const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", video: "", slide: null, podcast: "" }]);
   const [showImageCropper, setShowImageCropper] = useState(false);
@@ -133,14 +131,13 @@ export default function Curso() {
     // remove aulas vazias (caso tenha clicado pra add uma nova e nao preencher)
     function removerAulasVazias(aulas: AulaType[]) {
       return aulas.filter((aula) => {
-        return Object.values(aula).every((valor) => {
-          if (typeof valor === "string") {
-            return valor.trim() !== "";
-          }
-          return valor !== null || valor !== undefined;
-        });
-      });
-    }
+           return (
+              aula.titulo.trim() !== "" ||
+              aula.video.trim() !== "" ||
+              aula.slide !== null ||
+              aula.podcast.trim() !== ""
+            );
+    })}
 
     const aulasFiltradas = removerAulasVazias(aulas)
 
@@ -216,13 +213,6 @@ export default function Curso() {
               <Label htmlFor="titulo">Título</Label>
               <Input type="text" name="titulo"/>
             </div>
-{/* 
-            <ImageCropper
-                    userId={String(session?.user.id)}
-                    onUploadSuccess={(url) => {
-                      console.log("Imagem salva com sucesso:", url);
-                    }}
-            /> */}
 
             <div className="grid items-center gap-1.5">
                 <Label htmlFor="metodologia">Metodologia</Label>
