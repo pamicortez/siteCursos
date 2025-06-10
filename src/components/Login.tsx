@@ -99,6 +99,7 @@ function ConfirmationModal({
 }
 
 const Login: React.FC<LoginProps> = ({ logo }) => {
+  const [isLoginProcess, setIsLoginProcess] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [usuario, setUsuario] = useState<Usuario | null>(null)
@@ -114,7 +115,15 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
     fotoPerfil: null as string | null,
   })
   const { data: session, status } = useSession();
+  // Redirecionar se já estiver logado (mas não durante o processo de login)
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user && !isLoginProcess) {
+      router.push('/');
+    }
+  }, [status, session, router, isLoginProcess]);
+
   const photoToUse = usuario?.fotoPerfil || null;
+
 
   const fetchWithErrorHandling = async (url: string) => {
     try {
@@ -149,6 +158,7 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
     });
 
     if (result?.ok) {
+      setIsLoginProcess(true);
       setJustLoggedIn(true);
       setErro("");
 
@@ -215,7 +225,10 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
         setShowResultDialog(false)
       }, 2000)
 
-      setJustLoggedIn(false);
+      // Após o modal, permitir redirecionamento
+      setTimeout(() => {
+        setIsLoginProcess(false);
+      }, 3000); // Um pouco mais que o tempo do modal
     }
   }, [justLoggedIn, session, status, usuario]);
 
@@ -240,7 +253,10 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
     }
   }, [usuario?.fotoPerfil]);
 
-
+  // Não renderizar o formulário se já estiver autenticado (mas permitir durante o processo de login)
+  if (status === 'authenticated' && !isLoginProcess) {
+    return null;
+  }
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-6 mb-6 md:grid-cols-2">
