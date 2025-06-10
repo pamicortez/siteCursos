@@ -55,6 +55,8 @@ export default function Curso() {
 
   const { data: session, status } = useSession();
   const [projeto, setProjeto] = useState({})
+  const [loadingInitial, setLoadingInitial] = useState(true); // Novo estado para controle inicial de carregamento
+
 
 
 
@@ -66,20 +68,29 @@ export default function Curso() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
-
-      async function loadProjeto() {
-      
-        const res = await fetch(`/api/projeto?id=${idProjeto}`); 
-
-        const data = await res.json();
-        setProjeto(data);
-
-        console.log(data)
-      }
-    loadProjeto()
-      
-
+      return
     }
+
+    async function loadProjeto() {
+    
+        try {
+          const res = await fetch(`/api/projeto?id=${idProjeto}`); 
+          if (!res.ok) {
+            throw new Error('Falha ao carregar projeto');
+          }
+          const data = await res.json();
+          setProjeto(data);
+          console.log("Dados do projeto carregados:", data);
+        } catch (error) {
+          console.error("Erro ao carregar projeto:", error);
+        } finally {
+          setLoadingInitial(false); // Marca o carregamento inicial como concluído
+        }
+      console.log(projeto)
+    }
+
+    loadProjeto()
+
   }, [status, router]);
 
 
@@ -185,8 +196,6 @@ export default function Curso() {
       cargaHoraria: Number(formData.get('cargaHoraria'))
     };
 
-    console.log(data)
-
     try {
       const response = await fetch('/api/curso', {
         method: 'POST',
@@ -206,17 +215,35 @@ export default function Curso() {
     } catch (error) {
       alert('Erro ao enviar os dados para a API');
     }
-}
-  // Verifica se usuario é dono do projeto associado
-    if(projeto.idUsuario != session?.user.id){
-      return (
-        <div className="text-center py-20">
-          <h2 className="text-2xl font-bold">Acesso Negado</h2>
-          <p className="mt-4">Você não tem permissão para criar curso nesse projeto.</p>
-          <Button onClick={() => window.history.back()} className="mt-6">Voltar</Button>
-        </div>
-      );
-    }
+
+
+  }
+
+
+
+  if (loadingInitial) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold">Carregando...</h2>
+      </div>
+    );
+  }
+
+
+  // Verifica se o projeto foi carregado e se o usuário é o dono
+  const isProjectOwner = projeto?.projetoUsuario?.some(
+    (user: any) => Number(user.idUsuario) === Number(session?.user?.id)
+  );
+  
+  if (!isProjectOwner) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold">Acesso Negado</h2>
+        <p className="mt-4">Você não tem permissão para criar curso nesse projeto.</p>
+        <Button onClick={() => window.history.back()} className="mt-6">Voltar</Button>
+      </div>
+    );
+  }
   
 
   return (
@@ -239,8 +266,8 @@ export default function Curso() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="Opção 1">Opção 1</SelectItem>
-                      <SelectItem value="Opção 2">Opção 2</SelectItem>
+                      <SelectItem value="Metodologia prática">Metodologia prática</SelectItem>
+                      <SelectItem value="Outro">Outro</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>
