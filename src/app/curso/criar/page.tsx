@@ -20,7 +20,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Trash2 } from 'lucide-react';
 
 
-type OptionType = { value: string; label: string };
 type AulaType = {
   titulo: string;
   video: string;
@@ -55,6 +54,7 @@ export default function Curso() {
   const router = useRouter();
 
   const { data: session, status } = useSession();
+  const [projeto, setProjeto] = useState({})
 
 
 
@@ -66,14 +66,24 @@ export default function Curso() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login');
+
+      async function loadProjeto() {
+      
+        const res = await fetch(`/api/projeto?id=${idProjeto}`); 
+
+        const data = await res.json();
+        setProjeto(data);
+
+        console.log(data)
+      }
+    loadProjeto()
+      
+
     }
   }, [status, router]);
 
 
-  const categoriasOptions = Object.entries(Categoria).map(([value, label]) => ({
-  value,
-  label,
-}));
+
 
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
 
@@ -153,8 +163,6 @@ export default function Curso() {
         })
     );
 
-    // Pega os arquivos
-    const slideFile = formData.get("slide") as File | null;
     const apostilaFile = formData.get("apostila") as File | null;
 
     // Converte pra string base64
@@ -199,7 +207,16 @@ export default function Curso() {
       alert('Erro ao enviar os dados para a API');
     }
 }
-
+  // Verifica se usuario é dono do projeto associado
+    if(projeto.idUsuario != session?.user.id){
+      return (
+        <div className="text-center py-20">
+          <h2 className="text-2xl font-bold">Acesso Negado</h2>
+          <p className="mt-4">Você não tem permissão para criar curso nesse projeto.</p>
+          <Button onClick={() => window.history.back()} className="mt-6">Voltar</Button>
+        </div>
+      );
+    }
   
 
   return (
@@ -377,7 +394,7 @@ export default function Curso() {
                       <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                           <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-semibold">Alterar Foto de Perfil</h3>
+                            <h3 className="text-xl font-semibold">Ajustar Imagem</h3>
                             <button
                               onClick={() => setShowImageCropper(false)}
                               className="text-gray-400 hover:text-gray-600 text-2xl"
