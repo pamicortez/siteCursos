@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation"; // importar hooks
 import Link from "next/link";
 import { HorizontalCard } from "@/components/ui/horizontal_card";
 import {
@@ -24,11 +25,16 @@ import {
 import { Footer2 } from "@/components/ui/footer";
 
 export default function SearchPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Inicializa os estados lendo os parâmetros da URL ou valores padrão
+  const [filter, setFilter] = useState(searchParams.get("filter") ?? "curso");
+  const [categoria, setCategoria] = useState(searchParams.get("categoria") ?? "");
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("searchTerm") ?? "");
+  const [ordem, setOrdem] = useState(searchParams.get("ordem") ?? "alfabetica");
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [filter, setFilter] = useState("curso");
-  const [categoria, setCategoria] = useState("");
-  const [searchTerm, setSearchTerm] = useState(""); // Estado para a pesquisa
-  const [ordem, setOrdem] = useState("alfabetica"); // Estado para a ordenação
   const [items, setItems] = useState([]);
 
   // Estados para as categorias/formações
@@ -58,7 +64,7 @@ export default function SearchPage() {
     "Meio Ambiente e Sustentabilidade",
   ];
 
-  // Função para buscar formações acadêmicas distintas (usuarios)
+  // Funções de fetch (idem seu código original)...
   const fetchFormacoesAcademicas = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/usuario");
@@ -76,7 +82,6 @@ export default function SearchPage() {
     }
   };
 
-  // Função para buscar categorias de cursos
   const fetchCategoriasCursos = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/curso");
@@ -94,7 +99,6 @@ export default function SearchPage() {
     }
   };
 
-  // Função para buscar categorias de projetos
   const fetchCategoriasProjetos = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/projeto");
@@ -112,9 +116,9 @@ export default function SearchPage() {
     }
   };
 
-  // Effect para resetar a categoria sempre que o filtro mudar
+  // Resetar categoria e carregar categorias/formações quando filtro mudar
   useEffect(() => {
-    setCategoria(""); // **Reseta a categoria sempre que o filtro mudar**
+    setCategoria(""); // resetar categoria ao trocar filtro
 
     if (filter === "usuario") {
       fetchFormacoesAcademicas().then((data) => setFormacoes(data));
@@ -131,14 +135,13 @@ export default function SearchPage() {
       setFormacoes([]);
       setCategoriasCursos([]);
     } else {
-      // Reset geral, caso tenha outros filtros
       setFormacoes([]);
       setCategoriasCursos([]);
       setCategoriasProjetos([]);
     }
   }, [filter]);
 
-  // Effect para buscar itens (cursos, projetos ou usuários)
+  // Buscar dados quando filtros, categoria, searchTerm ou ordem mudarem
   useEffect(() => {
     const fetchData = async () => {
       let url = `http://localhost:3000/api/${filter}`;
@@ -165,7 +168,7 @@ export default function SearchPage() {
         const response = await fetch(url);
         const data = await response.json();
         setItems(data);
-        setCurrentPage(1); // Resetar página ao buscar novos dados
+        setCurrentPage(1); // resetar página ao buscar novos dados
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
       }
@@ -174,12 +177,25 @@ export default function SearchPage() {
     fetchData();
   }, [filter, categoria, searchTerm, ordem]);
 
+  // Atualizar URL para refletir filtros atuais (exceto currentPage)
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (filter) params.set("filter", filter);
+    if (categoria) params.set("categoria", categoria);
+    if (searchTerm) params.set("searchTerm", searchTerm);
+    if (ordem) params.set("ordem", ordem);
+
+    const queryString = params.toString();
+    router.replace(`/search${queryString ? "?" + queryString : ""}`, { scroll: false });
+  }, [filter, categoria, searchTerm, ordem, router]);
+
+  // Paginação (sem alteração)
   const itemsPerPage = 6;
   const totalPages = Math.ceil(items.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentItems = items.slice(startIndex, startIndex + itemsPerPage);
 
-  // Escolhe a lista de categorias/formações para o select conforme filtro
   const categoriasParaSelect =
     filter === "usuario"
       ? formacoes
@@ -195,7 +211,7 @@ export default function SearchPage() {
       <div className="w-full max-w-4xl bg-white p-6 mt-8 shadow-lg rounded-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <Select onValueChange={(value) => setFilter(value)} value={filter}>
+            <Select onValueChange={setFilter} value={filter}>
               <SelectTrigger className="w-[180px] flex justify-between items-center">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
@@ -207,7 +223,7 @@ export default function SearchPage() {
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <Select onValueChange={(value) => setCategoria(value)} value={categoria}>
+            <Select onValueChange={setCategoria} value={categoria}>
               <SelectTrigger className="w-[180px] flex justify-between items-center">
                 <SelectValue placeholder={filter === "usuario" ? "Formação" : "Categoria"} />
               </SelectTrigger>
@@ -237,7 +253,7 @@ export default function SearchPage() {
             </div>
           </div>
           {/* Filtro de Ordenação */}
-          <Select onValueChange={(value) => setOrdem(value)} value={ordem}>
+          <Select onValueChange={setOrdem} value={ordem}>
             <SelectTrigger className="w-[180px] flex justify-between items-center">
               <SelectValue placeholder="Ordem" />
             </SelectTrigger>

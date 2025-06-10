@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import UserAproveCard from '@/components/ui/userAproveCard';
 import UserBlockCard from '@/components/ui/userBlockCard';
 import UserDeleteCard from '@/components/ui/userDeleteCard';
+import axios from 'axios';
 
 type User = {
   id: number;
@@ -23,11 +26,44 @@ type User = {
 };
 
 export default function UserManagement() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [userLoading, setUserLoading] = useState(false);
+  const [usuario, setUsuario] = useState(null);
+
   const [selectedButton, setSelectedButton] = useState<string>('aprovação');
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
 
-  // Recuperar valor do localStorage após o componente montar
+  // Verifica se está autenticado e se é super
+  useEffect(() => {
+    const fetchUsuario = async () => {
+      if (status === 'authenticated' && session?.user?.id) {
+        setUserLoading(true);
+        try {
+          const response = await axios.get(`/api/usuario?id=${session.user.id}`);
+          setUsuario(response.data);
+
+          // Verifica o tipo do usuário do retorno da API
+          if (response.data.tipo !== 'Super') {
+            router.push('/home'); // acesso negado
+          }
+        } catch (error) {
+          console.error('Erro ao carregar usuário:', error);
+          router.push('/login'); // ou outra ação em caso de erro
+        } finally {
+          setUserLoading(false);
+        }
+      }
+
+      if (status === 'unauthenticated') {
+        router.push('/login');
+      }
+    };
+
+    fetchUsuario();
+  }, [status, session, router]);
+
   useEffect(() => {
     const storedButton = localStorage.getItem('selectedButton');
     if (storedButton) {
@@ -52,7 +88,7 @@ export default function UserManagement() {
         setUsers([]);
       });
 
-    localStorage.setItem('selectedButton', selectedButton); // salva sempre que muda
+    localStorage.setItem('selectedButton', selectedButton);
   }, [selectedButton]);
 
   const handleButtonClick = (button: string) => {
@@ -79,7 +115,6 @@ export default function UserManagement() {
     }
   };
 
-  // Filtrar usuários com base no termo de pesquisa
   const filteredUsers = users.filter(user =>
     user.Nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
