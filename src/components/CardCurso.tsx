@@ -46,7 +46,7 @@ const CardCurso: React.FC<CardCursoProps> = ({
       img.onload = () => resolve(true)
       img.onerror = () => resolve(false)
       img.src = url
-      
+
       // Timeout para evitar travamento em URLs que não respondem
       setTimeout(() => resolve(false), 5000)
     })
@@ -78,13 +78,13 @@ const CardCurso: React.FC<CardCursoProps> = ({
 
       // Verificar se a imagem é válida
       const imagemValida = await verificarImagem(urlParaVerificar)
-      
+
       if (imagemValida) {
         setImageSrc(urlParaVerificar)
       } else {
         setImageSrc("/curso-default.jpg")
       }
-      
+
       setImageLoaded(true)
     }
 
@@ -173,22 +173,24 @@ const CardCurso: React.FC<CardCursoProps> = ({
   // Função para formatar o nome da categoria para exibição
   const formatarCategoria = (categoria: string) => {
     const categoriaMap: { [key: string]: string } = {
-      "Agricultura": "Agricultura",
-      "Silvicultura": "Silvicultura",
-      "PescaEVeterinaria": "Pesca e Veterinária",
-      "ArtesEHumanidades": "Artes e Humanidades",
-      "CienciasSociais": "Ciências Sociais",
-      "ComunicacaoEInformacao": "Comunicação e Informação",
-      "CienciasNaturais": "Ciências Naturais",
-      "MatematicaEEstatistica": "Matemática e Estatística",
-      "ComputacaoETecnologiaDaInformacao": "Computação e TI",
-      "Engenharia": "Engenharia",
-      "ProducaoEConstrucao": "Produção e Construção",
-      "SaudeEBemEstar": "Saúde e Bem-estar",
-      "Educacao": "Educação",
-      "NegociosAdministracaoEDireito": "Neg., Adm. e Direito",
-      "Servicos": "Serviços",
-      "ProgramasBasicos": "Programas Básicos"
+      "LinguagensLetrasEComunicacao": "Linguagens e Letras",      // 18 chars
+      "ArtesECultura": "Artes e Cultura",                         // 15 chars
+      "CienciasAgrarias": "Ciências Agrárias",                    // 17 chars
+      "PesquisaEInovacao": "Pesquisa e Inovação",                 // 19 chars
+      "ServicosSociasEComunitarios": "Serviços Sociais",          // 16 chars
+      "GestaoEPlanejamento": "Gestão e Planejamento",             // 21 chars
+      "CienciasSociaisAplicadasANegocios": "Ciências Soc. Aplicadas", // 23 chars
+      "ComunicacaoEInformacao": "Comunicação e Info.",             // 18 chars
+      "CienciasBiologicasENaturais": "Ciências Biológicas",       // 19 chars
+      "EngenhariaEProducao": "Engenharia e Produção",             // 21 chars
+      "TecnologiaEComputacao": "Tecnologia e Comp.",              // 17 chars
+      "ProducaoEConstrucao": "Produção e Construção",             // 20 chars
+      "SaudeEBemEstar": "Saúde e Bem-estar",                      // 17 chars
+      "EducacaoEFormacaoDeProfessores": "Educação e Formação",    // 18 chars
+      "NegociosAdministracaoEDireito": "Neg., Adm. e Direito",    // 19 chars
+      "CienciasExatas": "Ciências Exatas",                        // 15 chars
+      "CienciasHumanas": "Ciências Humanas",                      // 16 chars
+      "MeioAmbienteESustentabilidade": "Meio Amb. e Sustent."     // 19 chars
     }
     return categoriaMap[categoria] || categoria
   }

@@ -106,8 +106,8 @@ function ConfirmationModal({
           )}
           <button
             className={`px-4 py-2 rounded-md transition ${variant === 'destructive'
-                ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-gray-900 text-white hover:bg-gray-700'
+              ? 'bg-red-600 text-white hover:bg-red-700'
+              : 'bg-gray-900 text-white hover:bg-gray-700'
               }`}
             onClick={onConfirm}
           >
@@ -662,7 +662,7 @@ export default function ProfilePage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-gray-800">Meu Perfil</h1>
-            <div className="space-x-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               {editMode ? (
                 <>
                   <button
@@ -884,22 +884,20 @@ export default function ProfilePage() {
                       placeholder="Descrição da publicação"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        value={pub.link}
-                        onChange={(e) => handleArrayInputChange("publicacoes", index, "link", e.target.value)}
-                        placeholder="Link da publicação"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeArrayItem("publicacoes", index)}
-                        className="px-3 py-1 bg-black text-white rounded hover:bg-gray-700"
-                      >
-                        Remover
-                      </button>
-                    </div>
+                    <input
+                      type="url"
+                      value={pub.link}
+                      onChange={(e) => handleArrayInputChange("publicacoes", index, "link", e.target.value)}
+                      placeholder="Link da publicação"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem("publicacoes", index)}
+                      className="px-3 py-1 bg-black text-white rounded hover:bg-gray-700"
+                    >
+                      Remover
+                    </button>
                   </div>
                 ))}
               </div>
