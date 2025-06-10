@@ -1,58 +1,262 @@
 "use client";
 
-import {useSession} from "next-auth/react"
+import { useSession } from "next-auth/react"
 import React, { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { getSession } from "next-auth/react";
+import { useRouter } from "next/navigation"
+import { User } from 'lucide-react'
 
 interface LoginProps {
   logo: string;
 }
 
-// /api/auth/sigin/credentials
+interface Usuario {
+  id: number
+  fotoPerfil: string
+  Nome: string
+}
+
+function ConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText,
+  variant = 'default',
+  showProfilePhoto = false,
+  profilePhoto = null,
+  showSpinner = false
+}: {
+  isOpen: boolean;
+  onClose?: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText: string;
+  variant?: 'default' | 'destructive';
+  showProfilePhoto?: boolean;
+  profilePhoto?: string | null;
+  showSpinner?: boolean;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center z-50 transition-all duration-700 ease-in-out bg-slate-600/40 backdrop-blur-sm opacity-100"
+      style={{
+        backdropFilter: 'blur(8px)',
+        background: 'rgba(71, 85, 105, 0.4)'
+      }}
+    >
+      <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200 transform transition-all duration-700 ease-in-out scale-100 opacity-100 translate-y-0">
+        <h2 className="text-xl font-bold mb-4 text-center">{title}</h2>
+
+        {/* Foto de Perfil */}
+        {showProfilePhoto && (
+          <div className="flex justify-center mb-4">
+            <div className="relative group">
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                {profilePhoto ? (
+                  <img
+                    src={profilePhoto}
+                    alt="Foto de perfil"
+                    className="w-full h-full object-cover"
+                    onLoad={() => console.log("Imagem carregada")} // debug
+                  />
+                ) : (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-500"></div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        <p className="mb-6 text-center">{message}</p>
+
+        {/* Spinner */}
+        {showSpinner && (
+          <div className="flex justify-center mb-4">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-200"></div>
+          </div>
+        )}
+
+        <div className="flex justify-end gap-4">
+          {onClose && (
+            <button
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition"
+              onClick={onClose}
+            >
+              Continuar editando
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const Login: React.FC<LoginProps> = ({ logo }) => {
+  const [isLoginProcess, setIsLoginProcess] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [erro, setErro] = useState("");
+  const router = useRouter()
   const [justLoggedIn, setJustLoggedIn] = useState(false);
+  const [showResultDialog, setShowResultDialog] = useState(false)
+  const [fotoCarregando, setFotoCarregando] = useState(true);
+  const [resultDialog, setResultDialog] = useState({
+    title: '',
+    message: '',
+    isError: false,
+    fotoPerfil: null as string | null,
+  })
   const { data: session, status } = useSession();
+  // Redirecionar se já estiver logado (mas não durante o processo de login)
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user && !isLoginProcess) {
+      router.push('/');
+    }
+  }, [status, session, router, isLoginProcess]);
+
+  const photoToUse = usuario?.fotoPerfil || null;
+
+
+  const fetchWithErrorHandling = async (url: string) => {
+    try {
+      const response = await fetch(url)
+
+      // Verifica se a resposta é bem-sucedida
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      // Verifica o Content-Type para garantir que é JSON
+      const contentType = response.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        const text = await response.text()
+        console.error("Response is not JSON:", text)
+        throw new Error("Response is not valid JSON")
+      }
+
+      return await response.json()
+    } catch (error) {
+      console.error(`Error fetching ${url}:`, error)
+      throw error
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = await signIn("credentials", {
-      redirect: false, // Evita redirecionamento automático do NextAuth
+      redirect: false,
       username,
       password,
     });
 
-    if (result?.ok){
-      const nome = session?.user.name;
-      const id = session?.user.id;
+    if (result?.ok) {
+      setIsLoginProcess(true);
       setJustLoggedIn(true);
       setErro("");
-      if (result.url) {
-        
-        window.location.href = "/home";
-        //window.location.href = result.url; // Redireciona para a URL fornecida
-      } else {
-        // Caso não tenha a URL no resultado, redireciona diretamente
-        window.location.href = "/home";
-      }
 
-    } else{
+      // Aguardar a sessão ser atualizada antes de redirecionar
+      const updatedSession = await getSession();
+      if (updatedSession) {
+        // Pequeno delay para garantir que o modal seja mostrado
+        setTimeout(() => {
+          if (result.url) {
+            router.push(`/`)
+          } else {
+            router.push(`/`)
+          }
+        }, 2500); // Delay maior que o timeout do modal
+      }
+    } else {
       setErro("Usuário ou senha inválidos");
       console.log(result?.error);
     }
-
   };
 
+
+
   useEffect(() => {
-    if (justLoggedIn && session?.user?.id && session?.user?.name) {
-      alert(`Login realizado com sucesso!\nNome: ${session.user.name}\nID: ${session.user.id}`);
-      setJustLoggedIn(false); // impede múltiplos alerts
+    const fetchUsuario = async () => {
+      if (session?.user?.id) {
+        try {
+          const data = await fetchWithErrorHandling(`/api/usuario?id=${session.user.id}`)
+          setUsuario(data)
+        } catch (error) {
+          console.error("Erro ao carregar usuário:", error)
+          setResultDialog({
+            title: 'Erro',
+            message: "Erro ao carregar dados do usuário",
+            isError: true,
+            fotoPerfil: usuario?.fotoPerfil || null,
+          })
+          setShowResultDialog(true)
+        }
+      }
     }
-  }, [justLoggedIn, session]);
-  
+
+    fetchUsuario()
+  }, [session])
+
+  useEffect(() => {
+    if (justLoggedIn && session?.user?.id && session?.user?.name && status === 'authenticated') {
+      console.log("Session user image:", session.user.image); // Debug
+
+      // Priorizar fotoPerfil do usuário se existir, senão usar session.user.image
+      const photoToUse = usuario?.fotoPerfil || null;
+
+      setResultDialog({
+        title: 'Login realizado com sucesso!',
+        message: `Bem vindo, ${session.user.name}`,
+        isError: false,
+        fotoPerfil: photoToUse,
+
+      })
+      setShowResultDialog(true)
+
+      // Fechar o modal automaticamente após 2 segundos
+      setTimeout(() => {
+        setShowResultDialog(false)
+      }, 2000)
+
+      // Após o modal, permitir redirecionamento
+      setTimeout(() => {
+        setIsLoginProcess(false);
+      }, 3000); // Um pouco mais que o tempo do modal
+    }
+  }, [justLoggedIn, session, status, usuario]);
+
+  // Debug para verificar os valores
+  useEffect(() => {
+    if (showResultDialog) {
+      console.log("Modal aberto com:");
+      console.log("- fotoPerfil:", resultDialog.fotoPerfil);
+      console.log("- session.user.image:", session?.user?.image);
+      console.log("- usuario.fotoPerfil:", usuario?.fotoPerfil);
+      console.log("- showProfilePhoto:", !resultDialog.isError);
+    }
+  }, [showResultDialog, resultDialog.fotoPerfil, session?.user?.image, usuario?.fotoPerfil]);
+
+  useEffect(() => {
+    if (usuario?.fotoPerfil) {
+      setResultDialog(prev => ({
+        ...prev,
+        fotoPerfil: usuario.fotoPerfil,
+      }));
+      setFotoCarregando(false);
+    }
+  }, [usuario?.fotoPerfil]);
+
+  // Não renderizar o formulário se já estiver autenticado (mas permitir durante o processo de login)
+  if (status === 'authenticated' && !isLoginProcess) {
+    return null;
+  }
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-6 mb-6 md:grid-cols-2">
@@ -123,6 +327,20 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
             </div>
           </div>
         </div>
+
+        {/* Modal de Resultado */}
+        <ConfirmationModal
+          isOpen={showResultDialog}
+          onConfirm={() => setShowResultDialog(false)}
+          title={resultDialog.title}
+          message={resultDialog.message}
+          confirmText="OK"
+          variant={resultDialog.isError ? 'destructive' : 'default'}
+          showProfilePhoto={!resultDialog.isError}
+          profilePhoto={resultDialog.fotoPerfil}
+          showSpinner={fotoCarregando}
+        />
+
       </div>
     </form>
   );

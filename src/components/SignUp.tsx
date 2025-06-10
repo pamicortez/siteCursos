@@ -34,6 +34,54 @@ interface SignUpFormData {
   }>
 }
 
+function ConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText,
+  variant = 'default'
+}: {
+  isOpen: boolean;
+  onClose?: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText: string;
+  variant?: 'default' | 'destructive';
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200">
+        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        <p className="mb-6">{message}</p>
+        <div className="flex justify-end gap-4">
+          {onClose && (
+            <button
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition"
+              onClick={onClose}
+            >
+              Continuar editando
+            </button>
+          )}
+          <button
+            className={`px-4 py-2 rounded-md transition ${variant === 'destructive'
+              ? 'bg-red-600 text-white hover:bg-red-700'
+              : 'bg-black text-white hover:bg-gray-700'
+              }`}
+            onClick={onConfirm}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SignUpPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -46,7 +94,12 @@ export default function SignUpPage() {
   const [userCreated, setUserCreated] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isModalClosing, setIsModalClosing] = useState(false)
-
+  const [showResultDialog, setShowResultDialog] = useState(false)
+  const [resultDialog, setResultDialog] = useState({
+    title: '',
+    message: '',
+    isError: false,
+  })
   const [formData, setFormData] = useState<SignUpFormData>({
     Nome: "",
     email: "",
@@ -69,13 +122,20 @@ export default function SignUpPage() {
       },
     ],
   })
+  // Após as outras declarações de useState
+  const [isClient, setIsClient] = useState(false)
+
+  // Adicione este useEffect logo após os outros useEffects
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Redirect se já estiver logado
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && isClient) {
       router.push("/profile")
     }
-  }, [status, router])
+  }, [status, router, isClient])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -197,18 +257,33 @@ export default function SignUpPage() {
       const response = await axios.post("/api/auth/signup", filteredData)
 
       if (response.status === 201) {
-        alert("Conta criada com sucesso!")
         setCreatedUserId(response.data.user.id.toString())
         setUserCreated(true)
         setCurrentStep(4) // Ir para a etapa da foto após sucesso
+
+        // Mostrar modal de sucesso
+        setResultDialog({
+          title: 'Sucesso!',
+          message: 'Conta criada com sucesso!',
+          isError: false,
+        })
+        setShowResultDialog(true)
       }
     } catch (error: any) {
       console.error("Erro ao criar conta:", error)
-      alert(error.response?.data?.error || "Erro ao criar conta. Tente novamente.")
+
+      // Mostrar modal de erro
+      setResultDialog({
+        title: 'Erro',
+        message: error.response?.data?.error || 'Erro ao criar conta. Tente novamente.',
+        isError: true,
+      })
+      setShowResultDialog(true)
     } finally {
       setLoading(false)
     }
   }
+
 
   const handleCloseModal = () => {
     setIsModalClosing(true)
@@ -227,7 +302,7 @@ export default function SignUpPage() {
     router.push("/login")
   }
 
-  if (status === "loading") {
+  if (status === "loading" || !isClient) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -238,17 +313,48 @@ export default function SignUpPage() {
   const stepTitles = ["Informações Básicas", "Formação Acadêmica", "Experiência e Links", "Foto do Perfil"]
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 py-8 pt-32 md:pt-8">
       <div className="max-w-4xl mx-auto px-4">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+
+
+        {/* Progress Bar Mobile - Fixo como navbar */}
+        <div className="fixed top-29 left-0 right-0 bg-white shadow-md z-39 md:hidden">
+          <div className="px-4 py-3">
+            <div className="text-center">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Criar Conta</h1>
+              <p className="text-gray-600 hidden md:block">Preencha os dados para criar sua conta</p>
+            </div>
+            <div className="flex items-center justify-center">
+              {[1, 2, 3, 4].map((step) => (
+                <React.Fragment key={step}>
+                  <div
+                    className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
+                      }`}
+                  >
+                    {step}
+                  </div>
+                  {step < 4 && (
+                    <div className={`w-8 h-1 mx-1 ${step < currentStep ? "bg-blue-600" : "bg-gray-200"}`} />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+            <div className="text-center mt-1">
+              <span className="text-xs text-gray-600">{stepTitles[currentStep - 1]}</span>
+            </div>
+          </div>
+        </div>
+
+
+        {/* Header - Apenas título no mobile, completo no desktop */}
+        <div className="hidden bg-white rounded-lg shadow-md p-6 mb-6 md:block">
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Criar Conta</h1>
-            <p className="text-gray-600">Preencha os dados para criar sua conta</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Criar Conta</h1>
+            <p className="text-gray-600 hidden md:block">Preencha os dados para criar sua conta</p>
           </div>
 
-          {/* Progress Bar */}
-          <div className="flex items-center justify-center mt-6">
+          {/* Progress Bar - Visível apenas no desktop */}
+          <div className="hidden md:flex items-center justify-center mt-6">
             {[1, 2, 3, 4].map((step) => (
               <React.Fragment key={step}>
                 <div
@@ -261,10 +367,13 @@ export default function SignUpPage() {
               </React.Fragment>
             ))}
           </div>
-          <div className="text-center mt-2">
+          <div className="text-center mt-2 hidden md:block">
             <span className="text-sm text-gray-600">{stepTitles[currentStep - 1]}</span>
           </div>
         </div>
+
+
+
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
@@ -538,7 +647,7 @@ export default function SignUpPage() {
                       <button
                         type="button"
                         onClick={() => removeArrayItem("publicacoes", index)}
-                        className="px-3 py-1bg-black text-white rounded hover:bg-gray-700"
+                        className="px-3 py-1 bg-black text-white rounded hover:bg-gray-700"
                       >
                         Remover
                       </button>
@@ -714,8 +823,8 @@ export default function SignUpPage() {
       {showImageCropper && userCreated && createdUserId && (
         <div
           className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-700 ease-in-out ${isModalClosing
-              ? 'bg-slate-600/0 backdrop-blur-none opacity-0'
-              : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
+            ? 'bg-slate-600/0 backdrop-blur-none opacity-0'
+            : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
             }`}
           style={{
             backdropFilter: isModalClosing ? 'blur(0px)' : 'blur(8px)',
@@ -726,8 +835,8 @@ export default function SignUpPage() {
         >
           <div
             className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-700 ease-in-out ${isModalClosing
-                ? 'scale-95 opacity-0 translate-y-4'
-                : 'scale-100 opacity-100 translate-y-0'
+              ? 'scale-95 opacity-0 translate-y-4'
+              : 'scale-100 opacity-100 translate-y-0'
               }`}
           >
             <div className="p-6">
@@ -745,6 +854,15 @@ export default function SignUpPage() {
           </div>
         </div>
       )}
+      {/* Modal de Resultado */}
+      <ConfirmationModal
+        isOpen={showResultDialog}
+        onConfirm={() => setShowResultDialog(false)}
+        title={resultDialog.title}
+        message={resultDialog.message}
+        confirmText="OK"
+        variant={resultDialog.isError ? 'destructive' : 'default'}
+      />
     </div>
   )
 }

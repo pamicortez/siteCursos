@@ -1,5 +1,7 @@
 "use client"
 import { Badge } from "@/components/ui/badge"
+import {useSession} from "next-auth/react"
+import { redirect, useRouter } from 'next/navigation';
 import { Link, TvMinimalPlay, Headphones, Images } from "lucide-react"
 import {
   Pagination,
@@ -13,33 +15,42 @@ import {
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-const categoria: Record<string, string> = {
-  Agricultura: "Agricultura",
-  Silvicultura: "Silvicultura",
-  PescaEVeterinaria: "Pesca e Veterinária",
-  ArtesEHumanidades: "Artes e Humanidades",
-  CienciasSociais: "Ciências Sociais",
-  ComunicacaoEInformacao: "Comunicação e Informação",
-  CienciasNaturais: "Ciências Naturais",
-  MatematicaEEstatistica: "Matemática e Estatística",
-  ComputacaoETecnologiaDaInformacao: "Computação e Tecnologia da Informação",
-  Engenharia: "Engenharia",
-  ProducaoEConstrucao: "Produção e Construção",
-  SaudeEBemEstar: "Saúde e Bem-Estar",
-  Educacao: "Educação",
-  NegociosAdministracaoEDireito: "Negócios, Administração e Direito",
-  Servicos: "Serviços",
-  ProgramasBasicos: "Programas Básicos"
-};
+enum categoria {
+  SaudeEBemEstar = "Saúde e Bem-estar",
+  CienciasBiologicasENaturais = "Ciências Biológicas e Naturais",
+  TecnologiaEComputacao = "Tecnologia e Computação",
+  EngenhariaEProducao = "Engenharia e Produção",
+  CienciasSociaisENegocios = "Ciências Sociais Aplicadas e Negócios",
+  EducacaoEFormacao = "Educação e Formação de Professores",
+  CienciasExatas = "Ciências Exatas",
+  CienciasHumanas = "Ciências Humanas",
+  MeioAmbienteESustentabilidade = "Meio Ambiente e Sustentabilidade",
+  LinguagensELetrasEComunicacao = "Linguagens, Letras e Comunicação",
+  ArtesECultura = "Artes e Cultura",
+  CienciasAgrarias = "Ciências Agrárias",
+  PesquisaEInovacao = "Pesquisa e Inovação",
+  ServicosSociaisEComunitarios = "Serviços Sociais e Comunitários",
+  GestaoEPlanejamento = "Gestão e Planejamento",
+}
+
 
 
 
 export default function DetalhesCurso() {
 
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+  }, [status, router]);
+
   const params = useParams();
   const id = params.id;
 
-  const [curso, setCurso] = useState(null);
+  const [curso, setCurso] = useState(null); // criar tipo aqui
   const [paginaAtual, setPaginaAtual] = useState(1);
   const aulasPorPagina = 3;
 
@@ -66,6 +77,10 @@ export default function DetalhesCurso() {
     paginaAtual * aulasPorPagina
   ) || [];
 
+  console.log(session?.user.id)
+
+  
+  
   return (
     <div>
         <div className="flex w-100% h-100 bg-gray-200">
@@ -94,7 +109,7 @@ export default function DetalhesCurso() {
              {curso.linkApostila && (
                 <a
                   href={curso.linkApostila}
-                  download="apostila.pdf"
+                  download={`apostila_${curso.titulo}.pdf`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
@@ -127,7 +142,7 @@ export default function DetalhesCurso() {
                 )}
 
                 {aula.linkPdf && (
-                  <a href={aula.linkPdf} target="_blank" rel="noopener noreferrer" download="slide.pdf">
+                  <a href={aula.linkPdf} target="_blank" rel="noopener noreferrer" download={`${aula.titulo}.pdf`}>
                     <Images />
                   </a>
                 )}

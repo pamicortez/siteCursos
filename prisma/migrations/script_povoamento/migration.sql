@@ -21,12 +21,12 @@ VALUES
 -- Inserindo cursos (expandido para 5+)
 INSERT INTO "Curso" (titulo, imagem, descricao, categoria, "cargaHoraria", "linkInscricao", vagas, bibliografia, metodologia, "metodoAvaliacao", "idProjeto", "idUsuario", "createdAt", "updatedAt")
 VALUES
-('Curso de IA', '/proj1.jpg', 'Curso sobre inteligência artificial', 'ComputacaoETecnologiaDaInformacao', 40, 'https://inscricao.com/curso1', 50, 'Bibliografia AI', 'Metodologia prática', 'Provas e projetos', 1, 1, NOW(), NOW()),
-('Curso de Biotecnologia', '/proj3.jpg', 'Curso sobre biotecnologia', 'CienciasNaturais', 35, 'https://inscricao.com/curso2', 30, 'Bibliografia Bio', 'Aulas expositivas', 'Trabalhos e provas', 2, 2, NOW(), NOW()),
-('Curso de Agricultura Sustentável', '/proj1.jpg', 'Técnicas modernas de agricultura sustentável', 'Agricultura', 60, 'https://inscricao.com/curso3', 40, 'Manual de Agricultura Sustentável', 'Aulas práticas e teóricas', 'Projetos práticos', 3, 3, NOW(), NOW()),
-('Curso de Desenvolvimento Web', '/proj3.jpg', 'Desenvolvimento de aplicações web modernas', 'ComputacaoETecnologiaDaInformacao', 80, 'https://inscricao.com/curso4', 25, 'Livros de JavaScript e React', 'Hands-on coding', 'Projetos finais', 4, 4, NOW(), NOW()),
-('Curso de Estatística Aplicada', '/proj1.jpg', 'Análise estatística para pesquisa científica', 'MatematicaEEstatistica', 45, 'https://inscricao.com/curso5', 35, 'Livros de Estatística', 'Aulas expositivas e exercícios', 'Provas e trabalhos', 5, 5, NOW(), NOW()),
-('Curso de Design Thinking', '/proj3.jpg', 'Metodologias de design para inovação', 'ArtesEHumanidades', 30, 'https://inscricao.com/curso6', 20, 'Livros de Design Thinking', 'Workshops práticos', 'Projetos colaborativos', 6, 6, NOW(), NOW());
+('Curso de IA', '/proj1.jpg', 'Curso sobre inteligência artificial', 'CienciasAgrarias', 40, 'https://inscricao.com/curso1', 50, 'Bibliografia AI', 'Metodologia prática', 'Provas e projetos', 1, 1, NOW(), NOW()),
+('Curso de Biotecnologia', '/proj3.jpg', 'Curso sobre biotecnologia', 'CienciasAgrarias', 35, 'https://inscricao.com/curso2', 30, 'Bibliografia Bio', 'Aulas expositivas', 'Trabalhos e provas', 2, 2, NOW(), NOW()),
+('Curso de Agricultura Sustentável', '/proj1.jpg', 'Técnicas modernas de agricultura sustentável', 'CienciasAgrarias', 60, 'https://inscricao.com/curso3', 40, 'Manual de Agricultura Sustentável', 'Aulas práticas e teóricas', 'Projetos práticos', 3, 3, NOW(), NOW()),
+('Curso de Desenvolvimento Web', '/proj3.jpg', 'Desenvolvimento de aplicações web modernas', 'TecnologiaEComputacao', 80, 'https://inscricao.com/curso4', 25, 'Livros de JavaScript e React', 'Hands-on coding', 'Projetos finais', 4, 4, NOW(), NOW()),
+('Curso de Estatística Aplicada', '/proj1.jpg', 'Análise estatística para pesquisa científica', 'CienciasExatas', 45, 'https://inscricao.com/curso5', 35, 'Livros de Estatística', 'Aulas expositivas e exercícios', 'Provas e trabalhos', 5, 5, NOW(), NOW()),
+('Curso de Design Thinking', '/proj3.jpg', 'Metodologias de design para inovação', 'ArtesECultura', 30, 'https://inscricao.com/curso6', 20, 'Livros de Design Thinking', 'Workshops práticos', 'Projetos colaborativos', 6, 6, NOW(), NOW());
 
 -- Inserindo aulas (expandido)
 INSERT INTO "Aula" (titulo, "linkPdf", "linkVideo", "idCurso", "createdAt", "updatedAt")

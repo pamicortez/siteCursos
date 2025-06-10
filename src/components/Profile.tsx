@@ -2,12 +2,13 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import Carrossel from '@/components/Carrossel';
+import Carrossel from "@/components/Carrossel"
 import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import ImageCropper from "@/components/ui/ImageCropper"
 import CardEvento from "@/components/CardEvento"
-import CardProjeto from '@/components/CardProjeto';
+import CardProjeto from "@/components/CardProjeto"
+import { LinkIcon, FileText, Building } from "lucide-react"
 
 interface Usuario {
   id: number
@@ -70,17 +71,71 @@ interface Evento {
   }>
 }
 
+function ConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  confirmText,
+  variant = 'default'
+}: {
+  isOpen: boolean;
+  onClose?: () => void;
+  onConfirm: () => void;
+  title: string;
+  message: string;
+  confirmText: string;
+  variant?: 'default' | 'destructive';
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200">
+        <h2 className="text-xl font-bold mb-4">{title}</h2>
+        <p className="mb-6">{message}</p>
+        <div className="flex justify-end gap-4">
+          {onClose && (
+            <button
+              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition"
+              onClick={onClose}
+            >
+              Continuar editando
+            </button>
+          )}
+          <button
+            className={`px-4 py-2 rounded-md transition ${variant === 'destructive'
+              ? 'bg-red-600 text-white hover:bg-red-700'
+              : 'bg-gray-900 text-white hover:bg-gray-700'
+              }`}
+            onClick={onConfirm}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [usuario, setUsuario] = useState<Usuario | null>(null);
-  const [projetos, setProjetos] = useState<Projeto[]>([]);
-  const [eventos, setEventos] = useState<Evento[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-  const [showImageCropper, setShowImageCropper] = useState(false);
-  const [isModalClosing, setIsModalClosing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
+  const [projetos, setProjetos] = useState<Projeto[]>([])
+  const [eventos, setEventos] = useState<Evento[]>([])
+  const [loading, setLoading] = useState(true)
+  const [editMode, setEditMode] = useState(false)
+  const [showImageCropper, setShowImageCropper] = useState(false)
+  const [isModalClosing, setIsModalClosing] = useState(false)
+  // const [error, setError] = useState<string | null>(null)
+  const [showResultDialog, setShowResultDialog] = useState(false)
+  const [resultDialog, setResultDialog] = useState({
+    title: '',
+    message: '',
+    isError: false,
+  })
   const [formData, setFormData] = useState({
     Nome: "",
     email: "",
@@ -88,48 +143,58 @@ export default function ProfilePage() {
     instituicaoEnsino: "",
     formacaoAcademica: "",
     resumoPessoal: "",
-  });
+    links: [] as Array<{ id?: number; tipo: string; link: string }>,
+    publicacoes: [] as Array<{ id?: number; descricao: string; link: string }>,
+    carreira: [] as Array<{
+      id?: number
+      nome: string
+      descricao: string
+      categoria: string
+      dataInicio: string
+      dataFim: string
+    }>,
+  })
 
   // Função auxiliar para fazer requests com tratamento de erro
   const fetchWithErrorHandling = async (url: string) => {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url)
 
       // Verifica se a resposta é bem-sucedida
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       // Verifica o Content-Type para garantir que é JSON
-      const contentType = response.headers.get("content-type");
+      const contentType = response.headers.get("content-type")
       if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        console.error("Response is not JSON:", text);
-        throw new Error("Response is not valid JSON");
+        const text = await response.text()
+        console.error("Response is not JSON:", text)
+        throw new Error("Response is not valid JSON")
       }
 
-      return await response.json();
+      return await response.json()
     } catch (error) {
-      console.error(`Error fetching ${url}:`, error);
-      throw error;
+      console.error(`Error fetching ${url}:`, error)
+      throw error
     }
-  };
+  }
 
   // Redirect se não estiver logado
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/login");
+      router.push("/login")
     }
-  }, [status, router]);
+  }, [status, router])
 
   // Carregar dados do usuário
   useEffect(() => {
     const fetchUsuario = async () => {
       if (session?.user?.id) {
         try {
-          setError(null);
-          const data = await fetchWithErrorHandling(`/api/usuario?id=${session.user.id}`);
-          setUsuario(data);
+          //setError(null)
+          const data = await fetchWithErrorHandling(`/api/usuario?id=${session.user.id}`)
+          setUsuario(data)
           setFormData({
             Nome: data.Nome || "",
             email: data.email || "",
@@ -137,18 +202,27 @@ export default function ProfilePage() {
             instituicaoEnsino: data.instituicaoEnsino || "",
             formacaoAcademica: data.formacaoAcademica || "",
             resumoPessoal: data.resumoPessoal || "",
-          });
+            links: data.link || [],
+            publicacoes: data.publicacao || [],
+            carreira: data.carreira || [],
+          })
         } catch (error) {
-          console.error("Erro ao carregar usuário:", error);
-          setError("Erro ao carregar dados do usuário");
+          console.error("Erro ao carregar usuário:", error)
+          //setError("Erro ao carregar dados do usuário")
+          setResultDialog({
+            title: 'Erro',
+            message: "Erro ao carregar dados do usuário",
+            isError: true,
+          })
+          setShowResultDialog(true)
         } finally {
-          setLoading(false);
+          setLoading(false)
         }
       }
-    };
+    }
 
-    fetchUsuario();
-  }, [session]);
+    fetchUsuario()
+  }, [session])
 
   // Carregar projetos do usuário - CORRIGIDO: usando endpoint correto baseado no schema
   useEffect(() => {
@@ -156,18 +230,18 @@ export default function ProfilePage() {
       if (session?.user?.id) {
         try {
           // Busca projetos através da tabela de relacionamento projetoUsuario
-          const data = await fetchWithErrorHandling(`/api/usuario/${session.user.id}/projetos`);
-          setProjetos(Array.isArray(data) ? data : []);
+          const data = await fetchWithErrorHandling(`/api/usuario/${session.user.id}/projetos`)
+          setProjetos(Array.isArray(data) ? data : [])
         } catch (error) {
-          console.error("Erro ao carregar projetos:", error);
+          console.error("Erro ao carregar projetos:", error)
           // Em caso de erro 404, define array vazio
-          setProjetos([]);
+          setProjetos([])
         }
       }
-    };
+    }
 
-    fetchProjetos();
-  }, [session]);
+    fetchProjetos()
+  }, [session])
 
   // Carregar eventos do usuário - CORRIGIDO: usando endpoint correto baseado no schema
   useEffect(() => {
@@ -175,127 +249,395 @@ export default function ProfilePage() {
       if (session?.user?.id) {
         try {
           // Busca eventos através da tabela de relacionamento eventoUsuario
-          const data = await fetchWithErrorHandling(`/api/usuario/${session.user.id}/eventos`);
-          setEventos(Array.isArray(data) ? data : []);
+          const data = await fetchWithErrorHandling(`/api/usuario/${session.user.id}/eventos`)
+          setEventos(Array.isArray(data) ? data : [])
         } catch (error) {
-          console.error("Erro ao carregar eventos:", error);
+          console.error("Erro ao carregar eventos:", error)
           // Em caso de erro 404, define array vazio
-          setEventos([]);
+          setEventos([])
         }
       }
-    };
+    }
 
-    fetchEventos();
-  }, [session]);
+    fetchEventos()
+  }, [session])
 
   useEffect(() => {
-    console.log("Debug - Projetos:", projetos);
-    console.log("Debug - Eventos:", eventos);
-    console.log("Debug - Usuario:", usuario);
-  }, [projetos, eventos, usuario]);
+    console.log("Debug - Projetos:", projetos)
+    console.log("Debug - Eventos:", eventos)
+    console.log("Debug - Usuario:", usuario)
+  }, [projetos, eventos, usuario])
 
+  useEffect(() => {
+    console.log("Session changed:", { status, session })
+
+    if (status === "unauthenticated") {
+      console.log("User is not authenticated, redirecting to login")
+      router.push("/login")
+    }
+
+    if (status === "authenticated" && !session?.user?.id) {
+      console.warn("Session exists but user ID is missing")
+    }
+  }, [status, session, router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+    const { name, value } = e.target
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }));
-  };
+      [name]: value,
+    }))
+  }
 
+  // Função para adicionar item ao array
+  const addArrayItem = (arrayName: "links" | "publicacoes" | "carreira") => {
+    setFormData((prev) => ({
+      ...prev,
+      [arrayName]: [
+        ...prev[arrayName],
+        arrayName === "links"
+          ? { tipo: "Linkedin", link: "" }
+          : arrayName === "publicacoes"
+            ? { descricao: "", link: "" }
+            : { nome: "", descricao: "", categoria: "acadêmica", dataInicio: "", dataFim: "" },
+      ],
+    }))
+  }
+
+  // Função para remover item do array
+  const removeArrayItem = (arrayName: "links" | "publicacoes" | "carreira", index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      [arrayName]: prev[arrayName].filter((_, i) => i !== index),
+    }))
+  }
+
+  // Função para alterar item específico do array
+  const handleArrayInputChange = (
+    arrayName: "links" | "publicacoes" | "carreira",
+    index: number,
+    field: string,
+    value: string,
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [arrayName]: prev[arrayName].map((item, i) => (i === index ? { ...item, [field]: value } : item)),
+    }))
+  }
+
+  const handleSuccessConfirm = () => {
+    setShowResultDialog(false)
+  }
+
+  // FUNÇÃO CORRIGIDA - handleSave
   const handleSave = async () => {
     try {
-      const response = await fetch(`/api/usuario?id=${session?.user?.id}`, {
-        method: 'PATCH',
+      setLoading(true)
+      //setError(null)
+
+      // Verificar se o usuário está autenticado
+      if (!session?.user?.id) {
+        //setError("Você precisa estar logado para editar seu perfil")
+        setResultDialog({
+          title: 'Erro',
+          message: "Você precisa estar logado para editar seu perfil",
+          isError: true,
+        })
+        setShowResultDialog(true)
+        return
+      }
+
+      // Validar dados básicos antes de enviar
+      if (!formData.Nome.trim()) {
+        //setError("Nome é obrigatório")
+        setResultDialog({
+          title: 'Erro',
+          message: "Nome é obrigatório",
+          isError: true,
+        })
+        setShowResultDialog(true)
+        return
+      }
+
+      if (!formData.email.trim()) {
+        //setError("Email é obrigatório")
+        setResultDialog({
+          title: 'Erro',
+          message: "Email é obrigatório",
+          isError: true,
+        })
+        setShowResultDialog(true)
+        return
+      }
+
+      // Validar formato do email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(formData.email)) {
+        //setError("Email inválido")
+        setResultDialog({
+          title: 'Erro',
+          message: "Email inválido",
+          isError: true,
+        })
+        setShowResultDialog(true)
+        return
+      }
+
+      // Preparar todos os dados em um único objeto
+      const allUserData = {
+        // Dados básicos do usuário (apenas os que foram alterados)
+        ...(formData.Nome !== usuario?.Nome && { Nome: formData.Nome.trim() }),
+        ...(formData.email !== usuario?.email && { email: formData.email.toLowerCase().trim() }),
+        ...(formData.Titulacao !== usuario?.Titulacao && { Titulacao: formData.Titulacao }),
+        ...(formData.instituicaoEnsino !== usuario?.instituicaoEnsino && {
+          instituicaoEnsino: formData.instituicaoEnsino.trim(),
+        }),
+        ...(formData.formacaoAcademica !== usuario?.formacaoAcademica && {
+          formacaoAcademica: formData.formacaoAcademica.trim(),
+        }),
+        ...(formData.resumoPessoal !== usuario?.resumoPessoal && {
+          resumoPessoal: formData.resumoPessoal.trim(),
+        }),
+
+        // Arrays relacionados - filtrar apenas itens válidos
+        links: formData.links
+          .filter((link) => link.link.trim() !== "" && link.tipo.trim() !== "")
+          .map((link) => ({
+            tipo: link.tipo.trim(),
+            link: link.link.trim(),
+            ...(link.id && { id: link.id }),
+          })),
+
+        publicacoes: formData.publicacoes
+          .filter((pub) => pub.descricao.trim() !== "" && pub.link.trim() !== "")
+          .map((pub) => ({
+            descricao: pub.descricao.trim(),
+            link: pub.link.trim(),
+            ...(pub.id && { id: pub.id }),
+          })),
+
+        carreira: formData.carreira
+          .filter(
+            (exp) =>
+              exp.nome.trim() !== "" &&
+              exp.descricao.trim() !== "" &&
+              exp.categoria.trim() !== "" &&
+              exp.dataInicio.trim() !== "" &&
+              exp.dataFim.trim() !== "",
+          )
+          .map((exp) => ({
+            nome: exp.nome.trim(),
+            descricao: exp.descricao.trim(),
+            categoria: exp.categoria.trim(),
+            dataInicio: exp.dataInicio,
+            dataFim: exp.dataFim,
+            ...(exp.id && { id: exp.id }),
+          })),
+      }
+
+      console.log("Dados sendo enviados:", allUserData)
+
+      // Fazer a requisição com headers corretos e aguardar a sessão ser válida
+      const response = await fetch(`/api/usuario/editar?id=${session.user.id}`, {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
-      });
+        credentials: "include", // Importante: incluir cookies de sessão
+        body: JSON.stringify(allUserData),
+      })
 
+      // Verificar se a resposta está OK antes de tentar fazer parse
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        let errorMessage = `Erro ${response.status}: ${response.statusText}`
+
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorMessage
+        } catch (parseError) {
+          console.warn("Não foi possível fazer parse do erro:", parseError)
+        }
+
+        // Tratar diferentes códigos de status
+        switch (response.status) {
+          case 401:
+            //setError("Sessão expirada. Faça login novamente.")
+            setResultDialog({
+              title: 'Erro',
+              message: "Sessão expirada. Faça login novamente.",
+              isError: true,
+            })
+            setShowResultDialog(true)
+            // Opcional: redirecionar para login após um delay
+            setTimeout(() => router.push("/login"), 2000)
+            return
+          case 403:
+            //setError("Você não tem permissão para editar este perfil.")
+            setResultDialog({
+              title: 'Erro',
+              message: "Você não tem permissão para editar este perfil.",
+              isError: true,
+            })
+            setShowResultDialog(true)
+            return
+          case 409:
+            //setError("Este email já está sendo usado por outro usuário.")
+            setResultDialog({
+              title: 'Erro',
+              message: "Este email já está sendo usado por outro usuário.",
+              isError: true,
+            })
+            setShowResultDialog(true)
+            return
+          case 400:
+            //setError(`Erro de validação: ${errorMessage}`)
+            setResultDialog({
+              title: 'Erro',
+              message: `Erro de validação: ${errorMessage}`,
+              isError: true,
+            })
+            setShowResultDialog(true)
+            return
+          default:
+            throw new Error(errorMessage)
+        }
       }
 
-      // Verifica se a resposta é JSON válida
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        await response.json(); // Consome a resposta JSON
+      // Parse da resposta de sucesso
+      const data = await response.json()
+
+      // Verificar se os dados foram retornados corretamente
+      if (!data || !data.id) {
+        throw new Error("Nenhum dado válido foi retornado do servidor")
       }
 
-      setUsuario(prev => prev ? { ...prev, ...formData } : null);
-      setEditMode(false);
-      alert("Perfil atualizado com sucesso!");
+      // Atualizar estado local com dados atualizados
+      setUsuario(data)
+      setFormData({
+        Nome: data.Nome || "",
+        email: data.email || "",
+        Titulacao: data.Titulacao || "",
+        instituicaoEnsino: data.instituicaoEnsino || "",
+        formacaoAcademica: data.formacaoAcademica || "",
+        resumoPessoal: data.resumoPessoal || "",
+        links: data.link || [],
+        publicacoes: data.publicacao || [],
+        carreira: data.carreira || [],
+      })
+
+      setEditMode(false)
+      //setError(null)
+
+      setResultDialog({
+        title: 'Sucesso!',
+        message: 'Perfil atualizado com sucesso.',
+        isError: false,
+      })
+      setShowResultDialog(true)
     } catch (error: any) {
-      console.error("Erro ao atualizar perfil:", error);
-      alert(error.message || "Erro ao atualizar perfil");
+      console.error("Erro ao atualizar perfil:", error)
+
+      // Tratamento de erro mais específico
+      if (error.name === "TypeError" && error.message.includes("fetch")) {
+        //setError("Erro de conexão. Verifique sua internet e tente novamente.")
+        setResultDialog({
+          title: 'Erro',
+          message: "Erro de conexão. Verifique sua internet e tente novamente.",
+          isError: true,
+        })
+        setShowResultDialog(true)
+      } else if (error.message.includes("JSON")) {
+        //setError("Erro no formato dos dados. Tente novamente.")
+        setResultDialog({
+          title: 'Erro',
+          message: "Erro no formato dos dados. Tente novamente.",
+          isError: true,
+        })
+        setShowResultDialog(true)
+      } else if (error.message.includes("NetworkError") || error.message.includes("Failed to fetch")) {
+        //setError("Erro de rede. Verifique sua conexão e tente novamente.")
+        setResultDialog({
+          title: 'Erro',
+          message: "Erro de rede. Verifique sua conexão e tente novamente.",
+          isError: true,
+        })
+        setShowResultDialog(true)
+      } else {
+        //setError(error.message || "Erro ao atualizar perfil. Tente novamente.")
+        setResultDialog({
+          title: 'Erro',
+          message: error.message || "Erro ao atualizar perfil. Tente novamente.",
+          isError: true,
+        })
+        setShowResultDialog(true)
+      }
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   const handleImageUploadSuccess = (newImageBase64: string) => {
-    setUsuario(prev => prev ? { ...prev, fotoPerfil: newImageBase64 } : null);
-    handleCloseModal();
-  };
+    setUsuario((prev) => (prev ? { ...prev, fotoPerfil: newImageBase64 } : null))
+    handleCloseModal()
+  }
 
   const handleCloseModal = () => {
-    setIsModalClosing(true);
+    setIsModalClosing(true)
     setTimeout(() => {
-      setShowImageCropper(false);
-      setIsModalClosing(false);
-    }, 700); // Duração da animação de fade out
-  };
-
+      setShowImageCropper(false)
+      setIsModalClosing(false)
+    }, 700) // Duração da animação de fade out
+  }
 
   const isValidTipoParticipacao = (tipo: string): tipo is "Ouvinte" | "Palestrante" | "Organizador" => {
-    return ["Ouvinte", "Palestrante", "Organizador"].includes(tipo);
-  };
+    return ["Ouvinte", "Palestrante", "Organizador"].includes(tipo)
+  }
 
   const isValidCategoria = (tipo: string): tipo is "Coordenador" | "Colaborador" | "Bolsista" | "Voluntário" => {
-    return ["Coordenador", "Colaborador", "Bolsista", "Voluntário"].includes(tipo);
-  };
+    return ["Coordenador", "Colaborador", "Bolsista", "Voluntário"].includes(tipo)
+  }
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('pt-BR');
+      return new Date(dateString).toLocaleDateString("pt-BR")
     } catch (error) {
-      console.error("Erro ao formatar data:", error);
-      return "Data inválida";
+      console.error("Erro ao formatar data:", error)
+      return "Data inválida"
     }
-  };
+  }
 
   const handleProjetoClick = (projetoId: number) => {
-    router.push(`/projeto/${projetoId}`);
-  };
+    router.push(`/projeto/${projetoId}`)
+  }
 
   const handleEventoClick = (eventoId: number) => {
-    router.push(`/evento/${eventoId}`);
-  };
+    router.push(`/evento/${eventoId}`)
+  }
 
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
-    );
+    )
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Erro</h2>
-          <p className="text-gray-700">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // if (error) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="text-center">
+  //         <h2 className="text-xl font-semibold text-red-600 mb-2">Erro</h2>
+  //         <p className="text-gray-700">{error}</p>
+  //         <button
+  //           onClick={() => window.location.reload()}
+  //           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+  //         >
+  //           Tentar novamente
+  //         </button>
+  //       </div>
+  //     </div>
+  //   )
+  // }
 
   if (!usuario) {
     return (
@@ -310,7 +652,7 @@ export default function ProfilePage() {
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -320,14 +662,15 @@ export default function ProfilePage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-gray-800">Meu Perfil</h1>
-            <div className="space-x-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               {editMode ? (
                 <>
                   <button
                     onClick={handleSave}
-                    className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-600 transition"
+                    disabled={loading}
+                    className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-600 transition disabled:opacity-50"
                   >
-                    Salvar
+                    {loading ? "Salvando..." : "Salvar"}
                   </button>
                   <button
                     onClick={() => setEditMode(false)}
@@ -346,6 +689,7 @@ export default function ProfilePage() {
               )}
             </div>
           </div>
+          {/* {error && <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>} */}
         </div>
 
         {/* Foto de Perfil e Informações Básicas */}
@@ -378,11 +722,16 @@ export default function ProfilePage() {
               <p className="text-gray-600 mb-1">{usuario.email}</p>
               <p className="text-gray-600 mb-1">{usuario.Titulacao}</p>
               <p className="text-gray-600 mb-1">{usuario.instituicaoEnsino}</p>
-              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${usuario.tipo === 'Normal' ? 'bg-green-100 text-green-800' :
-                usuario.tipo === 'Super' ? 'bg-blue-100 text-blue-800' :
-                  usuario.tipo === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                }`}>
+              <span
+                className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${usuario.tipo === "Normal"
+                  ? "bg-green-100 text-green-800"
+                  : usuario.tipo === "Super"
+                    ? "bg-blue-100 text-blue-800"
+                    : usuario.tipo === "Pendente"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+              >
                 {usuario.tipo}
               </span>
             </div>
@@ -460,14 +809,172 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">Experiência e Links (Opcional)</h3>
+
+              {/* Links */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-700">
+                    <LinkIcon className="inline w-4 h-4 mr-1" />
+                    Links Profissionais
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => addArrayItem("links")}
+                    className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-gray-700"
+                  >
+                    + Adicionar Link
+                  </button>
+                </div>
+
+                {formData.links.map((link, index) => (
+                  <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
+                    <select
+                      value={link.tipo}
+                      onChange={(e) => handleArrayInputChange("links", index, "tipo", e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Linkedin">LinkedIn</option>
+                      <option value="Instragram">Instagram</option>
+                      <option value="Facebook">Facebook</option>
+                      <option value="Whatsapp">WhatsApp</option>
+                      <option value="Genérico">Website</option>
+                    </select>
+                    <input
+                      type="url"
+                      value={link.link}
+                      onChange={(e) => handleArrayInputChange("links", index, "link", e.target.value)}
+                      placeholder="https://..."
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem("links", index)}
+                      className="px-3 py-1 bg-black text-white rounded hover:bg-gray-700"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Publications */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-700">
+                    <FileText className="inline w-4 h-4 mr-1" />
+                    Publicações
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => addArrayItem("publicacoes")}
+                    className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-gray-700"
+                  >
+                    + Adicionar Publicação
+                  </button>
+                </div>
+
+                {formData.publicacoes.map((pub, index) => (
+                  <div key={index} className="space-y-2 mb-4 p-3 border border-gray-200 rounded">
+                    <input
+                      type="text"
+                      value={pub.descricao}
+                      onChange={(e) => handleArrayInputChange("publicacoes", index, "descricao", e.target.value)}
+                      placeholder="Descrição da publicação"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="url"
+                      value={pub.link}
+                      onChange={(e) => handleArrayInputChange("publicacoes", index, "link", e.target.value)}
+                      placeholder="Link da publicação"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem("publicacoes", index)}
+                      className="px-3 py-1 bg-black text-white rounded hover:bg-gray-700"
+                    >
+                      Remover
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Experience */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-700">
+                    <Building className="inline w-4 h-4 mr-1" />
+                    Experiência Profissional
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={() => addArrayItem("carreira")}
+                    className="px-3 py-1 bg-black text-white text-sm rounded hover:bg-gray-700"
+                  >
+                    + Adicionar Experiência
+                  </button>
+                </div>
+
+                {formData.carreira.map((exp, index) => (
+                  <div key={index} className="space-y-2 mb-4 p-3 border border-gray-200 rounded">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        value={exp.nome}
+                        onChange={(e) => handleArrayInputChange("carreira", index, "nome", e.target.value)}
+                        placeholder="Nome da posição/cargo"
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <select
+                        value={exp.categoria}
+                        onChange={(e) => handleArrayInputChange("carreira", index, "categoria", e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="acadêmica">Acadêmica</option>
+                        <option value="profissional">Profissional</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <input
+                        type="date"
+                        value={exp.dataInicio}
+                        onChange={(e) => handleArrayInputChange("carreira", index, "dataInicio", e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <input
+                        type="date"
+                        value={exp.dataFim}
+                        onChange={(e) => handleArrayInputChange("carreira", index, "dataFim", e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <textarea
+                      value={exp.descricao}
+                      onChange={(e) => handleArrayInputChange("carreira", index, "descricao", e.target.value)}
+                      placeholder="Descrição da experiência"
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeArrayItem("carreira", index)}
+                      className="px-3 py-1 bg-black text-white rounded hover:bg-gray-700"
+                    >
+                      Remover Experiência
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {/* Carrossel de Projetos */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">
-            Meus Projetos ({projetos.length})
-          </h3>
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">Meus Projetos ({projetos.length})</h3>
           {projetos.length > 0 ? (
             <Carrossel>
               {projetos.map((projeto) => (
@@ -502,56 +1009,63 @@ export default function ProfilePage() {
               <p className="text-sm">Debug: Array length = {projetos.length}</p>
             </div>
           )}
+          <button
+            onClick={() => router.push("/projeto/criar")}
+            className="px-6 py-3 bg-black text-white rounded-md hover:bg-gray-600 transition flex items-center gap-2 mx-auto"
+          >
+            <span>+</span>
+            Criar Novo Projeto
+          </button>
         </div>
 
         {/* Carrossel de Eventos */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-xl font-semibold mb-4 text-gray-800">
-            Meus Eventos ({eventos.length})
-          </h3>
+          <h3 className="text-xl font-semibold mb-4 text-gray-800">Meus Eventos ({eventos.length})</h3>
           {eventos.length > 0 ? (
-
             <Carrossel>
               {eventos.map((evento: any) => (
                 <div key={evento.id} className="flex-shrink-0 w-80 h-full mt-1">
-                  <div className="h-112">
-                    <CardEvento
-                      idEvento={evento.id}
-                      titulo={evento.titulo}
-                      descricao={evento.descricao}
-                      data={evento.data}
-                      linkParticipacao={evento.linkParticipacao || '#'}
-                      imagens={evento.imagemEvento?.map((img: any) => img.link) || []}
-                      isOwner={true}
-                      tipoParticipacao={
-                        evento.eventoUsuario?.[0]?.tipoParticipacao &&
-                          isValidTipoParticipacao(evento.eventoUsuario[0].tipoParticipacao)
-                          ? evento.eventoUsuario[0].tipoParticipacao
-                          : undefined
-                      }
-                      onEventoDeleted={() => window.location.reload()}
-                    />
-                  </div>
+
+                  <CardEvento
+                    idEvento={evento.id}
+                    titulo={evento.titulo}
+                    descricao={evento.descricao}
+                    data={evento.data}
+                    linkParticipacao={evento.linkParticipacao || "#"}
+                    imagens={evento.imagemEvento?.map((img: any) => img.link) || []}
+                    isOwner={true}
+                    tipoParticipacao={
+                      evento.eventoUsuario?.[0]?.tipoParticipacao &&
+                        isValidTipoParticipacao(evento.eventoUsuario[0].tipoParticipacao)
+                        ? evento.eventoUsuario[0].tipoParticipacao
+                        : undefined
+                    }
+                    onEventoDeleted={() => window.location.reload()}
+                  />
+
                 </div>
               ))}
             </Carrossel>
-
           ) : (
             <div className="text-center py-8 text-gray-500">
               <p>Nenhum evento encontrado</p>
               <p className="text-sm">Debug: Array length = {eventos.length}</p>
             </div>
           )}
+          <button
+            onClick={() => router.push("/evento/criar")}
+            className="px-6 py-3 bg-black text-white rounded-md hover:bg-gray-600 transition flex items-center gap-2 mx-auto"
+          >
+            <span>+</span>
+            Criar Novo Evento
+          </button>
         </div>
-
 
         {/* Informações Adicionais - Apenas Visualização */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Links */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-semibold mb-4">
-              Links ({usuario?.link?.length || 0})
-            </h3>
+            <h3 className="text-xl font-semibold mb-4">Links ({usuario?.link?.length || 0})</h3>
             {usuario?.link && usuario.link.length > 0 ? (
               <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
                 {usuario.link.map((link) => (
@@ -571,7 +1085,9 @@ export default function ProfilePage() {
             ) : (
               <div className="text-center py-4 text-gray-500">
                 <p>Nenhum link cadastrado</p>
-                <p className="text-sm">Debug: {usuario?.link ? `Array length = ${usuario.link.length}` : 'Array is null/undefined'}</p>
+                <p className="text-sm">
+                  Debug: {usuario?.link ? `Array length = ${usuario.link.length}` : "Array is null/undefined"}
+                </p>
               </div>
             )}
           </div>
@@ -607,8 +1123,10 @@ export default function ProfilePage() {
                   <div key={exp.id} className="border-l-4 border-blue-500 pl-4">
                     <div className="flex justify-between items-start mb-1">
                       <h4 className="font-semibold text-gray-800">{exp.nome}</h4>
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${exp.categoria === 'acadêmica' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
-                        }`}>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${exp.categoria === "acadêmica" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
+                          }`}
+                      >
                         {exp.categoria}
                       </span>
                     </div>
@@ -643,20 +1161,16 @@ export default function ProfilePage() {
       {showImageCropper && (
         <div
           className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-700 ease-in-out ${isModalClosing
-            ? 'bg-slate-600/0 backdrop-blur-none opacity-0'
-            : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
+            ? "bg-slate-600/0 backdrop-blur-none opacity-0"
+            : "bg-slate-600/40 backdrop-blur-sm opacity-100"
             }`}
           style={{
-            backdropFilter: isModalClosing ? 'blur(0px)' : 'blur(8px)',
-            background: isModalClosing
-              ? 'rgba(71, 85, 105, 0)'
-              : 'rgba(71, 85, 105, 0.4)'
+            backdropFilter: isModalClosing ? "blur(0px)" : "blur(8px)",
+            background: isModalClosing ? "rgba(71, 85, 105, 0)" : "rgba(71, 85, 105, 0.4)",
           }}
         >
           <div
-            className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-700 ease-in-out ${isModalClosing
-              ? 'scale-95 opacity-0 translate-y-4'
-              : 'scale-100 opacity-100 translate-y-0'
+            className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-700 ease-in-out ${isModalClosing ? "scale-95 opacity-0 translate-y-4" : "scale-100 opacity-100 translate-y-0"
               }`}
           >
             <div className="p-6">
@@ -669,14 +1183,19 @@ export default function ProfilePage() {
                   ×
                 </button>
               </div>
-              <ImageCropper
-                userId={session?.user?.id || ""}
-                onUploadSuccess={handleImageUploadSuccess}
-              />
+              <ImageCropper userId={session?.user?.id || ""} onUploadSuccess={handleImageUploadSuccess} />
             </div>
           </div>
         </div>
       )}
+      <ConfirmationModal
+        isOpen={showResultDialog}
+        onConfirm={handleSuccessConfirm}
+        title={resultDialog.title}
+        message={resultDialog.message}
+        confirmText="OK"
+        variant={resultDialog.isError ? 'destructive' : 'default'}
+      />
     </div>
-  );
+  )
 }

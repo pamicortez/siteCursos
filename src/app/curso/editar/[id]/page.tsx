@@ -1,7 +1,8 @@
 "use client"
 
 import React, {useState, useEffect} from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
+import { useSession } from "next-auth/react"
 import CreatableSelect from 'react-select/creatable';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,28 +29,29 @@ type AulaType = {
 
 
 enum Categoria {
-  Agricultura = "Agricultura",
-  Silvicultura = "Silvicultura",
-  PescaEVeterinaria = "Pesca e Veterinária",
-  ArtesEHumanidades = "Artes e Humanidades",
-  CienciasSociais = "Ciências Sociais",
-  ComunicacaoEInformacao = "Comunicação e Informação",
-  CienciasNaturais = "Ciências Naturais",
-  MatematicaEEstatistica = "Matemática e Estatística",
-  ComputacaoETecnologiaDaInformacao = "Computação e TI",
-  Engenharia = "Engenharia",
-  ProducaoEConstrucao = "Produção e Construção",
-  SaudeEBemEstar = "Saúde e Bem-Estar",
-  Educacao = "Educação",
-  NegociosAdministracaoEDireito = "Negócios, Administração e Direito",
-  Servicos = "Serviços",
-  ProgramasBasicos = "Programas Básicos",
+  SaudeEBemEstar = "Saúde e Bem-estar",
+  CienciasBiologicasENaturais = "Ciências Biológicas e Naturais",
+  TecnologiaEComputacao = "Tecnologia e Computação",
+  EngenhariaEProducao = "Engenharia e Produção",
+  CienciasSociaisENegocios = "Ciências Sociais Aplicadas e Negócios",
+  EducacaoEFormacao = "Educação e Formação de Professores",
+  CienciasExatas = "Ciências Exatas",
+  CienciasHumanas = "Ciências Humanas",
+  MeioAmbienteESustentabilidade = "Meio Ambiente e Sustentabilidade",
+  LinguagensLetrasEComunicacao = "Linguagens, Letras e Comunicação",
+  ArtesECultura = "Artes e Cultura",
+  CienciasAgrarias = "Ciências Agrárias",
+  PesquisaEInovacao = "Pesquisa e Inovação",
+  ServicosSociaisEComunitarios = "Serviços Sociais e Comunitários",
+  GestaoEPlanejamento = "Gestão e Planejamento",
 }
+
 
 
 export default function Curso() {
 
   const params = useParams()
+  const router = useRouter();
   const id = params.id
 
   const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", linkVideo: "", linkPdf: null, linkPodcast: "" }]);
@@ -59,6 +61,8 @@ export default function Curso() {
   value,
   label,
   }));
+
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     async function loadCurso() {
@@ -74,7 +78,22 @@ export default function Curso() {
       console.log(data)
     }
     loadCurso()
+
+    if (status === 'unauthenticated') {
+      router.push('/login');
+    }
+
   }, [id])
+
+    if (curso.idUsuario != session?.user.id) {
+    return (
+      <div className="text-center py-20">
+        <h2 className="text-2xl font-bold">Acesso Negado</h2>
+        <p className="mt-4">Você não tem permissão para editar este curso.</p>
+        <Button onClick={() => window.history.back()} className="mt-6">Voltar</Button>
+      </div>
+    );
+  }
 
   const [options, setOptions] = useState<OptionType[]>(categoriasOptions);
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
@@ -127,34 +146,6 @@ export default function Curso() {
     setAulas(updatedAulas);
   };
 
-
-    const customStyles = {
-    control: (provided: any, state: any) => ({
-      ...provided,
-      backgroundColor: "white",
-      borderWidth: "1px",
-      borderRadius: "6px",
-      minHeight: "30px",
-    }),
-    menu: (provided: any) => ({
-      ...provided,
-      backgroundColor: "white",
-      borderRadius: "6px",
-      boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-    }),
-    option: (provided: any, state: { isFocused: any; }) => ({
-      ...provided,
-      backgroundColor: state.isFocused ? "#EEF2FF" : "white",
-      color: "#111827",
-      padding: "10px",
-      cursor: "pointer",
-    }),
-    placeholder: (provided: any) => ({
-      ...provided,
-      color: "#9CA3AF",
-      fontSize: "14px",
-    }),
-  };
 
   const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -220,7 +211,7 @@ export default function Curso() {
     const data = {
       titulo: formData.get("titulo"),
       metodologia: formData.get("metodologia"),
-      categoria: selectedOption?.value ?? curso.categoria, // Seleção feita com react-select
+      categoria: formData.get('categoria'),
       descricao: formData.get('descricao'),
       bibliografia: formData.get('bibliografia'),
       imagem: imagemBase64,
@@ -333,23 +324,20 @@ export default function Curso() {
 
             <div>
                 <label className="block mb-2 text-sm font-medium text-gray-900">Categoria</label>
-                <CreatableSelect name="categoria"
-                isClearable
-                styles={customStyles}
-                options={options}
-                value={curso.categoria ? {value: curso.categoria, label: Categoria[curso.categoria as keyof typeof Categoria]}: null
-                }
-                onChange={(option) => {
-                  setSelectedOption(option);
-                  console.log(option)
-                  setCurso((prev) => ({
-                    ...prev,
-                    categoria: option ? option.value : "",
-                  }));
-                }}
-                onCreateOption={handleCreate}
-                placeholder="Selecione ou crie..."
-                required />
+                <Select name="categoria" value={curso.categoria ?? ""} onValueChange={(value) => setCurso((prev) => ({ ...prev, categoria: value }))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Escolha..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {categoriasOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
             </div>
 
           </div>

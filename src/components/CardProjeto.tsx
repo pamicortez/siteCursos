@@ -139,22 +139,24 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
   // Função para formatar o nome da categoria para exibição (igual ao CardCurso)
   const formatarCategoria = (categoria: string) => {
     const categoriaMap: { [key: string]: string } = {
-      "Agricultura": "Agricultura",
-      "Silvicultura": "Silvicultura",
-      "PescaEVeterinaria": "Pesca e Veterinária",
-      "ArtesEHumanidades": "Artes e Humanidades",
-      "CienciasSociais": "Ciências Sociais",
-      "ComunicacaoEInformacao": "Comunicação e Informação",
-      "CienciasNaturais": "Ciências Naturais",
-      "MatematicaEEstatistica": "Matemática e Estatística",
-      "ComputacaoETecnologiaDaInformacao": "Computação e TI",
-      "Engenharia": "Engenharia",
-      "ProducaoEConstrucao": "Produção e Construção",
-      "SaudeEBemEstar": "Saúde e Bem-estar",
-      "Educacao": "Educação",
-      "NegociosAdministracaoEDireito": "Neg., Adm. e Direito",
-      "Servicos": "Serviços",
-      "ProgramasBasicos": "Programas Básicos"
+      "LinguagensLetrasEComunicacao": "Linguagens e Letras",      // 18 chars
+      "ArtesECultura": "Artes e Cultura",                         // 15 chars
+      "CienciasAgrarias": "Ciências Agrárias",                    // 17 chars
+      "PesquisaEInovacao": "Pesquisa e Inovação",                 // 19 chars
+      "ServicosSociasEComunitarios": "Serviços Sociais",          // 16 chars
+      "GestaoEPlanejamento": "Gestão e Planejamento",             // 21 chars
+      "CienciasSociaisAplicadasANegocios": "Ciências Soc. Aplicadas", // 23 chars
+      "ComunicacaoEInformacao": "Comunicação e Info.",             // 18 chars
+      "CienciasBiologicasENaturais": "Ciências Biológicas",       // 19 chars
+      "EngenhariaEProducao": "Engenharia e Produção",             // 21 chars
+      "TecnologiaEComputacao": "Tecnologia e Comp.",              // 17 chars
+      "ProducaoEConstrucao": "Produção e Construção",             // 20 chars
+      "SaudeEBemEstar": "Saúde e Bem-estar",                      // 17 chars
+      "EducacaoEFormacaoDeProfessores": "Educação e Formação",    // 18 chars
+      "NegociosAdministracaoEDireito": "Neg., Adm. e Direito",    // 19 chars
+      "CienciasExatas": "Ciências Exatas",                        // 15 chars
+      "CienciasHumanas": "Ciências Humanas",                      // 16 chars
+      "MeioAmbienteESustentabilidade": "Meio Amb. e Sustent."     // 19 chars
     }
     return categoriaMap[categoria] || categoria
   }
@@ -190,7 +192,7 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
   return (
     <>
       <div
-        className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-80 flex flex-col"
+        className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-90 flex flex-col"
         style={{ width: "14rem", margin: "0 auto" }}
         onClick={handleCardClick}
       >
@@ -201,7 +203,7 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
             className="w-full h-full object-cover"
             alt={titulo}
             onError={(e) => {
-              ;(e.target as HTMLImageElement).src = "/placeholder.svg?height=128&width=224"
+              ; (e.target as HTMLImageElement).src = "/placeholder.svg?height=128&width=224"
             }}
           />
         </div>
@@ -225,7 +227,7 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
           <div className="flex justify-between items-center mb-2 flex-shrink-0">
             <span
               className={cn(
-                "px-2 py-1 rounded-full text-xs font-medium",
+                "px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 line-clamp-1",
                 getCategoriaBadgeColor(categoria)
               )}
             >

@@ -83,7 +83,7 @@ async function main() {
             titulo: 'Python',
             imagem: '/python.jpg',
             descricao: 'Curso intensivo de programação em Python.',
-            categoria: client_1.categoriaCurso.ComputacaoETecnologiaDaInformacao,
+            categoria: client_1.categoriaCurso.TecnologiaEComputacao,
             cargaHoraria: 40,
             linkInscricao: 'https://inscricao.com/python',
             vagas: 30,

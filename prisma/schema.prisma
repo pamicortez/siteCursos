@@ -13,22 +13,24 @@ datasource db {
 }
 
 enum categoriaCurso {
-  Agricultura
-  Silvicultura
-  PescaEVeterinaria
-  ArtesEHumanidades
-  CienciasSociais
+  LinguagensLetrasEComunicacao
+  ArtesECultura
+  CienciasAgrarias
+  PesquisaEInovacao
+  ServicosSociasEComunitarios
+  GestaoEPlanejamento
+  CienciasSociaisAplicadasANegocios
   ComunicacaoEInformacao
-  CienciasNaturais
-  MatematicaEEstatistica
-  ComputacaoETecnologiaDaInformacao
-  Engenharia
+  CienciasBiologicasENaturais
+  EngenhariaEProducao
+  TecnologiaEComputacao
   ProducaoEConstrucao
   SaudeEBemEstar
-  Educacao
+  EducacaoEFormacaoDeProfessores
   NegociosAdministracaoEDireito
-  Servicos
-  ProgramasBasicos
+  CienciasExatas
+  CienciasHumanas
+  MeioAmbienteESustentabilidade
 }
 
 enum tipoLink {
