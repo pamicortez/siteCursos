@@ -173,29 +173,29 @@ const Navbar = () => {
   };
 
   // Função para formatar o nome da categoria para exibição (igual ao CardCurso)
-  const formatarCategoria = (categoria: string) => {
-    const categoriaMap: { [key: string]: string } = {
-      "LinguagensLetrasEComunicacao": "Linguagens, Letras e Comunicação",
-      "ArtesECultura": "Artes e Cultura",
-      "CienciasAgrarias": "Ciências Agrárias",
-      "PesquisaEInovacao": "Pesquisa e Inovação",
-      "ServicosSociasEComunitarios": "Serviços Sociais e Comunitários",
-      "GestaoEPlanejamento": "Gestão e Planejamento",
-      "CienciasSociaisAplicadasANegocios": "Ciências Sociais Aplicadas a Negócios",
-      "ComunicacaoEInformacao": "Comunicação e Informação",
-      "CienciasBiologicasENaturais": "Ciências Biológicas e Naturais",
-      "EngenhariaEProducao": "Engenharia e Produção",
-      "TecnologiaEComputacao": "Tecnologia e Computação",
-      "ProducaoEConstrucao": "Produção e Construção",
-      "SaudeEBemEstar": "Saúde e Bem-estar",
-      "EducacaoEFormacaoDeProfessores": "Educação e Formação de Professores",
-      "NegociosAdministracaoEDireito": "Negócios, Administração e Direito",
-      "CienciasExatas": "Ciências Exatas",
-      "CienciasHumanas": "Ciências Humanas",
-      "MeioAmbienteESustentabilidade": "Meio Ambiente e Sustentabilidade"
-    }
-    return categoriaMap[categoria] || categoria
-  }
+  // const formatarCategoria = (categoria: string) => {
+  //   const categoriaMap: { [key: string]: string } = {
+  //     "LinguagensLetrasEComunicacao": "Linguagens, Letras e Comunicação",
+  //     "ArtesECultura": "Artes e Cultura",
+  //     "CienciasAgrarias": "Ciências Agrárias",
+  //     "PesquisaEInovacao": "Pesquisa e Inovação",
+  //     "ServicosSociasEComunitarios": "Serviços Sociais e Comunitários",
+  //     "GestaoEPlanejamento": "Gestão e Planejamento",
+  //     "CienciasSociaisAplicadasANegocios": "Ciências Sociais Aplicadas a Negócios",
+  //     "ComunicacaoEInformacao": "Comunicação e Informação",
+  //     "CienciasBiologicasENaturais": "Ciências Biológicas e Naturais",
+  //     "EngenhariaEProducao": "Engenharia e Produção",
+  //     "TecnologiaEComputacao": "Tecnologia e Computação",
+  //     "ProducaoEConstrucao": "Produção e Construção",
+  //     "SaudeEBemEstar": "Saúde e Bem-estar",
+  //     "EducacaoEFormacaoDeProfessores": "Educação e Formação de Professores",
+  //     "NegociosAdministracaoEDireito": "Negócios, Administração e Direito",
+  //     "CienciasExatas": "Ciências Exatas",
+  //     "CienciasHumanas": "Ciências Humanas",
+  //     "MeioAmbienteESustentabilidade": "Meio Ambiente e Sustentabilidade"
+  //   }
+  //   return categoriaMap[categoria] || categoria
+  // }
 
   // Função para fechar o menu mobile
   const closeMobileMenu = () => {
@@ -246,7 +246,8 @@ const Navbar = () => {
                       }}
                       className="block text-left w-full whitespace-nowrap px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
                     >
-                      {formatarCategoria(category)}
+                      {/* {formatarCategoria(category)} */}
+                      {category}
                     </button>
 
                   ))}
@@ -414,7 +415,8 @@ const Navbar = () => {
                     className="block py-2 px-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors"
                     onClick={closeMobileMenu}
                   >
-                    {formatarCategoria(category)}
+                    {/* {formatarCategoria(category)} */}
+                    {category}
                   </a>
                 ))}
               </div>

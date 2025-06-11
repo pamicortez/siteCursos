@@ -15,7 +15,7 @@ const CardProfessor: React.FC<CardProfessorProps> = ({ idProfessor, imagem, nome
     router.push(`/usuario/${idProfessor}`)
   }
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-70"
+    <div className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-75"
      style={{ width: "17rem", margin: "0 auto" }}
      onClick={handleCardClick}
      >

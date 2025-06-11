@@ -39,7 +39,7 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
 
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text
-    return text.substring(0, maxLength).trim() + "..."
+    return text.substring(0, maxLength).trim() + "."
   }
 
   // Formatar as datas do projeto
@@ -99,67 +99,71 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
   // Função para obter a cor do badge baseado na categoria (igual ao CardCurso)
   const getCategoriaBadgeColor = (categoria: string) => {
     switch (categoria) {
-      case "Agricultura":
-        return "bg-green-100 text-green-800"
-      case "Silvicultura":
-        return "bg-emerald-100 text-emerald-800"
-      case "PescaEVeterinaria":
-        return "bg-teal-100 text-teal-800"
-      case "ArtesEHumanidades":
-        return "bg-purple-100 text-purple-800"
-      case "CienciasSociais":
-        return "bg-pink-100 text-pink-800"
-      case "ComunicacaoEInformacao":
+      case "LinguagensLetrasEComunicacao":
         return "bg-blue-100 text-blue-800"
-      case "CienciasNaturais":
-        return "bg-cyan-100 text-cyan-800"
-      case "MatematicaEEstatistica":
-        return "bg-indigo-100 text-indigo-800"
-      case "ComputacaoETecnologiaDaInformacao":
+      case "ArtesECultura":
+        return "bg-purple-100 text-purple-800"
+      case "CienciasAgrarias":
+        return "bg-green-100 text-green-800"
+      case "PesquisaEInovacao":
         return "bg-violet-100 text-violet-800"
-      case "Engenharia":
+      case "ServicosSociasEComunitarios":
+        return "bg-pink-100 text-pink-800"
+      case "GestaoEPlanejamento":
+        return "bg-slate-100 text-slate-800"
+      case "CienciasSociaisAplicadasANegocios":
+        return "bg-indigo-100 text-indigo-800"
+      case "ComunicacaoEInformacao":
+        return "bg-cyan-100 text-cyan-800"
+      case "CienciasBiologicasENaturais":
+        return "bg-emerald-100 text-emerald-800"
+      case "EngenhariaEProducao":
         return "bg-orange-100 text-orange-800"
+      case "TecnologiaEComputacao":
+        return "bg-violet-100 text-violet-800"
       case "ProducaoEConstrucao":
         return "bg-amber-100 text-amber-800"
       case "SaudeEBemEstar":
         return "bg-red-100 text-red-800"
-      case "Educacao":
+      case "EducacaoEFormacaoDeProfessores":
         return "bg-yellow-100 text-yellow-800"
       case "NegociosAdministracaoEDireito":
-        return "bg-slate-100 text-slate-800"
-      case "Servicos":
-        return "bg-gray-100 text-gray-800"
-      case "ProgramasBasicos":
         return "bg-stone-100 text-stone-800"
+      case "CienciasExatas":
+        return "bg-indigo-100 text-indigo-800"
+      case "CienciasHumanas":
+        return "bg-rose-100 text-rose-800"
+      case "MeioAmbienteESustentabilidade":
+        return "bg-teal-100 text-teal-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
   }
 
   // Função para formatar o nome da categoria para exibição (igual ao CardCurso)
-  const formatarCategoria = (categoria: string) => {
-    const categoriaMap: { [key: string]: string } = {
-      "LinguagensLetrasEComunicacao": "Linguagens e Letras",      // 18 chars
-      "ArtesECultura": "Artes e Cultura",                         // 15 chars
-      "CienciasAgrarias": "Ciências Agrárias",                    // 17 chars
-      "PesquisaEInovacao": "Pesquisa e Inovação",                 // 19 chars
-      "ServicosSociasEComunitarios": "Serviços Sociais",          // 16 chars
-      "GestaoEPlanejamento": "Gestão e Planejamento",             // 21 chars
-      "CienciasSociaisAplicadasANegocios": "Ciências Soc. Aplicadas", // 23 chars
-      "ComunicacaoEInformacao": "Comunicação e Info.",             // 18 chars
-      "CienciasBiologicasENaturais": "Ciências Biológicas",       // 19 chars
-      "EngenhariaEProducao": "Engenharia e Produção",             // 21 chars
-      "TecnologiaEComputacao": "Tecnologia e Comp.",              // 17 chars
-      "ProducaoEConstrucao": "Produção e Construção",             // 20 chars
-      "SaudeEBemEstar": "Saúde e Bem-estar",                      // 17 chars
-      "EducacaoEFormacaoDeProfessores": "Educação e Formação",    // 18 chars
-      "NegociosAdministracaoEDireito": "Neg., Adm. e Direito",    // 19 chars
-      "CienciasExatas": "Ciências Exatas",                        // 15 chars
-      "CienciasHumanas": "Ciências Humanas",                      // 16 chars
-      "MeioAmbienteESustentabilidade": "Meio Amb. e Sustent."     // 19 chars
-    }
-    return categoriaMap[categoria] || categoria
-  }
+  // const formatarCategoria = (categoria: string) => {
+  //   const categoriaMap: { [key: string]: string } = {
+  //     "LinguagensLetrasEComunicacao": "Linguagens e Letras",      // 18 chars
+  //     "ArtesECultura": "Artes e Cultura",                         // 15 chars
+  //     "CienciasAgrarias": "Ciências Agrárias",                    // 17 chars
+  //     "PesquisaEInovacao": "Pesquisa e Inovação",                 // 19 chars
+  //     "ServicosSociasEComunitarios": "Serviços Sociais",          // 16 chars
+  //     "GestaoEPlanejamento": "Gestão e Planejamento",             // 21 chars
+  //     "CienciasSociaisAplicadasANegocios": "Ciências Soc. Aplicadas", // 23 chars
+  //     "ComunicacaoEInformacao": "Comunicação e Info.",             // 18 chars
+  //     "CienciasBiologicasENaturais": "Ciências Biológicas",       // 19 chars
+  //     "EngenhariaEProducao": "Engenharia e Produção",             // 21 chars
+  //     "TecnologiaEComputacao": "Tecnologia e Comp.",              // 17 chars
+  //     "ProducaoEConstrucao": "Produção e Construção",             // 20 chars
+  //     "SaudeEBemEstar": "Saúde e Bem-estar",                      // 17 chars
+  //     "EducacaoEFormacaoDeProfessores": "Educação e Formação",    // 18 chars
+  //     "NegociosAdministracaoEDireito": "Neg., Adm. e Direito",    // 19 chars
+  //     "CienciasExatas": "Ciências Exatas",                        // 15 chars
+  //     "CienciasHumanas": "Ciências Humanas",                      // 16 chars
+  //     "MeioAmbienteESustentabilidade": "Meio Amb. e Sustent."     // 19 chars
+  //   }
+  //   return categoriaMap[categoria] || categoria
+  // }
 
   // Função para obter a cor do badge baseado na função do usuário
   const getFuncaoBadgeColor = (funcao?: string) => {
@@ -231,7 +235,8 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
                 getCategoriaBadgeColor(categoria)
               )}
             >
-              {formatarCategoria(categoria)}
+              {/* {formatarCategoria(categoria)} */}
+              {truncateText(categoria, 14)}
             </span>
             <span
               className={cn(

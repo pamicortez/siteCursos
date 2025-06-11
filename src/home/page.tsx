@@ -177,7 +177,7 @@ const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="container space-y-4">
+    <div className="container space-y-4 mx-auto">
       <div className="mt-12">
         <h1 className="text-center text-3xl font-bold">Professores</h1>
         {usuarios.length > 0 ? (
@@ -200,7 +200,7 @@ const HomePage: React.FC = () => {
       </div>
 
       <div className="mt-20">
-        <h1 className="px-8 text-left text-3xl font-bold">Projetos</h1>
+        <h1 className="px-8 text-center text-3xl font-bold">Projetos</h1>
         {projetos.length > 0 ? (
           <Carrossel linhas={linhas}>
             {projetos.map((projeto) => (
@@ -226,7 +226,7 @@ const HomePage: React.FC = () => {
       </div>
 
       <div className="mt-20">
-        <h1 className="px-8 text-left text-3xl font-bold">Cursos</h1>
+        <h1 className="px-8 text-center text-3xl font-bold">Cursos</h1>
         {cursos.length > 0 ? (
           <Carrossel linhas={linhas}>
             {cursos.map((curso) => (
