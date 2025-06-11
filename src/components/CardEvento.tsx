@@ -87,7 +87,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
   };
 
   const handleCardClick = () => {
-    router.push(`/evento/detalhes/${idEvento}`);
+    router.push(`/evento/${idEvento}`);
   };
 
   const handleDeleteClick = (e: React.MouseEvent) => {
