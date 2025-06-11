@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { Trash2 } from 'lucide-react';
+import { ConfirmationModal } from '@/components/ConfirmationModal';
 
 
 type AulaType = {
@@ -56,8 +57,14 @@ export default function Curso() {
   const { data: session, status } = useSession();
   const [projeto, setProjeto] = useState({})
   const [loadingInitial, setLoadingInitial] = useState(true); // Novo estado para controle inicial de carregamento
-
-
+  const [resultDialog, setResultDialog] = useState({
+    title: '',
+    message: '',
+    isError: false,
+    cursoId: null as string | null,
+  });
+  const [showResultDialog, setShowResultDialog] = useState(false);
+  
 
 
   if (!idProjeto) {
@@ -206,18 +213,32 @@ export default function Curso() {
       });
 
       if (response.ok) {
-        alert('Curso criado com sucesso!');
         const res = await response.json();
-        router.replace(`/curso/detalhes/${res.id}`)
+        setResultDialog({
+          title: 'Sucesso!',
+          message: 'Curso criado com sucesso.',
+          isError: false,
+          cursoId: res.id 
+        });
       } else {
         alert('Erro ao criar o curso');
       }
     } catch (error) {
       alert('Erro ao enviar os dados para a API');
+    } finally {
+      setShowResultDialog(true)
     }
 
 
   }
+
+  const handleSuccessConfirm = () => {
+    if (resultDialog.cursoId) {
+      router.push(`/curso/detalhes/${resultDialog.cursoId}`);
+    } else {
+      setShowResultDialog(false);
+    }
+  };
 
 
 
@@ -254,27 +275,17 @@ export default function Curso() {
           <div className="grid gap-6 mb-6 md:grid-cols-3">
 
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="titulo">Título</Label>
+              <Label htmlFor="titulo">Título*</Label>
               <Input type="text" name="titulo"/>
             </div>
 
             <div className="grid items-center gap-1.5">
-                <Label htmlFor="metodologia">Metodologia</Label>
-                <Select name="metodologia">
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Escolha..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="Metodologia prática">Metodologia prática</SelectItem>
-                      <SelectItem value="Outro">Outro</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+              <Label htmlFor="metodologia">Metodologia*</Label>
+              <Input type="text" name="metodologia"/>
             </div>
 
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="inscricao">Link de Inscrição</Label>
+              <Label htmlFor="inscricao">Link de Inscrição*</Label>
               <Input type="text" name="inscricao"/>
             </div>
 
@@ -283,13 +294,13 @@ export default function Curso() {
           <div className="grid gap-6 mb-6 md:grid-cols-2">
 
               <div className="grid w-full gap-1.5">
-                <Label htmlFor="message">Descrição</Label>
-                <Textarea placeholder="" name="descricao" />
+                <Label htmlFor="message">Descrição*</Label>
+                <Textarea name="descricao" />
               </div>
 
               <div className="grid w-full gap-1.5">
-                <Label htmlFor="bibliografia">Bibliografia</Label>
-                <Textarea placeholder="" name="bibliografia" />
+                <Label htmlFor="bibliografia">Bibliografia*</Label>
+                <Textarea  name="bibliografia" />
               </div>
 
           </div>
@@ -297,7 +308,7 @@ export default function Curso() {
           <div className="grid gap-6 mb-6 md:grid-cols-3">
 
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="imagem">Imagem</Label>
+              <Label htmlFor="imagem">Imagem*</Label>
               <Input 
                 type="file" 
                 accept="image/*"
@@ -317,12 +328,12 @@ export default function Curso() {
             </div>
 
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="Carga horaria">Carga Horária</Label>
+              <Label htmlFor="Carga horaria">Carga Horária*</Label>
               <Input type="number" name="cargaHoraria"></Input>
             </div>
 
             <div>
-                <label className="block mb-2 text-sm font-medium text-gray-900">Categoria</label>
+                <label className="block mb-2 text-sm font-medium text-gray-900">Categoria*</label>
                 <Select name="categoria">
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Escolha..." />
@@ -350,24 +361,15 @@ export default function Curso() {
             </div>
 
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="Vagas">Número de Vagas</Label>
+              <Label htmlFor="Vagas">Número de Vagas*</Label>
               <Input type="number" name="vagas"></Input>
             </div>
 
             <div className="grid items-center gap-1.5">
-                <Label htmlFor="avaliação">Método de Avaliação</Label>
-                <Select name="avaliacao">
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Escolha..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="Provas e projetos">Provas e projetos</SelectItem>
-                      <SelectItem value="Outro">Outro</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+              <Label htmlFor="avaliacao">Método de Avaliação*</Label>
+              <Input type="text" name="avaliacao"/>
             </div>
+
           </div>
 
 
@@ -414,6 +416,16 @@ export default function Curso() {
       </div>
       
       </form>
+
+      <ConfirmationModal
+        isOpen={showResultDialog}
+        onConfirm={handleSuccessConfirm}
+        title={resultDialog.title}
+        message={resultDialog.message}
+        confirmText="OK"
+        variant={resultDialog.isError ? 'destructive' : 'default'}
+      />
+
 
       {/* Modal do Image Cropper */}
           {showImageCropper && (
