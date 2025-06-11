@@ -2,10 +2,11 @@
 
 import { useSession } from "next-auth/react"
 import React, { useState, useEffect } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import { getSession } from "next-auth/react";
 import { useRouter } from "next/navigation"
 import { User } from 'lucide-react'
+import { tipoUser } from '@prisma/client'
 
 interface LoginProps {
   logo: string;
@@ -15,6 +16,7 @@ interface Usuario {
   id: number
   fotoPerfil: string
   Nome: string
+  tipo: tipoUser
 }
 
 function ConfirmationModal({
@@ -73,7 +75,6 @@ function ConfirmationModal({
           </div>
         )}
 
-
         <p className="mb-6 text-center">{message}</p>
 
         {/* Spinner */}
@@ -115,6 +116,7 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
     fotoPerfil: null as string | null,
   })
   const { data: session, status } = useSession();
+  
   // Redirecionar se já estiver logado (mas não durante o processo de login)
   useEffect(() => {
     if (status === 'authenticated' && session?.user && !isLoginProcess) {
@@ -123,7 +125,6 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
   }, [status, session, router, isLoginProcess]);
 
   const photoToUse = usuario?.fotoPerfil || null;
-
 
   const fetchWithErrorHandling = async (url: string) => {
     try {
@@ -149,8 +150,73 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
     }
   }
 
+  const handleUserStatusCheck = async (userId: string) => {
+    try {
+      const userData = await fetchWithErrorHandling(`/api/usuario?id=${userId}`)
+      
+      // DEBUG: Log completo dos dados do usuário
+      console.log("=== DEBUG TIPO USER ===")
+      console.log("Dados completos do usuário:", userData)
+      console.log("userData.tipo:", userData.tipo)
+      console.log("Tipo de userData.tipo:", typeof userData.tipo)
+      console.log("userData.tipo === 'Bloqueado':", userData.tipo === 'Bloqueado')
+      console.log("userData.tipo === 'Pendente':", userData.tipo === 'Pendente')
+      console.log("userData.tipo === tipoUser.Bloqueado:", userData.tipo === tipoUser.Bloqueado)
+      console.log("userData.tipo === tipoUser.Pendente:", userData.tipo === tipoUser.Pendente)
+      console.log("Valores do enum tipoUser:", {
+        Pendente: tipoUser.Pendente,
+        Normal: tipoUser.Normal,
+        Super: tipoUser.Super,
+        Bloqueado: tipoUser.Bloqueado,
+      })
+      console.log("======================")
+      
+      if (userData.tipo === 'Bloqueado' || userData.tipo === 'Pendente') {
+        console.log("USUÁRIO BLOQUEADO/PENDENTE - Executando bloqueio")
+        
+        const statusMessage = userData.tipo === 'Bloqueado' 
+          ? 'Sua conta foi bloqueada. Entre em contato com o administrador da página para mais informações.'
+          : 'Sua conta está pendente de aprovação. Entre em contato com o administrador da página para mais informações.';
+        
+        setResultDialog({
+          title: `Usuário ${userData.tipo}`,
+          message: statusMessage,
+          isError: true,
+          fotoPerfil: userData.fotoPerfil || null,
+        })
+        setShowResultDialog(true)
+        
+        // Força logout após mostrar o modal
+        setTimeout(async () => {
+          await signOut({ redirect: false });
+          setShowResultDialog(false);
+          setIsLoginProcess(false);
+          setJustLoggedIn(false);
+          setErro("");
+        }, 3000);
+        
+        return false; // Bloqueia o login
+      }
+      
+      console.log("USUÁRIO PERMITIDO - Continuando login normal")
+      return true; // Permite o login
+    } catch (error) {
+      console.error("Erro ao verificar status do usuário:", error)
+      setResultDialog({
+        title: 'Erro',
+        message: "Erro ao verificar status do usuário",
+        isError: true,
+        fotoPerfil: null,
+      })
+      setShowResultDialog(true)
+      return false;
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoginProcess(true);
+    
     const result = await signIn("credentials", {
       redirect: false,
       username,
@@ -158,35 +224,49 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
     });
 
     if (result?.ok) {
-      setIsLoginProcess(true);
       setJustLoggedIn(true);
       setErro("");
 
-      // Aguardar a sessão ser atualizada antes de redirecionar
+      // Aguardar a sessão ser atualizada
       const updatedSession = await getSession();
-      if (updatedSession) {
-        // Pequeno delay para garantir que o modal seja mostrado
+      if (updatedSession?.user?.id) {
+        // Verificar status do usuário
+        const canProceed = await handleUserStatusCheck(updatedSession.user.id);
+        
+        if (!canProceed) {
+          // Se não pode prosseguir, o handleUserStatusCheck já cuidou do logout
+          return;
+        }
+        
+        // Se chegou até aqui, o usuário pode prosseguir normalmente
         setTimeout(() => {
           if (result.url) {
             router.push(`/`)
           } else {
             router.push(`/`)
           }
-        }, 2500); // Delay maior que o timeout do modal
+        }, 2500);
       }
     } else {
       setErro("Usuário ou senha inválidos");
+      setIsLoginProcess(false);
       console.log(result?.error);
     }
   };
-
-
 
   useEffect(() => {
     const fetchUsuario = async () => {
       if (session?.user?.id) {
         try {
           const data = await fetchWithErrorHandling(`/api/usuario?id=${session.user.id}`)
+          
+          // DEBUG: Log dos dados recebidos da API
+          console.log("=== DEBUG FETCH USUARIO ===")
+          console.log("Dados recebidos da API:", data)
+          console.log("data.tipo:", data.tipo)
+          console.log("Tipo de data.tipo:", typeof data.tipo)
+          console.log("===============================")
+          
           setUsuario(data)
         } catch (error) {
           console.error("Erro ao carregar usuário:", error)
@@ -205,30 +285,51 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
   }, [session])
 
   useEffect(() => {
-    if (justLoggedIn && session?.user?.id && session?.user?.name && status === 'authenticated') {
-      console.log("Session user image:", session.user.image); // Debug
-
-      // Priorizar fotoPerfil do usuário se existir, senão usar session.user.image
-      const photoToUse = usuario?.fotoPerfil || null;
-
-      setResultDialog({
-        title: 'Login realizado com sucesso!',
-        message: `Bem vindo, ${session.user.name}`,
-        isError: false,
-        fotoPerfil: photoToUse,
-
+    if (justLoggedIn && session?.user?.id && session?.user?.name && status === 'authenticated' && usuario) {
+      // DEBUG: Log do usuário no useEffect
+      console.log("=== DEBUG USEEFFECT ===")
+      console.log("Usuario completo:", usuario)
+      console.log("usuario.tipo:", usuario.tipo)
+      console.log("Tipo de usuario.tipo:", typeof usuario.tipo)
+      console.log("Comparação com strings:", {
+        'Bloqueado': usuario.tipo === 'Bloqueado',
+        'Pendente': usuario.tipo === 'Pendente',
+        'Normal': usuario.tipo === 'Normal',
+        'Super': usuario.tipo === 'Super'
       })
-      setShowResultDialog(true)
+      console.log("Comparação com enum:", {
+        'Bloqueado': usuario.tipo === tipoUser.Bloqueado,
+        'Pendente': usuario.tipo === tipoUser.Pendente,
+        'Normal': usuario.tipo === tipoUser.Normal,
+        'Super': usuario.tipo === tipoUser.Super
+      })
+      console.log("=======================")
+      
+      // Só mostra o modal de sucesso se o usuário não for Bloqueado ou Pendente
+      if (usuario.tipo !== 'Bloqueado' && usuario.tipo !== 'Pendente') {
+        console.log("MOSTRANDO MODAL DE SUCESSO")
+        const photoToUse = usuario?.fotoPerfil || null;
 
-      // Fechar o modal automaticamente após 2 segundos
-      setTimeout(() => {
-        setShowResultDialog(false)
-      }, 2000)
+        setResultDialog({
+          title: 'Login realizado com sucesso!',
+          message: `Bem vindo, ${session.user.name}`,
+          isError: false,
+          fotoPerfil: photoToUse,
+        })
+        setShowResultDialog(true)
 
-      // Após o modal, permitir redirecionamento
-      setTimeout(() => {
-        setIsLoginProcess(false);
-      }, 3000); // Um pouco mais que o tempo do modal
+        // Fechar o modal automaticamente após 2 segundos
+        setTimeout(() => {
+          setShowResultDialog(false)
+        }, 2000)
+
+        // Após o modal, permitir redirecionamento
+        setTimeout(() => {
+          setIsLoginProcess(false);
+        }, 3000);
+      } else {
+        console.log("NÃO MOSTRANDO MODAL DE SUCESSO - Usuário bloqueado/pendente")
+      }
     }
   }, [justLoggedIn, session, status, usuario]);
 
@@ -257,6 +358,7 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
   if (status === 'authenticated' && !isLoginProcess) {
     return null;
   }
+
   return (
     <form onSubmit={handleSubmit}>
       <div className="grid gap-6 mb-6 md:grid-cols-2">
@@ -309,8 +411,9 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
                 <button
                   type="submit"
                   className="font-bold rounded-lg shadow-xl px-3 py-2 w-full mb-3 border-2 border-black text-black bg-white hover:bg-black hover:text-white active:scale-95 transition duration-150"
+                  disabled={isLoginProcess}
                 >
-                  Entrar com e-mail
+                  {isLoginProcess ? 'Entrando...' : 'Entrar com e-mail'}
                 </button>
 
                 {/* Links */}
@@ -322,7 +425,6 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
                     Esqueci minha senha
                   </a>
                 </div>
-
               </div>
             </div>
           </div>
@@ -331,7 +433,14 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
         {/* Modal de Resultado */}
         <ConfirmationModal
           isOpen={showResultDialog}
-          onConfirm={() => setShowResultDialog(false)}
+          onConfirm={() => {
+            setShowResultDialog(false);
+            if (resultDialog.isError) {
+              // Se for erro (usuário bloqueado/pendente), limpar estados
+              setIsLoginProcess(false);
+              setJustLoggedIn(false);
+            }
+          }}
           title={resultDialog.title}
           message={resultDialog.message}
           confirmText="OK"
@@ -340,7 +449,6 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
           profilePhoto={resultDialog.fotoPerfil}
           showSpinner={fotoCarregando}
         />
-
       </div>
     </form>
   );
