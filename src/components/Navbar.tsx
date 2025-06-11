@@ -40,6 +40,8 @@ const Navbar = () => {
   const [navClass, setNavClass] = useState('fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md top-0');
   const router = useRouter();
 
+  const [searchTerm, setSearchTerm] = useState("");
+
   // Carregar dados do usuário logado
   useEffect(() => {
     const fetchUsuario = async () => {
@@ -236,13 +238,17 @@ const Navbar = () => {
                   )}
                 >
                   {categories.map((category, index) => (
-                    <a
+                    <button
                       key={index}
-                      href={`/category/${category.toLowerCase()}`}
-                      className="block whitespace-nowrap px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
+                      onClick={() => {
+                        router.push(`/search?categoria=${encodeURIComponent(category)}`);
+                        setCategoryMenuOpen(false); // Fecha o menu após clique
+                      }}
+                      className="block text-left w-full whitespace-nowrap px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
                     >
                       {formatarCategoria(category)}
-                    </a>
+                    </button>
+
                   ))}
                 </div>
               </div>
@@ -258,6 +264,14 @@ const Navbar = () => {
                   type="search"
                   className="block w-full p-2 pl-10 text-sm border border-gray-700 rounded-full bg-gray-800 focus:outline-none focus:ring-1 focus:ring-gray-600 text-gray-200 placeholder-gray-400"
                   placeholder="Pesquise aqui"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      router.push(`/search?searchTerm=${encodeURIComponent(searchTerm)}`);
+                    }
+                  }}
                 />
               </div>
             </div>
