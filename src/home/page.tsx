@@ -251,7 +251,7 @@ const HomePage: React.FC = () => {
       </div>
 
       <div className="mt-20">
-        <h1 className="px-8 text-left text-3xl font-bold">Eventos</h1>
+        <h1 className="px-8 text-center text-3xl font-bold">Eventos</h1>
         {eventos.length > 0 ? (
           <Carrossel linhas={linhas}>
             {eventos.map((evento) => (
