@@ -13,24 +13,24 @@ datasource db {
 }
 
 enum categoriaCurso {
-  LinguagensLetrasEComunicacao
-  ArtesECultura
-  CienciasAgrarias
-  PesquisaEInovacao
-  ServicosSociasEComunitarios
-  GestaoEPlanejamento
-  CienciasSociaisAplicadasANegocios
-  ComunicacaoEInformacao
-  CienciasBiologicasENaturais
-  EngenhariaEProducao
-  TecnologiaEComputacao
-  ProducaoEConstrucao
-  SaudeEBemEstar
-  EducacaoEFormacaoDeProfessores
-  NegociosAdministracaoEDireito
-  CienciasExatas
-  CienciasHumanas
-  MeioAmbienteESustentabilidade
+  ArtesECultura @map("Artes e Cultura")
+  CienciasAgrarias @map("Ciências Agrárias")
+  CienciasBiologicasENaturais @map("Ciências Biológicas e Naturais")
+  CienciasExatas @map("Ciências Exatas")
+  CienciasHumanas @map("Ciências Humanas")
+  CienciasSociaisAplicadasANegocios @map("Ciências Sociais Aplicadas a Negócios")
+  ComunicacaoEInformacao @map("Comunicação e Informação")
+  EducacaoEFormacaoDeProfessores @map("Educação e Formação de Professores")
+  EngenhariaEProducao @map("Engenharia e Produção")
+  GestaoEPlanejamento @map("Gestão e Planejamento")
+  LinguagensLetrasEComunicacao @map("Linguagens, Letras e Comunicação")
+  MeioAmbienteESustentabilidade @map("Meio Ambiente e Sustentabilidade")
+  NegociosAdministracaoEDireito @map("Negócios, Administração e Direito")
+  PesquisaEInovacao @map("Pesquisa e Inovação")
+  ProducaoEConstrucao @map("Produção e Construção")
+  SaudeEBemEstar @map("Saúde e Bem-Estar")
+  ServicosSociasEComunitarios @map("Serviços Sociais e Comunitários")
+  TecnologiaEComputacao @map("Tecnologia e Computação")
 }
 
 enum tipoLink {
