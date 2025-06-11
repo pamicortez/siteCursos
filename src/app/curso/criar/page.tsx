@@ -221,7 +221,15 @@ export default function Curso() {
           cursoId: res.id 
         });
       } else {
-        alert('Erro ao criar o curso');
+        //alert('Erro ao criar o curso');
+        const errorData = await response.json();
+        console.error("Erro da API:", errorData);
+        setResultDialog({
+          title: 'Erro',
+          message: 'Erro ao salvar o curso',
+          isError: true,
+          cursoId: null
+        });
       }
     } catch (error) {
       alert('Erro ao enviar os dados para a API');
