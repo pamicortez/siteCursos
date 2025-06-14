@@ -33,7 +33,9 @@ export async function GET(request: Request) {
     // ===== Obtem usuários por tipo
     else if (tipo) {
       const usuario = await prisma.usuario.findMany({
-        where: { tipo: tipo as tipoUser, deletedAt: null, Nome: nome? {contains: nome, mode: 'insensitive'} : undefined },
+        where: {       
+          tipo: tipo === 'Ativo' ? { in: ['Super', 'Normal'] } : tipo as tipoUser // Verifica se o tipo é 'Ativo' e busca por 'Super' ou 'Normal', caso contrário, busca pelo tipo específico
+          , deletedAt: null, Nome: nome? {contains: nome, mode: 'insensitive'} : undefined },
         include: {
           link: true,
           publicacao: true,
