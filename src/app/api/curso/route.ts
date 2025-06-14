@@ -18,9 +18,9 @@ export async function GET(request: Request) {
 			console.log('Buscando cursos com título:', titulo);
 			// Buscar cursos que tenham o título especificado
 			const cursos = await prisma.curso.findMany({
-				where: { titulo:
-					{contains: titulo, mode: 'insensitive',},
+				where: { titulo: {contains: titulo, mode: 'insensitive',}, deletedAt: null,
 					categoria: categoria? categoria : undefined // Se categoria não for passada, não filtra por categoria 
+					, usuario: { tipo: { in: ['Super', 'Normal'] } } // Só obtem usuarios do tipo Super ou Normal
 				},
 				include: {
 				projeto: true, // Inclui o projeto relacionado
@@ -37,7 +37,11 @@ export async function GET(request: Request) {
 			console.log('Buscando cursos com idUsuario:', idUsuario);
 			// Buscar cursos que tenham o usuário especificado
 			const cursos = await prisma.curso.findMany({
-				where: { idUsuario: Number(idUsuario) },
+				where: { 
+					idUsuario: Number(idUsuario)
+					, deletedAt: null
+				, usuario: { tipo: { in: ['Super', 'Normal'] } } // Só obtem usuarios do tipo Super ou Normal
+				},
 				include: {
 				projeto: true, // Inclui o projeto relacionado
 				usuario: true, // Inclui o usuário que criou o curso
@@ -53,6 +57,8 @@ export async function GET(request: Request) {
 			const curso = await prisma.curso.findUnique({
 				where: {
 				id: Number(idCurso), // Utiliza o ID do curso
+				deletedAt: null
+				, usuario: { tipo: { in: ['Super', 'Normal'] } } // Só obtem usuarios do tipo Super ou Normal
 				},
 				include: {
 				projeto: true, // Inclui o projeto relacionado
@@ -66,7 +72,11 @@ export async function GET(request: Request) {
 			console.log('Buscando cursos com categoria:', categoria);
 			// Buscar cursos que tenham a categoria especificada
 			const cursos = await prisma.curso.findMany({
-				where: { categoria, titulo: titulo? {contains: titulo, mode: 'insensitive',} : undefined }, // Se título não for passado, não filtra por título
+				where: { 
+					categoria, titulo: titulo? {contains: titulo, mode: 'insensitive',} : undefined
+					, deletedAt: null
+					, usuario: { tipo: { in: ['Super', 'Normal'] } } // Só obtem usuarios do tipo Super ou Normal
+				 }, // Se título não for passado, não filtra por título
 				include: {
 				projeto: true, // Inclui o projeto relacionado
 				usuario: true, // Inclui o usuário que criou o curso
@@ -81,6 +91,8 @@ export async function GET(request: Request) {
 			const cursos = await prisma.curso.findMany({
 				where: { 				 	
 					categoria: categoria? categoria : undefined // Se categoria não for passada, não filtra por categoria 
+					, deletedAt: null // Verifica se o curso não foi deletado
+					, usuario: { tipo: { in: ['Super', 'Normal'] } } // Só obtem usuarios do tipo Super ou Normal
 				}, // Verifica se o curso não foi deletado
 				include: {
 				  projeto: true, // Inclui o projeto relacionado

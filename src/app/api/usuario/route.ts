@@ -207,7 +207,36 @@ export async function DELETE(request: Request) {
         { status: 404 }
       );
     }
-
+    // Se o uauário existe, marca como deletado e marcar o Curso, Aula, Evento e Publicação como deletados também
+    await prisma.cursoUsuario.updateMany({
+      where: { idUsuario: Number(id) },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.eventoUsuario.updateMany({
+      where: { idUsuario: Number(id) },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.publicacao.updateMany({
+      where: { idUsuario: Number(id) },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.curso.updateMany({
+      where: { cursoUsuario: { some: { idUsuario: Number(id) } } },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.evento.updateMany({
+      where: { eventoUsuario: { some: { idUsuario: Number(id) } }
+      },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.carreira.updateMany({
+      where: { idUsuario: Number(id) },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.link.updateMany({
+      where: { idUsuario: Number(id) },
+      data: { deletedAt: new Date() },
+    });
     // Atualiza o campo deletedAt com a data e hora atual
     await prisma.usuario.update({
       where: { id: Number(id) },
