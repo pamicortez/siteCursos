@@ -17,6 +17,7 @@ interface CardEventoProps {
   tipoParticipacao?: 'Ouvinte' | 'Palestrante' | 'Organizador';
   onEventoDeleted?: () => void;
   maxCaracteres?: number; // Opcional, padrão será 74
+  largura?: string;
 }
 
 const CardEvento: React.FC<CardEventoProps> = ({
@@ -29,7 +30,8 @@ const CardEvento: React.FC<CardEventoProps> = ({
   isOwner,
   tipoParticipacao,
   onEventoDeleted,
-  maxCaracteres = 74 
+  maxCaracteres = 74,
+  largura = "14rem"
 }) => {
   const router = useRouter(); 
   const { data: session, status } = useSession();
@@ -59,7 +61,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
   const isBase64 = primeiraImagem?.startsWith('data:image');
   const imageSrc = primeiraImagem 
     ? (isBase64 ? primeiraImagem : primeiraImagem?.startsWith('/') ? primeiraImagem : `/api/images?url=${encodeURIComponent(primeiraImagem)}`)
-    : '/event1.jpg'; // Imagem padrão para eventos
+    : '/event_lecture.jpg'; // Imagem padrão para eventos
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -118,7 +120,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
     <>
       <div 
         className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-90 flex flex-col"
-        style={{ width: "14rem", margin: "0 auto" }}
+        style={{ width: largura, margin: "0 auto" }}
         onClick={handleCardClick}
       >
         {/* Imagem com fallback */}
@@ -128,7 +130,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
             className="w-full h-full object-cover"
             alt={titulo} 
             onError={(e) => {
-              (e.target as HTMLImageElement).src = '/event1.jpg';
+              (e.target as HTMLImageElement).src = '/event_lecture.jpg';
             }}
           />
         </div>

@@ -18,6 +18,7 @@ interface CardProjetoProps {
   funcaoUsuario?: "Coordenador" | "Colaborador" | "Bolsista" | "Voluntário" | "Nenhuma"
   onProjetoDeleted?: () => void
   maxCaracteres?: number // Opcional, padrão será 74
+  largura?: string;
 }
 
 const CardProjeto: React.FC<CardProjetoProps> = ({
@@ -32,6 +33,7 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
   funcaoUsuario,
   onProjetoDeleted,
   maxCaracteres = 74,
+  largura = "14rem"
 }) => {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
@@ -197,7 +199,7 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
     <>
       <div
         className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-90 flex flex-col"
-        style={{ width: "14rem", margin: "0 auto" }}
+        style={{ width: largura, margin: "0 auto" }}
         onClick={handleCardClick}
       >
         {/* Imagem com fallback */}

@@ -1,32 +1,32 @@
 -- Inserindo usuários (expandido para 5+)
 INSERT INTO "Usuario" (email, "fotoPerfil", senha, "Nome", "Titulacao", "instituicaoEnsino", "formacaoAcademica", "resumoPessoal", "createdAt", "updatedAt")
 VALUES
-('jose@email.com', '/prof1.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'José Machado', 'Doutor', 'Universidade X', 'Engenharia de Software', 'Pesquisador na área de IA', NOW(), NOW()),
-('julia@email.com', '/prof2.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Júlia Souza', 'Mestre', 'Universidade Y', 'Ciência da Computação', 'Especialista em segurança digital', NOW(), NOW()),
-('carlos@email.com', '/prof1.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Carlos Silva', 'Especialista', 'Instituto Federal Z', 'Análise de Sistemas', 'Desenvolvedor full-stack com foco em aplicações web', NOW(), NOW()),
-('ana@email.com', '/prof2.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Ana Costa', 'Mestre', 'Universidade ABC', 'Biotecnologia', 'Pesquisadora em genética molecular', NOW(), NOW()),
-('pedro@email.com', '/prof1.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Pedro Santos', 'Doutor', 'Universidade DEF', 'Matemática Aplicada', 'Especialista em modelagem estatística', NOW(), NOW()),
-('maria@email.com', '/prof2.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Maria Oliveira', 'Bacharel', 'Faculdade GHI', 'Design Gráfico', 'Designer UX/UI com experiência em produtos digitais', NOW(), NOW());
+('jose@email.com', '/professor_man_1.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'José Machado', 'Doutor', 'Universidade X', 'Engenharia de Software', 'Pesquisador na área de IA', NOW(), NOW()),
+('julia@email.com', '/professor_woman_1.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Júlia Souza', 'Mestre', 'Universidade Y', 'Ciência da Computação', 'Especialista em segurança digital', NOW(), NOW()),
+('carlos@email.com', '/professor_man_2.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Carlos Silva', 'Especialista', 'Instituto Federal Z', 'Análise de Sistemas', 'Desenvolvedor full-stack com foco em aplicações web', NOW(), NOW()),
+('ana@email.com', '/professor_woman_2.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Ana Costa', 'Mestre', 'Universidade ABC', 'Biotecnologia', 'Pesquisadora em genética molecular', NOW(), NOW()),
+('pedro@email.com', '/professor_man_3.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Pedro Santos', 'Doutor', 'Universidade DEF', 'Matemática Aplicada', 'Especialista em modelagem estatística', NOW(), NOW()),
+('maria@email.com', '/professor_woman_3.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Maria Oliveira', 'Bacharel', 'Faculdade GHI', 'Design Gráfico', 'Designer UX/UI com experiência em produtos digitais', NOW(), NOW());
 
 -- Inserindo projetos (expandido para 5+)
 INSERT INTO "Projeto" (titulo, imagem, descricao, categoria, "dataInicio", "dataFim", "createdAt", "updatedAt")
 VALUES
-('Projeto AI', '/proj1.jpg', 'Projeto sobre inteligência artificial', 'Tecnologia', '2024-01-10', '2024-12-20', NOW(), NOW()),
-('Projeto Bio', '/proj3.jpg', 'Projeto sobre biotecnologia', 'Ciências', '2024-02-15', '2024-11-30', NOW(), NOW()),
-('Projeto Sustentabilidade', '/proj1.jpg', 'Desenvolvimento de soluções sustentáveis para agricultura', 'Meio Ambiente', '2024-03-01', '2025-02-28', NOW(), NOW()),
-('Projeto Educação Digital', '/proj3.jpg', 'Plataforma de ensino à distância para comunidades rurais', 'Educação', '2024-04-01', '2024-10-31', NOW(), NOW()),
-('Projeto Saúde Comunitária', '/proj1.jpg', 'Sistema de monitoramento de saúde para comunidades carentes', 'Saúde', '2024-05-15', '2025-05-14', NOW(), NOW()),
-('Projeto Inovação Social', '/proj3.jpg', 'Incubadora de startups sociais', 'Empreendedorismo', '2024-06-01', '2025-12-31', NOW(), NOW());
+('Projeto AI', '/project_information_technology.jpg', 'Projeto sobre inteligência artificial', 'Tecnologia', '2024-01-10', '2024-12-20', NOW(), NOW()),
+('Projeto Bio', '/project_chemistry.jpg', 'Projeto sobre biotecnologia', 'Ciências', '2024-02-15', '2024-11-30', NOW(), NOW()),
+('Projeto Sustentabilidade', '/project_sustainability.jpg', 'Desenvolvimento de soluções sustentáveis para agricultura', 'Meio Ambiente', '2024-03-01', '2025-02-28', NOW(), NOW()),
+('Projeto Educação Digital', '/project_network.jpg', 'Plataforma de ensino à distância para comunidades rurais', 'Educação', '2024-04-01', '2024-10-31', NOW(), NOW()),
+('Projeto Saúde Comunitária', '/project_health.jpg', 'Sistema de monitoramento de saúde para comunidades carentes', 'Saúde', '2024-05-15', '2025-05-14', NOW(), NOW()),
+('Projeto Inovação Social', '/project_hardware.jpg', 'Incubadora de startups sociais', 'Empreendedorismo', '2024-06-01', '2025-12-31', NOW(), NOW());
 
 -- Inserindo cursos (expandido para 5+)
 INSERT INTO "Curso" (titulo, imagem, descricao, categoria, "cargaHoraria", "linkInscricao", vagas, bibliografia, metodologia, "metodoAvaliacao", "idProjeto", "idUsuario", "createdAt", "updatedAt")
 VALUES
-('Curso de IA', '/proj1.jpg', 'Curso sobre inteligência artificial', 'CienciasAgrarias', 40, 'https://inscricao.com/curso1', 50, 'Bibliografia AI', 'Metodologia prática', 'Provas e projetos', 1, 1, NOW(), NOW()),
-('Curso de Biotecnologia', '/proj3.jpg', 'Curso sobre biotecnologia', 'CienciasAgrarias', 35, 'https://inscricao.com/curso2', 30, 'Bibliografia Bio', 'Aulas expositivas', 'Trabalhos e provas', 2, 2, NOW(), NOW()),
-('Curso de Agricultura Sustentável', '/proj1.jpg', 'Técnicas modernas de agricultura sustentável', 'CienciasAgrarias', 60, 'https://inscricao.com/curso3', 40, 'Manual de Agricultura Sustentável', 'Aulas práticas e teóricas', 'Projetos práticos', 3, 3, NOW(), NOW()),
-('Curso de Desenvolvimento Web', '/proj3.jpg', 'Desenvolvimento de aplicações web modernas', 'TecnologiaEComputacao', 80, 'https://inscricao.com/curso4', 25, 'Livros de JavaScript e React', 'Hands-on coding', 'Projetos finais', 4, 4, NOW(), NOW()),
-('Curso de Estatística Aplicada', '/proj1.jpg', 'Análise estatística para pesquisa científica', 'CienciasExatas', 45, 'https://inscricao.com/curso5', 35, 'Livros de Estatística', 'Aulas expositivas e exercícios', 'Provas e trabalhos', 5, 5, NOW(), NOW()),
-('Curso de Design Thinking', '/proj3.jpg', 'Metodologias de design para inovação', 'ArtesECultura', 30, 'https://inscricao.com/curso6', 20, 'Livros de Design Thinking', 'Workshops práticos', 'Projetos colaborativos', 6, 6, NOW(), NOW());
+('Curso de IA', '/course_machine_learning.jpg', 'Curso sobre inteligência artificial', 'Ciências Agrárias', 40, 'https://inscricao.com/curso1', 50, 'Bibliografia AI', 'Metodologia prática', 'Provas e projetos', 1, 1, NOW(), NOW()),
+('Curso de Biotecnologia', '/project_chemistry.jpg', 'Curso sobre biotecnologia', 'Ciências Agrárias', 35, 'https://inscricao.com/curso2', 30, 'Bibliografia Bio', 'Aulas expositivas', 'Trabalhos e provas', 2, 2, NOW(), NOW()),
+('Curso de Agricultura Sustentável', '/course_agriculture.jpg', 'Técnicas modernas de agricultura sustentável', 'Ciências Agrárias', 60, 'https://inscricao.com/curso3', 40, 'Manual de Agricultura Sustentável', 'Aulas práticas e teóricas', 'Projetos práticos', 3, 3, NOW(), NOW()),
+('Curso de Desenvolvimento Web', '/course_javascript.jpg', 'Desenvolvimento de aplicações web modernas', 'Tecnologia e Computação', 80, 'https://inscricao.com/curso4', 25, 'Livros de JavaScript e React', 'Hands-on coding', 'Projetos finais', 4, 4, NOW(), NOW()),
+('Curso de Estatística Aplicada', '/course_data_analysis.jpg', 'Análise estatística para pesquisa científica', 'Ciências Exatas', 45, 'https://inscricao.com/curso5', 35, 'Livros de Estatística', 'Aulas expositivas e exercícios', 'Provas e trabalhos', 5, 5, NOW(), NOW()),
+('Curso de Design Thinking', '/course_ux_ui.jpg', 'Metodologias de design para inovação', 'Artes e Cultura', 30, 'https://inscricao.com/curso6', 20, 'Livros de Design Thinking', 'Workshops práticos', 'Projetos colaborativos', 6, 6, NOW(), NOW());
 
 -- Inserindo aulas (expandido)
 INSERT INTO "Aula" (titulo, "linkPdf", "linkVideo", "idCurso", "createdAt", "updatedAt")
@@ -48,17 +48,31 @@ VALUES
 ('Workshop de Sustentabilidade', 'Práticas sustentáveis para o futuro', '2024-11-20', 'https://evento.com/sustentabilidade', NOW(), NOW()),
 ('Hackathon de Educação', 'Desenvolvimento de soluções educacionais', '2024-12-05', 'https://evento.com/hackathon', NOW(), NOW()),
 ('Conferência de Saúde Digital', 'Inovações em saúde e tecnologia', '2025-01-15', 'https://evento.com/saude', NOW(), NOW()),
-('Feira de Inovação Social', 'Exposição de projetos de impacto social', '2025-02-10', 'https://evento.com/inovacao', NOW(), NOW());
+('Feira de Inovação Social', 'Exposição de projetos de impacto social', '2025-02-10', 'https://evento.com/inovacao', NOW(), NOW()),
+('Forró da UEFS', 'Quadrilha junina se apresenta', '2025-02-10', 'https://evento.com/forro', NOW(), NOW()),
+('Festival de Música', 'Show de diversas bandas', '2025-02-10', 'https://evento.com/festival', NOW(), NOW()),
+('Show de rock', 'Show de diversas bandas de rock no borogodó', '2025-02-10', 'https://evento.com/festivalrock', NOW(), NOW()),
+('Orquestra feirense', 'A orquesta feirense se apresenta no auditório central', '2025-02-10', 'https://evento.com/oquestra', NOW(), NOW()),
+('Corrida de obstáculos', 'Corrida de obstáculos da UEFS', '2025-02-10', 'https://evento.com/corrida', NOW(), NOW()),
+('Palestra de Cibersegurança', 'Palestra de Cibersegurança ministrada pelo professor Ricardo Mendes', '2025-02-10', 'https://evento.com/palestraciberseguranca', NOW(), NOW()),
+('Conferência de IA', 'Conferência de IA com especialistas na UFBA', '2025-02-10', 'https://evento.com/conferencia', NOW(), NOW());
 
 -- Inserindo imagens dos eventos (expandido)
 INSERT INTO "imagemEvento" (link, "idEvento", "createdAt", "updatedAt")
 VALUES
-('/event1.jpg', 1, NOW(), NOW()),
-('/event2.jpg', 2, NOW(), NOW()),
-('/event3.jpg', 3, NOW(), NOW()),
-('/event1.jpg', 4, NOW(), NOW()),
-('/event2.jpg', 5, NOW(), NOW()),
-('/event3.jpg', 6, NOW(), NOW());
+('/event_conference.jpg', 1, NOW(), NOW()),
+('/event_lecture.jpg', 2, NOW(), NOW()),
+('/event_conversation_circle.jpg', 3, NOW(), NOW()),
+('/event_conference_2.jpg', 4, NOW(), NOW()),
+('/event_lecture_2.jpg', 5, NOW(), NOW()),
+('/event_lecture_3.jpg', 6, NOW(), NOW()),
+('/event_forro_show.jpg', 7, NOW(), NOW()),
+('/event_music_festival.jpg', 8, NOW(), NOW()),
+('/event_rock_concert.jpg', 9, NOW(), NOW()),
+('/event_orchestra.jpg', 10, NOW(), NOW()),
+('/event_obstacle_race.jpg', 11, NOW(), NOW()),
+('/event_meeting.jpg', 12, NOW(), NOW()),
+('/event_conference_2.jpg', 13, NOW(), NOW());
 
 -- Inserindo participação nos eventos (expandido)
 INSERT INTO "eventoUsuario" ("idUsuario", "idEvento", "tipoParticipacao", "createdAt", "updatedAt")
@@ -70,7 +84,14 @@ VALUES
 (5, 5, 'Ouvinte', NOW(), NOW()),
 (6, 6, 'Organizador', NOW(), NOW()),
 (1, 3, 'Ouvinte', NOW(), NOW()),
-(2, 4, 'Palestrante', NOW(), NOW());
+(2, 4, 'Palestrante', NOW(), NOW()),
+(2, 7, 'Palestrante', NOW(), NOW()),
+(4, 8, 'Palestrante', NOW(), NOW()),
+(5, 9, 'Ouvinte', NOW(), NOW()),
+(6, 10, 'Organizador', NOW(), NOW()),
+(1, 11, 'Ouvinte', NOW(), NOW()),
+(2, 12, 'Palestrante', NOW(), NOW()),
+(2, 13, 'Palestrante', NOW(), NOW());
 
 -- Inserindo links dos usuários (expandido para 5+ por usuário)
 INSERT INTO "Link" (link, "idUsuario", tipo, "createdAt", "updatedAt")
@@ -108,12 +129,12 @@ VALUES
 -- Inserindo colaboradores
 INSERT INTO "Colaborador" (nome)
 VALUES
-('Dr. Roberto Lima'),
-('Profa. Fernanda Alves'),
-('Eng. Marcos Pereira'),
-('Dra. Luciana Martins'),
-('Prof. Ricardo Gomes'),
-('Dra. Patrícia Rocha');
+('José Machado'),
+('Júlia Souza'),
+('Carlos Silva'),
+('Ana Costa'),
+('Pedro Santos'),
+('Maria Oliveira');
 
 -- Relacionando colaboradores com projetos
 -- Usando os valores corretos do enum colaboradorCategoria

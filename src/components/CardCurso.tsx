@@ -18,6 +18,7 @@ interface CardCursoProps {
   isOwner: boolean
   onCursoDeleted?: () => void
   maxCaracteres?: number // Opcional, padrão será 74
+  largura?: string;
 }
 
 const CardCurso: React.FC<CardCursoProps> = ({
@@ -32,6 +33,7 @@ const CardCurso: React.FC<CardCursoProps> = ({
   isOwner,
   onCursoDeleted,
   maxCaracteres = 74,
+  largura = "14rem"
 }) => {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
@@ -207,7 +209,7 @@ const CardCurso: React.FC<CardCursoProps> = ({
     <>
       <div
         className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg"
-        style={{ width: "14rem", margin: "0 auto" }}
+        style={{ width: largura, margin: "0 auto" }}
         onClick={handleCardClick}
       >
         {/* Imagem com verificação e fallback */}

@@ -79,7 +79,7 @@ const HomePage: React.FC = () => {
 
         // Buscar usuários
         try {
-          const usuariosResponse = await fetch("/api/usuario")
+          const usuariosResponse = await fetch("/api/usuario?tipo=Ativo")
           if (usuariosResponse.ok) {
             const usuariosData = await usuariosResponse.json()
             setUsuarios(Array.isArray(usuariosData) ? usuariosData : [])
@@ -214,6 +214,7 @@ const HomePage: React.FC = () => {
                 dataInicio={projeto.dataInicio}
                 dataFim={projeto.dataFim}
                 isOwner={false}
+                largura="17rem"
               />
             ))}
           </Carrossel>
@@ -240,6 +241,7 @@ const HomePage: React.FC = () => {
                 linkInscricao={curso.linkInscricao}
                 cargaHoraria={curso.cargaHoraria || 0}
                 isOwner={false}
+                largura="17rem"
               />
             ))}
           </Carrossel>
@@ -262,8 +264,9 @@ const HomePage: React.FC = () => {
                 descricao={evento.descricao}
                 data={evento.data}
                 linkParticipacao={evento.linkParticipacao || "#"}
-                imagens={evento.imagemEvento?.map((img) => img.link) || ["/event1.jpg"]}
+                imagens={evento.imagemEvento?.map((img) => img.link) || ["/event_lecture.jpg"]}
                 isOwner={false}
+                largura="17rem"
               />
             ))}
           </Carrossel>
