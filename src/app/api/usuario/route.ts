@@ -18,7 +18,10 @@ export async function GET(request: Request) {
     // ====== obtem um usuário específico
     if (id) {
       const usuario = await prisma.usuario.findUnique({
-        where: { id: Number(id), deletedAt: null },
+        where: { 
+          id: Number(id)
+          , deletedAt: null
+          , tipo: { in: ['Super', 'Normal'] }  },
         include: {
           link: true,
           publicacao: true,
@@ -57,6 +60,7 @@ export async function GET(request: Request) {
           },
           deletedAt: null,
           Nome: nome? {contains: nome, mode: 'insensitive'} : undefined
+          , tipo: { in: ['Super', 'Normal'] } 
         },
         include: {
           link: true,
@@ -73,6 +77,7 @@ export async function GET(request: Request) {
       const usuario = await prisma.usuario.findMany({
         where: { Nome: {contains: nome, mode: 'insensitive'},
           deletedAt: null
+          , tipo: { in: ['Super', 'Normal'] } 
         },
         include: {
           link: true,
