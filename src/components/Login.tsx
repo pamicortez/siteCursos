@@ -109,6 +109,7 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
   const [justLoggedIn, setJustLoggedIn] = useState(false);
   const [showResultDialog, setShowResultDialog] = useState(false)
   const [fotoCarregando, setFotoCarregando] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [resultDialog, setResultDialog] = useState({
     title: '',
     message: '',
@@ -151,8 +152,68 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
   }
 
   const handleUserStatusCheck = async (userId: string) => {
+    if (isLoggingOut) return false;
+    
     try {
       const userData = await fetchWithErrorHandling(`/api/usuario?id=${userId}`)
+      
+      if (!userData) {
+        console.log("Usuário não encontrado ou deletado - fazendo logout");
+        setIsLoggingOut(true);
+        
+        setResultDialog({
+          title: 'Acesso Negado',
+          message: "Sua conta não está ativa. Entre em contato com o administrador.",
+          isError: true,
+          fotoPerfil: null,
+        })
+        setShowResultDialog(true)
+        
+        // Força logout imediato para usuário deletado
+        setTimeout(async () => {
+          await signOut({ redirect: false });
+          setShowResultDialog(false);
+          setIsLoginProcess(false);
+          setJustLoggedIn(false);
+          setErro("");
+          setUsuario(null);
+          setTimeout(() => {
+            setIsLoggingOut(false);
+            window.location.reload();
+          }, 500);
+        }, 3000);
+        
+        return false;
+      }
+      
+      // Verificar se tem tipo (para dados válidos)
+      if (!userData.tipo) {
+        console.error("Dados do usuário sem tipo:", userData);
+        setIsLoggingOut(true);
+        
+        setResultDialog({
+          title: 'Erro de Dados',
+          message: "Erro ao verificar status do usuário. Tente novamente.",
+          isError: true,
+          fotoPerfil: null,
+        })
+        setShowResultDialog(true)
+        
+        setTimeout(async () => {
+          await signOut({ redirect: false });
+          setShowResultDialog(false);
+          setIsLoginProcess(false);
+          setJustLoggedIn(false);
+          setErro("");
+          setUsuario(null);
+          setTimeout(() => {
+            setIsLoggingOut(false);
+            window.location.reload();
+          }, 500);
+        }, 3000);
+        
+        return false;
+      }
       
       // DEBUG: Log completo dos dados do usuário
       console.log("=== DEBUG TIPO USER ===")
@@ -174,6 +235,8 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
       if (userData.tipo === 'Bloqueado' || userData.tipo === 'Pendente') {
         console.log("USUÁRIO BLOQUEADO/PENDENTE - Executando bloqueio")
         
+        setIsLoggingOut(true);
+        
         const statusMessage = userData.tipo === 'Bloqueado' 
           ? 'Sua conta foi bloqueada. Entre em contato com o administrador da página para mais informações.'
           : 'Sua conta está pendente de aprovação. Entre em contato com o administrador da página para mais informações.';
@@ -186,29 +249,51 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
         })
         setShowResultDialog(true)
         
-        // Força logout após mostrar o modal
         setTimeout(async () => {
           await signOut({ redirect: false });
           setShowResultDialog(false);
           setIsLoginProcess(false);
           setJustLoggedIn(false);
           setErro("");
+          setUsuario(null);
+          setTimeout(() => {
+            setIsLoggingOut(false);
+            window.location.reload();
+          }, 500);
         }, 3000);
         
-        return false; // Bloqueia o login
+        return false;
       }
       
       console.log("USUÁRIO PERMITIDO - Continuando login normal")
-      return true; // Permite o login
+      return true;
     } catch (error) {
       console.error("Erro ao verificar status do usuário:", error)
+      if (isLoggingOut) return false;
+      
+      setIsLoggingOut(true);
+      
       setResultDialog({
-        title: 'Erro',
-        message: "Erro ao verificar status do usuário",
+        title: 'Erro de Conexão',
+        message: "Erro ao verificar dados do usuário. Tente novamente.",
         isError: true,
         fotoPerfil: null,
       })
       setShowResultDialog(true)
+      
+      setTimeout(async () => {
+        await signOut({ redirect: false });
+        setShowResultDialog(false);
+        setIsLoginProcess(false);
+        setJustLoggedIn(false);
+        setErro("");
+        setUsuario(null);
+        setTimeout(() => {
+          setIsLoggingOut(false);
+          window.location.reload();
+        }, 500);
+      }, 3000);
+      
       return false;
     }
   }
@@ -222,15 +307,19 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
       username,
       password,
     });
-
+  
     if (result?.ok) {
       setJustLoggedIn(true);
       setErro("");
-
+  
       // Aguardar a sessão ser atualizada
       const updatedSession = await getSession();
       if (updatedSession?.user?.id) {
-        // Verificar status do usuário
+        if (isLoggingOut) {
+          return; // Se já está fazendo logout, não continua
+        }
+        
+        // Verifica status do usuário
         const canProceed = await handleUserStatusCheck(updatedSession.user.id);
         
         if (!canProceed) {
@@ -256,19 +345,39 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
 
   useEffect(() => {
     const fetchUsuario = async () => {
-      if (session?.user?.id) {
-        try {
-          const data = await fetchWithErrorHandling(`/api/usuario?id=${session.user.id}`)
-          
-          // DEBUG: Log dos dados recebidos da API
-          console.log("=== DEBUG FETCH USUARIO ===")
-          console.log("Dados recebidos da API:", data)
-          console.log("data.tipo:", data.tipo)
-          console.log("Tipo de data.tipo:", typeof data.tipo)
-          console.log("===============================")
-          
+      if (!session?.user?.id || isLoggingOut) {
+        return;
+      }
+      
+      try {
+        const data = await fetchWithErrorHandling(`/api/usuario?id=${session.user.id}`)
+        
+        if (!data) {
+          if (!isLoggingOut) {
+            console.log("Usuário não encontrado - provavelmente deletado");
+          }
+          return;
+        }
+        
+        if (!data.tipo) {
+          if (!isLoggingOut) {
+            console.log("Dados do usuário sem tipo:", data);
+          }
+          return;
+        }
+        
+        // DEBUG: Log dos dados recebidos da API
+        console.log("=== DEBUG FETCH USUARIO ===")
+        console.log("Dados recebidos da API:", data)
+        console.log("data.tipo:", data.tipo)
+        console.log("Tipo de data.tipo:", typeof data.tipo)
+        console.log("===============================")
+        
+        if (!isLoggingOut) {
           setUsuario(data)
-        } catch (error) {
+        }
+      } catch (error) {
+        if (!isLoggingOut) {
           console.error("Erro ao carregar usuário:", error)
           setResultDialog({
             title: 'Erro',
@@ -280,11 +389,14 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
         }
       }
     }
-
+  
     fetchUsuario()
-  }, [session])
+  }, [session, isLoggingOut])
 
   useEffect(() => {
+
+    if (isLoggingOut) return;
+
     if (justLoggedIn && session?.user?.id && session?.user?.name && status === 'authenticated' && usuario) {
       // DEBUG: Log do usuário no useEffect
       console.log("=== DEBUG USEEFFECT ===")
@@ -331,7 +443,7 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
         console.log("NÃO MOSTRANDO MODAL DE SUCESSO - Usuário bloqueado/pendente")
       }
     }
-  }, [justLoggedIn, session, status, usuario]);
+  }, [justLoggedIn, session, status, usuario, isLoggingOut]) 
 
   // Debug para verificar os valores
   useEffect(() => {
