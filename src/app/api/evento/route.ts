@@ -23,7 +23,8 @@ export async function GET(request: Request) {
 					{
 						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
 						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
-					},
+					}, deletedAt: null
+					, eventoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } } }}
 				 },
 				include: {
 					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
@@ -39,7 +40,11 @@ export async function GET(request: Request) {
 			console.log('Buscando evento com id:', id);
 			// Buscar evento que tenha o id especificado
 			const evento = await prisma.evento.findUnique({
-				where: { id: Number(id) },
+				where: { 
+					id: Number(id)
+					, deletedAt: null
+				, eventoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } } }}
+			 	},
 				include: {
 					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
 					imagemEvento: true,
@@ -58,7 +63,8 @@ export async function GET(request: Request) {
                     data: {
                         gte: new Date(data_inicio),
                         lte: new Date(data_fim)
-                    }
+                    }, deletedAt: null
+					, eventoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } } }}
                 },
 				include: {
 					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
@@ -73,6 +79,11 @@ export async function GET(request: Request) {
 			console.log('Buscando todos os eventos'); 
 			// Retorna todos os eventos se não houver título na URL
 			const eventos = await prisma.evento.findMany({
+				where: {
+					deletedAt: null
+					// Vai em eventoUsuario e só obtem os usuarios que são tipo Super ou Normal
+					, eventoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } } }}
+				}, // Verifica se o evento não foi deletado
 				include: {
 					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
 					imagemEvento: true,

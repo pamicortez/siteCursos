@@ -22,7 +22,10 @@ export async function GET(request: Request) {
 			console.log('Buscando projetos com título e categoria:', titulo, categoria); // http://localhost:3000/api/projeto?titulo=Projeto%20AI&categoria=IA
 			// Buscar projetos que tenham o título e categoria especificados
 			const projetos = await prisma.projeto.findMany({
-				where: { titulo:{ contains: titulo, mode: 'insensitive'}
+				where: { 
+					titulo:{ contains: titulo, mode: 'insensitive'}
+					, deletedAt: null
+					, projetoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } }, deletedAt: null }} // Garante que o usuário é do tipo Super ou Normal
 					, categoria 
 				},
 				include: {
@@ -38,7 +41,11 @@ export async function GET(request: Request) {
 		else if (id) {
 			console.log('Buscando projeto com id:', id); // http://localhost:3000/api/projeto?id=1
 			const projeto = await prisma.projeto.findUnique({
-				where: { id: Number(id)},
+				where: { 
+					id: Number(id)
+					, deletedAt: null
+					, projetoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } }, deletedAt: null }} // Garante que o usuário é do tipo Super ou Normal
+				},
 				include: {
 					projetoUsuario: {include: {usuario: true}},
 					curso: true,
@@ -56,7 +63,8 @@ export async function GET(request: Request) {
 					{
 						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
 						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
-					},
+					}, deletedAt: null
+					, projetoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } }, deletedAt: null }} // Garante que o usuário é do tipo Super ou Normal
 				},
 				include: {
 					projetoUsuario: {include: {usuario: true}},
@@ -73,7 +81,9 @@ export async function GET(request: Request) {
 			console.log('Buscando projetos com categoria:', categoria); // http://localhost:3000/api/projeto?categoria=IA
 			// Buscar projetos que tenham a categoria especificada
 			const projetos = await prisma.projeto.findMany({
-				where: { categoria },
+				where: { categoria, deletedAt: null
+					, projetoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } }, deletedAt: null }} // Garante que o usuário é do tipo Super ou Normal
+				 },
 				include: {
 					projetoUsuario: {include: {usuario: true}},
 					curso: true,
@@ -88,6 +98,9 @@ export async function GET(request: Request) {
 			console.log('Buscando todos os projetos'); // http://localhost:3000/api/projeto
 			// Retorna todos os projetos se não houver título na URL
 			const projetos = await prisma.projeto.findMany({
+				where: { deletedAt: null
+					, projetoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } }, deletedAt: null }} // Garante que o usuário é do tipo Super ou Normal
+				 },
 				include: {
 					projetoUsuario: {include: {usuario: true}},
 					curso: true,

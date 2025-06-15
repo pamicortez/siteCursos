@@ -20,7 +20,8 @@ export async function GET(request: Request) {
 					{
 						contains: titulo, // nomeBusca é o parâmetro de entrada, pode ser uma string com parte do nome
 						mode: 'insensitive',  // Ignora a diferença entre maiúsculas e minúsculas
-					},
+					}
+					, curso: {deletedAt: null, usuario: { tipo: { in: ['Super', 'Normal'] } }}
 				 },
 				include: {
 					curso: true
@@ -35,7 +36,10 @@ export async function GET(request: Request) {
 			console.log('Buscando aula com id:', id);
 			// Buscar aula que tenha o id especificado
 			const aula = await prisma.aula.findUnique({
-				where: { id: Number(id) },
+				where: { 
+					id: Number(id)
+					, curso: {deletedAt: null, usuario: { tipo: { in: ['Super', 'Normal'] } }}
+				 },
 				include: {
 					curso: true
 				}
@@ -48,7 +52,10 @@ export async function GET(request: Request) {
 			console.log('Buscando aulas com idCurso:', idCurso);
 			// Buscar aulas que tenham o idCurso especificado
 			const aulas = await prisma.aula.findMany({
-				where: { idCurso: Number(idCurso) },
+				where: { 
+					idCurso: Number(idCurso)
+					, curso: {deletedAt: null, usuario: { tipo: { in: ['Super', 'Normal'] } }}
+				 },
 				include: {
 					curso: true
 				},
@@ -63,6 +70,8 @@ export async function GET(request: Request) {
 			console.log('Buscando todos os aulas'); 
 			// Retorna todos os aulas se não houver título na URL
 			const aulas = await prisma.aula.findMany({
+				where: { curso: {deletedAt: null, usuario: { tipo: { in: ['Super', 'Normal'] } }}
+						}, // Filtra aulas que pertencem a cursos não excluídos
 				include: {
 					curso: true
 				},

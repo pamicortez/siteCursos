@@ -33,7 +33,9 @@ export async function GET(request: Request) {
     // ===== Obtem usuários por tipo
     else if (tipo) {
       const usuario = await prisma.usuario.findMany({
-        where: { tipo: tipo as tipoUser, deletedAt: null, Nome: nome? {contains: nome, mode: 'insensitive'} : undefined },
+        where: {       
+          tipo: tipo === 'Ativo' ? { in: ['Super', 'Normal'] } : tipo as tipoUser // Verifica se o tipo é 'Ativo' e busca por 'Super' ou 'Normal', caso contrário, busca pelo tipo específico
+          , deletedAt: null, Nome: nome? {contains: nome, mode: 'insensitive'} : undefined },
         include: {
           link: true,
           publicacao: true,
@@ -207,7 +209,36 @@ export async function DELETE(request: Request) {
         { status: 404 }
       );
     }
-
+    // Se o uauário existe, marca como deletado e marcar o Curso, Aula, Evento e Publicação como deletados também
+    await prisma.cursoUsuario.updateMany({
+      where: { idUsuario: Number(id) },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.eventoUsuario.updateMany({
+      where: { idUsuario: Number(id) },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.publicacao.updateMany({
+      where: { idUsuario: Number(id) },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.curso.updateMany({
+      where: { cursoUsuario: { some: { idUsuario: Number(id) } } },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.evento.updateMany({
+      where: { eventoUsuario: { some: { idUsuario: Number(id) } }
+      },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.carreira.updateMany({
+      where: { idUsuario: Number(id) },
+      data: { deletedAt: new Date() },
+    });
+    await prisma.link.updateMany({
+      where: { idUsuario: Number(id) },
+      data: { deletedAt: new Date() },
+    });
     // Atualiza o campo deletedAt com a data e hora atual
     await prisma.usuario.update({
       where: { id: Number(id) },

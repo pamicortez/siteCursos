@@ -13,7 +13,11 @@ export async function GET(request: Request) {
 	  // Se um ID de usuário for fornecido, retorna as publicações desse usuário
 	  if (idUsuario) {
 		const publicacoes = await prisma.publicacao.findMany({
-		  where: { idUsuario: Number(idUsuario) }, // Filtra pelo ID do usuário
+		  where: { 
+			idUsuario: Number(idUsuario)
+			, deletedAt: null 
+			, usuario: { tipo: { in: ['Super', 'Normal'] } } // Garante que o usuário é do tipo Super ou Normal
+		}, // Filtra pelo ID do usuário
 		  include: {
 			usuario: true, // Inclui os detalhes do usuário que fez a publicação
 		  },
@@ -23,7 +27,11 @@ export async function GET(request: Request) {
 	  // Se um ID de publicação for fornecido, retorna a publicação correspondente
 	  if (id) {
 		const publicacao = await prisma.publicacao.findUnique({
-			where: { id: Number(id) }, // Filtra pela ID da publicação
+			where: { 
+				id: Number(id)
+				, deletedAt: null
+				, usuario: { tipo: { in: ['Super', 'Normal'] } } // Garante que o usuário é do tipo Super ou Normal
+			 }, // Filtra pela ID da publicação
 			include: {
 			  usuario: true, // Inclui os detalhes do usuário que fez a publicação
 			},
@@ -33,6 +41,10 @@ export async function GET(request: Request) {
 	  
 	  // Se nenhum ID for fornecido, retorna todas as publicações
 	  const publicacoes = await prisma.publicacao.findMany({
+		where: { 
+			deletedAt: null
+			, usuario: { tipo: { in: ['Super', 'Normal'] } } // Garante que o usuário é do tipo Super ou Normal
+		 }, // Filtra publicações que não foram excluídas
 		include: {
 		  usuario: true, // Inclui os detalhes do usuário que fez a publicação
 		},
