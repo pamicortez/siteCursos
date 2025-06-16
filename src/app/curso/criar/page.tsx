@@ -28,23 +28,23 @@ type AulaType = {
   podcast: string;
 };
 
-enum Categoria {
-  SaudeEBemEstar = "Saúde e Bem-estar",
-  CienciasBiologicasENaturais = "Ciências Biológicas e Naturais",
-  TecnologiaEComputacao = "Tecnologia e Computação",
-  EngenhariaEProducao = "Engenharia e Produção",
-  CienciasSociaisENegocios = "Ciências Sociais Aplicadas e Negócios",
-  EducacaoEFormacao = "Educação e Formação de Professores",
-  CienciasExatas = "Ciências Exatas",
-  CienciasHumanas = "Ciências Humanas",
-  MeioAmbienteESustentabilidade = "Meio Ambiente e Sustentabilidade",
-  LinguagensLetrasEComunicacao = "Linguagens, Letras e Comunicação",
-  ArtesECultura = "Artes e Cultura",
-  CienciasAgrarias = "Ciências Agrárias",
-  PesquisaEInovacao = "Pesquisa e Inovação",
-  ServicosSociaisEComunitarios = "Serviços Sociais e Comunitários",
-  GestaoEPlanejamento = "Gestão e Planejamento",
-}
+// enum Categoria {
+//   SaudeEBemEstar = "Saúde e Bem-estar",
+//   CienciasBiologicasENaturais = "Ciências Biológicas e Naturais",
+//   TecnologiaEComputacao = "Tecnologia e Computação",
+//   EngenhariaEProducao = "Engenharia e Produção",
+//   CienciasSociaisENegocios = "Ciências Sociais Aplicadas e Negócios",
+//   EducacaoEFormacao = "Educação e Formação de Professores",
+//   CienciasExatas = "Ciências Exatas",
+//   CienciasHumanas = "Ciências Humanas",
+//   MeioAmbienteESustentabilidade = "Meio Ambiente e Sustentabilidade",
+//   LinguagensLetrasEComunicacao = "Linguagens, Letras e Comunicação",
+//   ArtesECultura = "Artes e Cultura",
+//   CienciasAgrarias = "Ciências Agrárias",
+//   PesquisaEInovacao = "Pesquisa e Inovação",
+//   ServicosSociaisEComunitarios = "Serviços Sociais e Comunitários",
+//   GestaoEPlanejamento = "Gestão e Planejamento",
+// }
 
 
 
@@ -55,6 +55,7 @@ export default function Curso() {
   const router = useRouter();
 
   const { data: session, status } = useSession();
+  const [categories, setCategories] = useState<string[]>([]);
   const [projeto, setProjeto] = useState({})
   const [loadingInitial, setLoadingInitial] = useState(true); // Novo estado para controle inicial de carregamento
   const [resultDialog, setResultDialog] = useState({
@@ -96,6 +97,21 @@ export default function Curso() {
       console.log(projeto)
     }
 
+    async function loadCategories() {
+      try {
+        const response = await fetch("/api/enums/categoriaCurso");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar categorias de evento");
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Erro:", error);
+      }
+    };
+  
+    loadCategories();
+
     loadProjeto()
 
   }, [status, router]);
@@ -118,10 +134,10 @@ export default function Curso() {
     setAulas(updatedAulas);
   };
 
-  const categoriaOptions = Object.entries(Categoria).map(([key, value]) => ({
-    label: value,
-    value: key,
-  }));
+  // const categoriaOptions = Object.entries(Categoria).map(([key, value]) => ({
+  //   label: value,
+  //   value: key,
+  // }));
 
 
 
@@ -348,9 +364,9 @@ export default function Curso() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {categoriaOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
+                      {categories.map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {opt}
                         </SelectItem>
                       ))}
                     </SelectGroup>

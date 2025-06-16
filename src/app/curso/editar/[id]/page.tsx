@@ -28,24 +28,6 @@ type AulaType = {
 };
 
 
-enum Categoria {
-  SaudeEBemEstar = "Saúde e Bem-estar",
-  CienciasBiologicasENaturais = "Ciências Biológicas e Naturais",
-  TecnologiaEComputacao = "Tecnologia e Computação",
-  EngenhariaEProducao = "Engenharia e Produção",
-  CienciasSociaisENegocios = "Ciências Sociais Aplicadas e Negócios",
-  EducacaoEFormacao = "Educação e Formação de Professores",
-  CienciasExatas = "Ciências Exatas",
-  CienciasHumanas = "Ciências Humanas",
-  MeioAmbienteESustentabilidade = "Meio Ambiente e Sustentabilidade",
-  LinguagensLetrasEComunicacao = "Linguagens, Letras e Comunicação",
-  ArtesECultura = "Artes e Cultura",
-  CienciasAgrarias = "Ciências Agrárias",
-  PesquisaEInovacao = "Pesquisa e Inovação",
-  ServicosSociaisEComunitarios = "Serviços Sociais e Comunitários",
-  GestaoEPlanejamento = "Gestão e Planejamento",
-}
-
 
 
 export default function Curso() {
@@ -56,6 +38,7 @@ export default function Curso() {
 
   const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", linkVideo: "", linkPdf: null, linkPodcast: "" }]);
   const [curso, setCurso] = useState([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loadingInitial, setLoadingInitial] = useState(true); // Novo estado para controle inicial de carregamento
     const [resultDialog, setResultDialog] = useState({
       title: '',
@@ -65,11 +48,6 @@ export default function Curso() {
     });
     const [showResultDialog, setShowResultDialog] = useState(false);
   
-  const categoriasOptions = Object.entries(Categoria).map(([value, label]) => ({
-  value,
-  label,
-  }));
-
   const { data: session, status } = useSession();
 
   useEffect(() => {
@@ -100,13 +78,29 @@ export default function Curso() {
             setLoadingInitial(false); // Marca o carregamento inicial como concluído
         }
     }
+
+
+    async function loadCategories() {
+      try {
+        const response = await fetch("/api/enums/categoriaCurso");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar categorias de evento");
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Erro:", error);
+      }
+    };
+  
+    loadCategories();
+
     loadCurso()
 
 
 
   }, [id])
 
-  const [options, setOptions] = useState<OptionType[]>(categoriasOptions);
   const [selectedOption, setSelectedOption] = useState<OptionType | null>(null);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [linkApostila, setLinkApostila] = useState<string | null>(null);
@@ -372,9 +366,9 @@ export default function Curso() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectGroup>
-                      {categoriasOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
+                      {categories.map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {opt}
                         </SelectItem>
                       ))}
                     </SelectGroup>
