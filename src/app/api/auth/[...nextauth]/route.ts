@@ -18,8 +18,16 @@ const handler = NextAuth( {
                     where: { email: credentials?.username },
                 });
 
-                if (user && bcrypt.compareSync(credentials?.password || "", user.senha)) {
-                    return { id: user.id.toString(), name: user.Nome, email: user.email };
+                if ((user && bcrypt.compareSync(credentials?.password || "", user.senha))) {
+                    if ((user.tipo=='Normal') || (user.tipo=='Super')) {
+                        return { id: user.id.toString(), name: user.Nome, email: user.email };
+                    }
+                    if (user.tipo=='Bloqueado'){
+                        throw new Error("Sua conta está bloqueada.");
+                    }
+                    if (user.tipo=='Pendente'){
+                        throw new Error("Sua conta está pendente de aprovação.");
+                    }
                 }
 
                 return null;
