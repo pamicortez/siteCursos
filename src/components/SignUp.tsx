@@ -251,7 +251,7 @@ export default function SignUpPage() {
         setCurrentStep(2);
       }
     } 
-    else if (currentStep === 3) {
+    else if (currentStep === 4) {
       await handleCreateAccount();
     } 
     else {
