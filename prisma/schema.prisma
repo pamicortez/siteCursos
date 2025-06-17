@@ -287,3 +287,12 @@ model projetoColaborador {
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
   deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 }
+
+model EmailVerificationCode {
+  id         String   @id @default(uuid())
+  email      String
+  code       String
+  expiresAt  DateTime
+  verifiedAt DateTime? 
+  createdAt  DateTime  @default(now())
+}

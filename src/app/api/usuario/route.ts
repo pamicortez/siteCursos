@@ -132,7 +132,9 @@ export async function POST(request: Request) {
         senha: hashSenha,
       },
     });
-    return NextResponse.json(novoUsuario, { status: 201 }); // Retorna o novo usuário com status 201
+
+    const { email, senha, id, ...respUsuario } = novoUsuario;
+    return NextResponse.json(respUsuario, { status: 201 }); // Retorna o novo usuário com status 201
   } catch (error) {
     console.error('Erro ao criar usuário:', error);
     return NextResponse.error(); // Retorna um erro em caso de falha
