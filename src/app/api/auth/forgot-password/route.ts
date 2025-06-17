@@ -28,12 +28,12 @@ export async function POST(request: Request) {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: process.env.EMAIL,
+        pass: process.env.EMAIL_PASSWORD,
       },
     });
 
-    const resetLink = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
+    const resetLink = `${process.env.NEXTAUTH_URL}/esqueci-senha?token=${token}`;
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: email,
