@@ -293,7 +293,7 @@ export default function SignUpPage() {
       if (response.status === 201) {
         setCreatedUserId(response.data.user.id.toString())
         setUserCreated(true)
-        setCurrentStep(4) // Ir para a etapa da foto após sucesso
+        setCurrentStep(5) // Ir para a etapa da foto após sucesso
 
         // Mostrar modal de sucesso
         setResultDialog({
@@ -417,31 +417,20 @@ const handleVerifyCode = async () => {
               <p className="text-gray-600 hidden md:block">Preencha os dados para criar sua conta</p>
             </div>
             <div className="flex items-center justify-center">
-              {[1, 2, 3, 4, 5].map((step) => {
-                // Pula a etapa 2 se o e-mail já foi verificado
-                if (formData.isEmailVerified && step === 2) return null;
-                
-                return (
-                  <React.Fragment key={step}>
-                    <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
-                      (step <= currentStep) || 
-                      (formData.isEmailVerified && step === 2 && currentStep >= 3) 
-                        ? "bg-blue-600 text-white" 
-                        : "bg-gray-200 text-gray-600"
-                    }`}>
-                      {step}
-                    </div>
-                    {step < 5 && !(formData.isEmailVerified && step === 1) && (
-                      <div className={`w-8 h-1 mx-1 ${
-                        (step < currentStep) || 
-                        (formData.isEmailVerified && step === 1 && currentStep >= 3)
-                          ? "bg-blue-600" 
-                          : "bg-gray-200"
-                      }`} />
-                    )}
-                  </React.Fragment>
-                );
-              })}
+              {[1, 2, 3, 4, 5].map((step) => (
+                <React.Fragment key={step}>
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
+                    step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
+                  }`}>
+                    {step}
+                  </div>
+                  {step < 5 && (
+                    <div className={`w-8 h-1 mx-1 ${
+                      step < currentStep ? "bg-blue-600" : "bg-gray-200"
+                    }`} />
+                  )}
+                </React.Fragment>
+              ))}
             </div>
             <div className="text-center mt-1">
               <span className="text-xs text-gray-600">{stepTitles[currentStep - 1]}</span>
@@ -459,31 +448,20 @@ const handleVerifyCode = async () => {
 
           {/* Progress Bar - Visível apenas no desktop */}
           <div className="hidden md:flex items-center justify-center mt-6">
-            {[1, 2, 3, 4, 5].map((step) => {
-              // Pula a etapa 2 se o e-mail já foi verificado
-              if (formData.isEmailVerified && step === 2) return null;
-              
-              return (
+            {[1, 2, 3, 4, 5].map((step) => (
                 <React.Fragment key={step}>
                   <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
-                    (step <= currentStep) || 
-                    (formData.isEmailVerified && step === 2 && currentStep >= 3) 
-                      ? "bg-blue-600 text-white" 
-                      : "bg-gray-200 text-gray-600"
+                    step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
                   }`}>
                     {step}
                   </div>
-                  {step < 5 && !(formData.isEmailVerified && step === 1) && (
+                  {step < 5 && (
                     <div className={`w-8 h-1 mx-1 ${
-                      (step < currentStep) || 
-                      (formData.isEmailVerified && step === 1 && currentStep >= 3)
-                        ? "bg-blue-600" 
-                        : "bg-gray-200"
+                      step < currentStep ? "bg-blue-600" : "bg-gray-200"
                     }`} />
                   )}
                 </React.Fragment>
-              );
-            })}
+              ))}
           </div>
           <div className="text-center mt-2 hidden md:block">
             <span className="text-sm text-gray-600">{stepTitles[currentStep - 1]}</span>
