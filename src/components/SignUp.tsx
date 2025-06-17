@@ -12,6 +12,8 @@ interface SignUpFormData {
   email: string
   password: string
   confirmPassword: string
+  emailVerificationCode: string
+  isEmailVerified: boolean 
   Titulacao: string
   instituicaoEnsino: string
   formacaoAcademica: string
@@ -105,6 +107,8 @@ export default function SignUpPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    emailVerificationCode: "",
+    isEmailVerified: false,
     Titulacao: "Bacharel",
     instituicaoEnsino: "",
     formacaoAcademica: "",
@@ -124,6 +128,8 @@ export default function SignUpPage() {
   })
   // Após as outras declarações de useState
   const [isClient, setIsClient] = useState(false)
+  const [isSendingCode, setIsSendingCode] = useState(false)
+  const [isVerifyingCode, setIsVerifyingCode] = useState(false)
 
   // Adicione este useEffect logo após os outros useEffects
   useEffect(() => {
@@ -136,6 +142,13 @@ export default function SignUpPage() {
       router.push("/profile")
     }
   }, [status, router, isClient])
+
+  useEffect(() => {
+    if (formData.isEmailVerified && currentStep === 2) {
+      // Se por algum motivo estiver na etapa 2 com e-mail já verificado
+      setCurrentStep(3);
+    }
+  }, [formData.isEmailVerified, currentStep]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -210,7 +223,13 @@ export default function SignUpPage() {
       else if (formData.password.length < 8) newErrors.password = "Senha deve ter pelo menos 8 caracteres"
       if (!formData.confirmPassword) newErrors.confirmPassword = "Confirmação de senha é obrigatória"
       else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Senhas não coincidem"
-    } else if (step === 2) {
+    } else if (step === 2) { // Nova validação para etapa de confirmação
+      if (!formData.emailVerificationCode) {
+        newErrors.emailVerificationCode = "Código de verificação é obrigatório"
+      } else if (formData.emailVerificationCode.length !== 6) {
+        newErrors.emailVerificationCode = "Código deve ter 6 dígitos"
+      }
+    } else if (step === 3) {
       if (!formData.Titulacao) newErrors.Titulacao = "Titulação é obrigatória"
       if (!formData.instituicaoEnsino.trim()) newErrors.instituicaoEnsino = "Instituição de ensino é obrigatória"
       if (!formData.formacaoAcademica.trim()) newErrors.formacaoAcademica = "Formação acadêmica é obrigatória"
@@ -221,20 +240,35 @@ export default function SignUpPage() {
   }
 
   const handleNext = async () => {
-    if (validateStep(currentStep)) {
-      // Se estivermos na etapa 3, criar a conta antes de ir para a próxima etapa
-      if (currentStep === 3) {
-        await handleCreateAccount()
-        // handleCreateAccount já gerencia o setCurrentStep(4) após sucesso
+  if (validateStep(currentStep)) {
+    if (currentStep === 1) {
+      // Se o e-mail já foi verificado, pula para a etapa 3
+      if (formData.isEmailVerified) {
+        setCurrentStep(3);
       } else {
-        setCurrentStep((prev) => Math.min(prev + 1, 4))
+        // Se não foi verificado, envia o código e vai para etapa 2
+        await handleSendVerificationCode();
+        setCurrentStep(2);
       }
+    } 
+    else if (currentStep === 3) {
+      await handleCreateAccount();
+    } 
+    else {
+      setCurrentStep(prev => Math.min(prev + 1, 5));
     }
   }
+}
 
   const handlePrevious = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1))
+  if (currentStep === 3 && formData.isEmailVerified) {
+    // Se estiver na etapa 3 e e-mail verificado, volta para etapa 1
+    setCurrentStep(1);
+  } else {
+    // Volta normalmente para outras situações
+    setCurrentStep(prev => Math.max(prev - 1, 1));
   }
+}
 
   const handleCreateAccount = async () => {
     setLoading(true)
@@ -310,7 +344,65 @@ export default function SignUpPage() {
     )
   }
 
-  const stepTitles = ["Informações Básicas", "Formação Acadêmica", "Experiência e Links", "Foto do Perfil"]
+  const handleSendVerificationCode = async () => {
+  setIsSendingCode(true)
+  try {
+    await axios.post("/api/solicitar-email", {
+      email: formData.email
+    })
+    setResultDialog({
+      title: 'Código enviado',
+      message: 'Enviamos um código de verificação para seu e-mail.',
+      isError: false
+    })
+    setShowResultDialog(true)
+  } catch (error: any) {
+    setResultDialog({
+      title: 'Erro',
+      message: error.response?.data?.error || 'Falha ao enviar código. Tente novamente.',
+      isError: true
+    })
+    setShowResultDialog(true)
+  } finally {
+    setIsSendingCode(false)
+  }
+}
+
+const handleVerifyCode = async () => {
+  setIsVerifyingCode(true)
+  try {
+    await axios.post("/api/validar-email", {
+      email: formData.email,
+      code: formData.emailVerificationCode
+    })
+    
+    setFormData(prev => ({
+      ...prev,
+      isEmailVerified: true
+    }))
+    
+    // Avança automaticamente para a próxima etapa
+    setCurrentStep(3)
+    
+    setResultDialog({
+      title: 'E-mail verificado',
+      message: 'Seu e-mail foi confirmado com sucesso!',
+      isError: false
+    })
+    setShowResultDialog(true)
+  } catch (error: any) {
+    setResultDialog({
+      title: 'Erro',
+      message: error.response?.data?.error || 'Código inválido. Tente novamente.',
+      isError: true
+    })
+    setShowResultDialog(true)
+  } finally {
+    setIsVerifyingCode(false)
+  }
+}
+
+  const stepTitles = ["Informações Básicas",  "Confirmação de E-mail", "Formação Acadêmica",  "Experiência e Links", "Foto do Perfil"]
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 pt-32 md:pt-8">
@@ -325,19 +417,31 @@ export default function SignUpPage() {
               <p className="text-gray-600 hidden md:block">Preencha os dados para criar sua conta</p>
             </div>
             <div className="flex items-center justify-center">
-              {[1, 2, 3, 4].map((step) => (
-                <React.Fragment key={step}>
-                  <div
-                    className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
-                      }`}
-                  >
-                    {step}
-                  </div>
-                  {step < 4 && (
-                    <div className={`w-8 h-1 mx-1 ${step < currentStep ? "bg-blue-600" : "bg-gray-200"}`} />
-                  )}
-                </React.Fragment>
-              ))}
+              {[1, 2, 3, 4, 5].map((step) => {
+                // Pula a etapa 2 se o e-mail já foi verificado
+                if (formData.isEmailVerified && step === 2) return null;
+                
+                return (
+                  <React.Fragment key={step}>
+                    <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
+                      (step <= currentStep) || 
+                      (formData.isEmailVerified && step === 2 && currentStep >= 3) 
+                        ? "bg-blue-600 text-white" 
+                        : "bg-gray-200 text-gray-600"
+                    }`}>
+                      {step}
+                    </div>
+                    {step < 5 && !(formData.isEmailVerified && step === 1) && (
+                      <div className={`w-8 h-1 mx-1 ${
+                        (step < currentStep) || 
+                        (formData.isEmailVerified && step === 1 && currentStep >= 3)
+                          ? "bg-blue-600" 
+                          : "bg-gray-200"
+                      }`} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </div>
             <div className="text-center mt-1">
               <span className="text-xs text-gray-600">{stepTitles[currentStep - 1]}</span>
@@ -355,17 +459,31 @@ export default function SignUpPage() {
 
           {/* Progress Bar - Visível apenas no desktop */}
           <div className="hidden md:flex items-center justify-center mt-6">
-            {[1, 2, 3, 4].map((step) => (
-              <React.Fragment key={step}>
-                <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
-                    }`}
-                >
-                  {step}
-                </div>
-                {step < 4 && <div className={`w-16 h-1 mx-2 ${step < currentStep ? "bg-blue-600" : "bg-gray-200"}`} />}
-              </React.Fragment>
-            ))}
+            {[1, 2, 3, 4, 5].map((step) => {
+              // Pula a etapa 2 se o e-mail já foi verificado
+              if (formData.isEmailVerified && step === 2) return null;
+              
+              return (
+                <React.Fragment key={step}>
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
+                    (step <= currentStep) || 
+                    (formData.isEmailVerified && step === 2 && currentStep >= 3) 
+                      ? "bg-blue-600 text-white" 
+                      : "bg-gray-200 text-gray-600"
+                  }`}>
+                    {step}
+                  </div>
+                  {step < 5 && !(formData.isEmailVerified && step === 1) && (
+                    <div className={`w-8 h-1 mx-1 ${
+                      (step < currentStep) || 
+                      (formData.isEmailVerified && step === 1 && currentStep >= 3)
+                        ? "bg-blue-600" 
+                        : "bg-gray-200"
+                    }`} />
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
           <div className="text-center mt-2 hidden md:block">
             <span className="text-sm text-gray-600">{stepTitles[currentStep - 1]}</span>
@@ -404,14 +522,21 @@ export default function SignUpPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     <Mail className="inline w-4 h-4 mr-1" />
                     Email *
+                    {formData.isEmailVerified && (
+                      <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                        Verificado
+                      </span>
+                    )}
                   </label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? "border-red-500" : "border-gray-300"
-                      }`}
+                    disabled={formData.isEmailVerified} // Bloqueia edição se verificado
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                      errors.email ? "border-red-500" : "border-gray-300"
+                    } ${formData.isEmailVerified ? "bg-gray-100 cursor-not-allowed" : ""}`}
                     placeholder="seu@email.com"
                   />
                   {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -480,8 +605,62 @@ export default function SignUpPage() {
             </div>
           )}
 
-          {/* Step 2: Academic Information */}
+          {/* Step 2: Email Verification */}
           {currentStep === 2 && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">Confirmação de E-mail</h3>
+              
+              <div className="bg-blue-50 p-4 rounded-md mb-4">
+                <p className="text-blue-800">
+                  Enviamos um código de verificação para <strong>{formData.email}</strong>.
+                  Por favor, insira o código abaixo para confirmar seu e-mail.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Código de Verificação *
+                  </label>
+                  <input
+                    type="text"
+                    name="emailVerificationCode"
+                    value={formData.emailVerificationCode}
+                    onChange={handleInputChange}
+                    maxLength={6}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.emailVerificationCode ? "border-red-500" : "border-gray-300"}`}
+                    placeholder="Código de 6 Dígitos"
+                  />
+                  {errors.emailVerificationCode && (
+                    <p className="text-red-500 text-xs mt-1">{errors.emailVerificationCode}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleSendVerificationCode}
+                  disabled={isSendingCode}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition disabled:opacity-50"
+                >
+                  {isSendingCode ? 'Enviando...' : 'Reenviar Código'}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleVerifyCode}
+                  disabled={isVerifyingCode || !formData.emailVerificationCode}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {isVerifyingCode ? 'Verificando...' : 'Verificar Código'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Academic Information */}
+          {currentStep === 3 && (
             <div className="space-y-4">
               <h3 className="text-xl font-semibold mb-4 text-gray-800">Formação Acadêmica</h3>
 
@@ -559,8 +738,8 @@ export default function SignUpPage() {
             </div>
           )}
 
-          {/* Step 3: Experience and Links */}
-          {currentStep === 3 && (
+          {/* Step 4: Experience and Links */}
+          {currentStep === 4 && (
             <div className="space-y-6">
               <h3 className="text-xl font-semibold mb-4 text-gray-800">Experiência e Links (Opcional)</h3>
 
@@ -725,8 +904,8 @@ export default function SignUpPage() {
             </div>
           )}
 
-          {/* Step 4: Profile Photo */}
-          {currentStep === 4 && (
+          {/* Step 5: Profile Photo */}
+          {currentStep === 5 && (
             <div className="space-y-6">
               <h3 className="text-xl font-semibold mb-4 text-gray-800">Foto do Perfil</h3>
 
@@ -762,50 +941,51 @@ export default function SignUpPage() {
             </div>
           )}
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between pt-6 border-t border-gray-200">
-            <div>
-              {currentStep > 1 && currentStep < 4 && (
-                <button
-                  type="button"
-                  onClick={handlePrevious}
-                  className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition"
-                >
-                  Anterior
-                </button>
-              )}
-            </div>
+          {/* Navigation Buttons - New*/}
+            {currentStep !== 2 && (
+              <div className="flex justify-between pt-6 border-t border-gray-200">
+                <div>
+                  {currentStep > 1 && currentStep < 5 && (
+                    <button
+                      type="button"
+                      onClick={handlePrevious}
+                      className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition"
+                    >
+                      Anterior
+                    </button>
+                  )}
+                </div>
 
-            <div className="space-x-3">
-              {currentStep === 4 ? (
-                <button
-                  type="button"
-                  onClick={handleFinish}
-                  className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
-                >
-                  Sair
-                </button>
-              ) : currentStep === 3 ? (
-                <button
-                  type="submit"
-                  disabled={loading}
-                  onClick={handleNext}
-                  className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-
-                  {loading ? "Criando..." : "Criar Conta"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
-                >
-                  Próximo
-                </button>
-              )}
-            </div>
-          </div>
+                <div className="space-x-3">
+                  {currentStep === 5 ? (
+                    <button
+                      type="button"
+                      onClick={handleFinish}
+                      className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
+                    >
+                      Sair
+                    </button>
+                  ) : currentStep === 4 ? (
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      onClick={handleNext}
+                      className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? "Criando..." : "Criar Conta"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleNext}
+                      className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
+                    >
+                      Próximo
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
         </form>
 
         {/* Login Link */}
