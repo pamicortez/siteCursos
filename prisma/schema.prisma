@@ -153,6 +153,8 @@ model Usuario {
   formacaoAcademica String // Formação acadêmica do usuário
   resumoPessoal   String // Resumo pessoal do usuário
   tipo            tipoUser @default(Pendente)
+  resetToken        String?   // Token para reset de senha
+  resetTokenExpires DateTime? // Data de expiração do token
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
   deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
