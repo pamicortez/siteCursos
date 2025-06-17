@@ -81,13 +81,15 @@ export default function Evento() {
 
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [eventoData, setEventoData] = useState({
-    title: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    category: '',
-    image: '',
-    local: '',
+  title: '',
+  description: '',
+  startDate: '',
+  endDate: '',
+  startTime: '',
+  endTime: '',
+  category: '',
+  image: '',
+  local: '',
   });
 console.log("estado inicial eventoData:", eventoData);
 
