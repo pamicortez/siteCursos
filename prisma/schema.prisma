@@ -90,8 +90,8 @@ model Projeto {
   imagem      String   // URL da imagem do projeto
   descricao   String   // Descrição do projeto
   categoria   String   // Categoria do projeto
-  dataInicio DateTime  // Data de início do projeto
-  dataFim    DateTime  // Data de término do projeto
+  dataInicio DateTime  // Data de início do projeto 
+  dataFim    DateTime?  // Data de término do projeto
   createdAt DateTime @default(now()) // Data de criação (automática)
   updatedAt DateTime @updatedAt // Data de última atualização (automática)
   deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
@@ -211,6 +211,7 @@ model Colaborador{
   id          Int      @id @default(autoincrement()) // ID único para cada colaborador
   nome        String
 
+  eventoColaborador eventoColaborador[]
   projetoColaborador projetoColaborador[]
 }
 
@@ -219,12 +220,16 @@ model Evento {
   id          Int      @id @default(autoincrement()) // ID único para cada evento
   titulo      String   // Título do evento
   descricao   String   // Descrição do evento
-  data        DateTime // Data e hora do evento
-  linkParticipacao String // Link para participar do evento
+  dataInicio        DateTime // Data e hora do início do evento
+  dataFim        DateTime // Data e hora do fim do evento
+  linkParticipacao String? // Link para participar do evento
+  categoria   categoriaCurso
+  local       String
   createdAt   DateTime @default(now()) // Data de criação (automática)
   updatedAt   DateTime @updatedAt // Data de última atualização (automática)
   deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
 
+  eventoColaborador eventoColaborador[]
   imagemEvento imagemEvento[]
   eventoUsuario eventoUsuario[]
 }
@@ -283,6 +288,18 @@ model projetoColaborador {
   categoria   colaboradorCategoria
   idProjeto   Int      // Relacionamento com o projeto
   projeto     Projeto @relation(fields: [idProjeto], references: [id], onDelete: Cascade)// Relacionamento com o colaborador
+  idColaborador   Int      // Relacionamento com o colaborador
+  colaborador     Colaborador @relation(fields: [idColaborador], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) // Data de criação (automática)
+  updatedAt   DateTime @updatedAt // Data de última atualização (automática)
+  deletedAt  DateTime? // Data de exclusão lógica (null se não deletado)
+}
+
+model eventoColaborador {
+  id          Int      @id @default(autoincrement()) // ID único para cada associação
+  categoria   colaboradorCategoria
+  idEvento   Int      // Relacionamento com o projeto
+  evento     Evento @relation(fields: [idEvento], references: [id], onDelete: Cascade)
   idColaborador   Int      // Relacionamento com o colaborador
   colaborador     Colaborador @relation(fields: [idColaborador], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now()) // Data de criação (automática)

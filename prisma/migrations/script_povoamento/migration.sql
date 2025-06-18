@@ -41,21 +41,21 @@ VALUES
 ('Prototipagem Rápida', 'https://example.com/design1.pdf', 'https://example.com/design1.mp4', 6, NOW(), NOW());
 
 -- Inserindo eventos (expandido para 5+)
-INSERT INTO "Evento" (titulo, descricao, "data", "linkParticipacao", "createdAt", "updatedAt")
+INSERT INTO "Evento" (titulo, descricao, "dataInicio", "dataFim",  "linkParticipacao", categoria, "local", "createdAt", "updatedAt")
 VALUES
-('Congresso de IA', 'Evento sobre inteligência artificial', '2024-09-10', 'https://evento.com/ia', NOW(), NOW()),
-('Seminário de Biotecnologia', 'Discussões sobre biotecnologia avançada', '2024-10-15', 'https://evento.com/bio', NOW(), NOW()),
-('Workshop de Sustentabilidade', 'Práticas sustentáveis para o futuro', '2024-11-20', 'https://evento.com/sustentabilidade', NOW(), NOW()),
-('Hackathon de Educação', 'Desenvolvimento de soluções educacionais', '2024-12-05', 'https://evento.com/hackathon', NOW(), NOW()),
-('Conferência de Saúde Digital', 'Inovações em saúde e tecnologia', '2025-01-15', 'https://evento.com/saude', NOW(), NOW()),
-('Feira de Inovação Social', 'Exposição de projetos de impacto social', '2025-02-10', 'https://evento.com/inovacao', NOW(), NOW()),
-('Forró da UEFS', 'Quadrilha junina se apresenta', '2025-02-10', 'https://evento.com/forro', NOW(), NOW()),
-('Festival de Música', 'Show de diversas bandas', '2025-02-10', 'https://evento.com/festival', NOW(), NOW()),
-('Show de rock', 'Show de diversas bandas de rock no borogodó', '2025-02-10', 'https://evento.com/festivalrock', NOW(), NOW()),
-('Orquestra feirense', 'A orquesta feirense se apresenta no auditório central', '2025-02-10', 'https://evento.com/oquestra', NOW(), NOW()),
-('Corrida de obstáculos', 'Corrida de obstáculos da UEFS', '2025-02-10', 'https://evento.com/corrida', NOW(), NOW()),
-('Palestra de Cibersegurança', 'Palestra de Cibersegurança ministrada pelo professor Ricardo Mendes', '2025-02-10', 'https://evento.com/palestraciberseguranca', NOW(), NOW()),
-('Conferência de IA', 'Conferência de IA com especialistas na UFBA', '2025-02-10', 'https://evento.com/conferencia', NOW(), NOW());
+('Congresso de IA', 'Evento sobre inteligência artificial', '2024-09-10', '2026-09-11', 'https://evento.com/ia', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Seminário de Biotecnologia', 'Discussões sobre biotecnologia avançada', '2024-10-15', '2026-09-11', 'https://evento.com/bio', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Workshop de Sustentabilidade', 'Práticas sustentáveis para o futuro', '2024-11-20', '2026-09-11', 'https://evento.com/sustentabilidade', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Hackathon de Educação', 'Desenvolvimento de soluções educacionais', '2024-12-05', '2026-09-11', 'https://evento.com/hackathon', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Conferência de Saúde Digital', 'Inovações em saúde e tecnologia', '2025-01-15', '2026-09-11', 'https://evento.com/saude', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Feira de Inovação Social', 'Exposição de projetos de impacto social', '2025-02-10', '2026-09-11', 'https://evento.com/inovacao', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Forró da UEFS', 'Quadrilha junina se apresenta', '2025-02-10', '2026-09-11', 'https://evento.com/forro', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Festival de Música', 'Show de diversas bandas', '2025-02-10', '2026-09-11', 'https://evento.com/festival', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Show de rock', 'Show de diversas bandas de rock no borogodó', '2025-02-10', '2026-09-11', 'https://evento.com/festivalrock', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Orquestra feirense', 'A orquesta feirense se apresenta no auditório central', '2025-02-10', '2026-09-11', 'https://evento.com/oquestra', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Corrida de obstáculos', 'Corrida de obstáculos da UEFS', '2025-02-10', '2026-09-11', 'https://evento.com/corrida', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Palestra de Cibersegurança', 'Palestra de Cibersegurança ministrada pelo professor Ricardo Mendes', '2025-02-10', '2026-09-11', 'https://evento.com/palestraciberseguranca', 'Artes e Cultura', 'Remoto', NOW(), NOW()),
+('Conferência de IA', 'Conferência de IA com especialistas na UFBA', '2025-02-10', '2026-09-11', 'https://evento.com/conferencia', 'Artes e Cultura', 'Remoto', NOW(), NOW());
 
 -- Inserindo imagens dos eventos (expandido)
 INSERT INTO "imagemEvento" (link, "idEvento", "createdAt", "updatedAt")
@@ -139,6 +139,18 @@ VALUES
 -- Relacionando colaboradores com projetos
 -- Usando os valores corretos do enum colaboradorCategoria
 INSERT INTO "projetoColaborador" (categoria, "idProjeto", "idColaborador", "createdAt", "updatedAt")
+VALUES
+('Cordenador(a)', 1, 1, NOW(), NOW()),
+('Colaborador(a)', 1, 2, NOW(), NOW()),
+('Cordenador(a)', 2, 3, NOW(), NOW()),
+('Bolsista', 2, 4, NOW(), NOW()),
+('Cordenador(a)', 3, 5, NOW(), NOW()),
+('Voluntário', 3, 6, NOW(), NOW()),
+('Colaborador(a)', 4, 1, NOW(), NOW()),
+('Cordenador(a)', 5, 2, NOW(), NOW()),
+('Colaborador(a)', 6, 3, NOW(), NOW());
+
+INSERT INTO "eventoColaborador" (categoria, "idEvento", "idColaborador", "createdAt", "updatedAt")
 VALUES
 ('Cordenador(a)', 1, 1, NOW(), NOW()),
 ('Colaborador(a)', 1, 2, NOW(), NOW()),
