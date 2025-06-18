@@ -394,7 +394,7 @@ export default function Projeto() {
         console.error("Erro da API:", errorData);
         setResultDialog({
           title: 'Erro',
-          message: 'Erro ao salvar o projeto, tente novamente mais tarde. Erro: ' + errorData,
+          message: 'Erro ao salvar o projeto, tente novamente mais tarde. Erro: ' + errorData.message,
           isError: true,
           projectId: null
         });
