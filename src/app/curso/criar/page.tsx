@@ -55,7 +55,12 @@ export default function Curso() {
   const router = useRouter();
 
   const { data: session, status } = useSession();
-  const [categories, setCategories] = useState<string[]>([]);
+
+  interface Category {
+    value: string;
+    label: string;
+  }
+  const [categories, setCategories] = useState<Category[]>([]);
   const [projeto, setProjeto] = useState({})
   const [loadingInitial, setLoadingInitial] = useState(true); // Novo estado para controle inicial de carregamento
   const [resultDialog, setResultDialog] = useState({
@@ -365,8 +370,8 @@ export default function Curso() {
                   <SelectContent>
                     <SelectGroup>
                       {categories.map((opt) => (
-                        <SelectItem key={opt} value={opt}>
-                          {opt}
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
                         </SelectItem>
                       ))}
                     </SelectGroup>

@@ -22,6 +22,11 @@ interface Usuario {
   createdAt: string;
 }
 
+interface Category {
+  value: string;
+  label: string;
+}
+
 const Navbar = () => {
   const { data: session, status } = useSession();
   const [isOpen, setIsOpen] = useState(false);
@@ -35,7 +40,7 @@ const Navbar = () => {
 
   const [hasUser, setHasUser] = useState(false);
   const [currentPath, setCurrentPath] = useState('/');
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [navClass, setNavClass] = useState('fixed w-full z-40 transition-all duration-300 ease-in-out shadow-md top-0');
   const router = useRouter();
@@ -202,6 +207,8 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
+  console.log("Conteúdo ATUAL do estado 'categories':", categories);
+
   return (
     <>
       <nav
@@ -237,19 +244,18 @@ const Navbar = () => {
                     categoryMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
                   )}
                 >
-                  {categories.map((category, index) => (
+                  {categories.map((category) => (
                     <button
-                      key={index}
+                      key={`desktop-${category.value}`} // Chave correta e robusta
                       onClick={() => {
-                        router.push(`/search?categoria=${encodeURIComponent(category)}`);
-                        setCategoryMenuOpen(false); // Fecha o menu após clique
+                        // Usa o 'value' para a navegação
+                        router.push(`/search?categoria=${encodeURIComponent(category.value)}`);
+                        setCategoryMenuOpen(false);
                       }}
                       className="block text-left w-full whitespace-nowrap px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
                     >
-                      {/* {formatarCategoria(category)} */}
-                      {category}
+                      {category.label} {/* Usa o 'label' para exibição */}
                     </button>
-
                   ))}
                 </div>
               </div>
@@ -408,15 +414,19 @@ const Navbar = () => {
             <div className="px-6 mb-6">
               <div className="font-medium mb-3 text-gray-200 text-lg">Categorias</div>
               <div className="space-y-1 max-h-40 overflow-y-auto">
-                {categories.map((category, index) => (
+                {categories.map((category) => (
                   <a
-                    key={index}
-                    href={`/category/${category.toLowerCase()}`}
+                    key={`mobile-${category.value}`} // Chave correta e robusta
+                    // Opcional: A navegação do mobile também pode usar o router para consistência
+                    onClick={(e) => {
+                      e.preventDefault();
+                      router.push(`/search?categoria=${encodeURIComponent(category.value)}`);
+                      closeMobileMenu();
+                    }}
+                    href={`/search?categoria=${encodeURIComponent(category.value)}`} // Fallback de href
                     className="block py-2 px-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-md transition-colors"
-                    onClick={closeMobileMenu}
                   >
-                    {/* {formatarCategoria(category)} */}
-                    {category}
+                    {category.label} {/* Usa o 'label' para exibição */}
                   </a>
                 ))}
               </div>

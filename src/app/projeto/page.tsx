@@ -101,7 +101,13 @@ export default function Projeto() {
     isError: false,
     projectId: null as string | null,
   });
-  const [categories, setCategories] = useState<string[]>([]);
+
+  interface Category {
+    value: string;
+    label: string;
+  }
+
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<ColaboradorFromAPI[]>([]);
   const [suggestions, setSuggestions] = useState<{index: number, names: string[]} | null>(null);
@@ -109,7 +115,7 @@ export default function Projeto() {
   const [showImageCropper, setShowImageCropper] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null); // base64 da imagem original
   
-
+  
 
 
   useEffect(() => {
@@ -533,8 +539,8 @@ export default function Projeto() {
                       <SelectItem value="loading" disabled>Carregando categorias...</SelectItem>
                     ) : (
                       categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
+                        <SelectItem key={category.value} value={category.value}>
+                          {category.label}
                         </SelectItem>
                       ))
                     )}
