@@ -236,7 +236,18 @@ const ProjetoHome: React.FC<ProjetoHomeProps> = ({ idOverride }) => {
   return (
     <div className="container mx-auto px-4 py-2">
       <div className="flex justify-between items-center my-4">
-        <h1 className="text-3xl font-bold">{projeto.titulo}</h1>
+      <h1 className="text-3xl font-bold flex items-center gap-3">
+        {projeto.titulo}
+        {isOwner && (
+          <button 
+            className="p-0 ml-2 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
+            onClick={() => router.push(`/projeto/editar/${projeto.id}`)}
+            aria-label="Editar Projeto"
+          >
+            <img src="/pen.png" alt="Editar" className="w-6 h-6" />
+          </button>
+        )}
+      </h1>
         {isOwner && (
           <Button
             type="button"

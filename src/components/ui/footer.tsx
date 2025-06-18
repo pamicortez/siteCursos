@@ -53,7 +53,7 @@ const Footer2 = ({
     title: "Desenvolvedores",
     links: [
       { text: "Alexsami Lopes", url: "https://github.com/alexsami-lopes" },
-      { text: "Cláudia", url: "https://github.com/clsf" },
+      { text: "Cláudia Inês Sales", url: "https://github.com/clsf" },
       { text: "Dermeval Neves", url: "https://github.com/Dermeval" },
       { text: "Filipe Carvalho", url: "https://github.com/ripe-glv" },
       { text: "Leticia Ribeiro", url: "https://github.com/leticiaribeiro7" },
