@@ -139,13 +139,6 @@ export default function Curso() {
     setAulas(updatedAulas);
   };
 
-  // const categoriaOptions = Object.entries(Categoria).map(([key, value]) => ({
-  //   label: value,
-  //   value: key,
-  // }));
-
-
-
 
   const addAula = () => {
     setAulas((prev) => [
@@ -169,7 +162,7 @@ export default function Curso() {
      // Função auxiliar para transformar um File em base64
     const fileToBase64 = (file: File | null) => {
       return new Promise<string | null>((resolve, reject) => {
-        if (!file) return resolve(null);
+        if (!file?.name) return resolve(null);
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => resolve(reader.result as string);
@@ -242,7 +235,6 @@ export default function Curso() {
           cursoId: res.id 
         });
       } else {
-        //alert('Erro ao criar o curso');
         const errorData = await response.json();
         console.error("Erro da API:", errorData);
         setResultDialog({
@@ -335,7 +327,6 @@ export default function Curso() {
           </div>
 
           <div className="grid gap-6 mb-6 md:grid-cols-3">
-
             <div className="grid items-center gap-1.5">
               <Label htmlFor="imagem">Imagem*</Label>
               <Input 
@@ -406,6 +397,10 @@ export default function Curso() {
           <div className="mb-5 flex justify-end"> 
             <Button type="button" onClick={addAula}>+ Adicionar aula</Button>
           </div>
+
+            {aulas.length === 0 && (
+              <p className="text-gray-500">Nenhuma aula adicionada.</p>
+            )}
          
          {aulas.map((aula, index) => (
           <div key={index} className="flex justify-between gap-5 mb-6 md:grid-cols-5">

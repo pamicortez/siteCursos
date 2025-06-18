@@ -1,12 +1,11 @@
 "use client"
 import { Badge } from "@/components/ui/badge"
 import {useSession} from "next-auth/react"
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter, notFound } from 'next/navigation';
 import { Link, TvMinimalPlay, Headphones, Images } from "lucide-react"
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -15,38 +14,24 @@ import {
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
-enum categoria {
-  SaudeEBemEstar = "Saúde e Bem-estar",
-  CienciasBiologicasENaturais = "Ciências Biológicas e Naturais",
-  TecnologiaEComputacao = "Tecnologia e Computação",
-  EngenhariaEProducao = "Engenharia e Produção",
-  CienciasSociaisENegocios = "Ciências Sociais Aplicadas e Negócios",
-  EducacaoEFormacao = "Educação e Formação de Professores",
-  CienciasExatas = "Ciências Exatas",
-  CienciasHumanas = "Ciências Humanas",
-  MeioAmbienteESustentabilidade = "Meio Ambiente e Sustentabilidade",
-  LinguagensELetrasEComunicacao = "Linguagens, Letras e Comunicação",
-  ArtesECultura = "Artes e Cultura",
-  CienciasAgrarias = "Ciências Agrárias",
-  PesquisaEInovacao = "Pesquisa e Inovação",
-  ServicosSociaisEComunitarios = "Serviços Sociais e Comunitários",
-  GestaoEPlanejamento = "Gestão e Planejamento",
-}
-
 
 
 
 export default function DetalhesCurso() {
 
-  const { data: session, status } = useSession();
-  const router = useRouter();
 
   const params = useParams();
   const id = params.id;
 
   const [curso, setCurso] = useState(null); // criar tipo aqui
   const [paginaAtual, setPaginaAtual] = useState(1);
+  const [categories, setCategories] = useState<Category[]>([]);
   const aulasPorPagina = 3;
+
+  interface Category {
+    value: string;
+    label: string;
+  }
 
   useEffect(() => {
     async function loadCurso() {
@@ -54,7 +39,21 @@ export default function DetalhesCurso() {
       const data = await res.json();
       setCurso(data);
     }
+
+    async function loadCategorias() {
+      try {
+        const response = await fetch("/api/enums/categoriaCurso");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar categorias de evento");
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Erro:", error);
+      }
+    }
     loadCurso();
+    loadCategorias();
   }, [id]);
 
   const absoluteLink = (url) => {
@@ -63,46 +62,45 @@ export default function DetalhesCurso() {
       : `https://${url}`;
   }
 
-  if (!curso) return <div></div>;
 
-  const totalPaginas = Math.ceil((curso.aula?.length || 0) / aulasPorPagina);
-  const aulasVisiveis = curso.aula?.slice(
+  const totalPaginas = Math.ceil((curso?.aula?.length || 0) / aulasPorPagina);
+  const aulasVisiveis = curso?.aula?.slice(
     (paginaAtual - 1) * aulasPorPagina,
     paginaAtual * aulasPorPagina
   ) || [];
-
-  console.log(session?.user.id)
-
   
+  const categoriaMapeada = categories.find((category) => category.value == curso?.categoria)
   
   return (
     <div>
-        <div className="flex w-100% h-100 bg-gray-200">
+        <div className="flex flex-col md:flex-row w-100% h-100 bg-gray-200">
+
             
-            <div className="w-1/2">
-                <h1 className="text-5xl font-bold pt-12 pb-10 px-10 text-left">{curso.titulo} </h1>
-                <p className="px-10 text-justify" >{curso.descricao}</p>
-                <div className="flex">
-                    <Badge className="ml-10 mr-2 my-5">{categoria[curso.categoria]}</Badge>
-                </div>
+            <div className="w-1/2 px-10">
+              <h1 className="text-5xl font-bold pt-12 pb-10  text-left">{curso?.titulo} </h1>
+              <p className="text-justify" >{curso?.descricao}</p>
+              <div className="flex">
+                  <Badge className="mr-2 my-5">{categoriaMapeada?.label}</Badge>
+              </div>
+              {/* <div>Bibliografia</div> */}
             </div>
 
-            <div className="w-1/2 flex justify-center items-center">
-              <div className="p-5 min-w-1/2 min-h-1/2 rounded-md border-3 border-[#cac4d0] border-solid">
-                 <p>Instrutor: {curso.usuario.Nome}</p>
-                 <p>Carga Horária: {curso.cargaHoraria}h</p>
-                 <p>Última Atualização: {new Date(curso.updatedAt).toLocaleDateString("pt-BR")}</p>
-              </div>
-            </div>
+        <div className="w-1/2 flex justify-center items-center">
+          <div className="p-5 min-w-1/2 min-h-1/2 rounded-md border-3 border-[#cac4d0] border-solid flex flex-col justify-center items-center">
+            <p><strong>Instrutor:</strong> {curso?.usuario.Nome}</p>
+            <p><strong>Carga Horária:</strong> {curso?.cargaHoraria}h</p>
+            <p><strong>Última Atualização:</strong> {new Date(curso?.updatedAt).toLocaleDateString("pt-BR")}</p>
+          </div>
+        </div>
 
         </div>
         
         <div className="flex flex-col items-center">
           <h1 className="text-5xl font-bold py-9">Materiais</h1>
           <div className="flex items-center hover:cursor-pointer">
-             {curso.linkApostila && (
+             {curso?.linkApostila && (
                 <a
-                  href={curso.linkApostila}
+                  href={curso?.linkApostila}
                   download={`apostila_${curso.titulo}.pdf`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -114,6 +112,10 @@ export default function DetalhesCurso() {
               )}
 
           </div>
+
+          {curso?.aula.length === 0 && (
+              <p className="text-gray-500 mt-10">Nenhuma aula adicionada.</p>
+          )}
 
         <div className="mt-10 mx-20 w-[90%]">
           {aulasVisiveis.map((aula: any, index: any) => (

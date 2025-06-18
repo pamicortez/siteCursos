@@ -160,7 +160,7 @@ export default function Curso() {
      // Função auxiliar para transformar um File em base64
     const fileToBase64 = (file: File | null) => {
       return new Promise<string | null>((resolve, reject) => {
-        if (!file || typeof file === "string") return resolve(null); // se for string é pq ja existe o base64
+        if (!file?.name || typeof file === "string") return resolve(null); // se for string é pq ja existe o base64
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => resolve(reader.result as string);
@@ -171,18 +171,16 @@ export default function Curso() {
     // remove aulas vazias (caso tenha clicado pra add uma nova e nao preencher)
     function removerAulasVazias(aulas: AulaType[]) {
       return aulas.filter((aula) => {
-        return Object.values(aula).every((valor) => {
-          if (typeof valor === "string") {
-            return valor.trim() !== "";
-          }
-          return valor !== null || valor !== undefined;
-        });
-      });
-    }
-
+           return (
+              aula.titulo.trim() !== "" ||
+              aula.linkVideo.trim() !== "" ||
+              aula.linkPdf !== null ||
+              aula.linkPodcast.trim() !== ""
+            );
+    })}
 
     const aulasFiltradas = removerAulasVazias(aulas)
-    console.log(aulasFiltradas)
+
 
   // conversão em base64
     const aulasConvertidas = await Promise.all(
@@ -192,6 +190,7 @@ export default function Curso() {
         if (aula.linkPdf != null) {
           slideBase64 = await fileToBase64(aula.linkPdf);
         }
+
 
         if (!aula.id) { // se nao tiver id é aula nova, monta o obj
           return {
@@ -210,7 +209,27 @@ export default function Curso() {
     if (apostilaFile != null) {
       apostilaBase64 = await fileToBase64(apostilaFile)
     }
+
     
+    const camposObrigatorios = ['titulo', 'metodologia', 'descricao', 'bibliografia', 'cargaHoraria', 'categoria', 'vagas', 'metodoAvaliacao'];
+
+    for (const campo of camposObrigatorios) {
+      if (!curso[campo]) {
+          alert(`O campo "${campo}" é obrigatório.`);
+          return
+      }
+
+
+     if (
+        typeof curso[campo] === 'string'
+          ? curso[campo].trim() === ''
+          : curso[campo] <= 0
+      ) {
+        alert(`O campo "${campo}" é obrigatório.`);
+        return;
+      }
+
+    }
 
     const data = {
       titulo: formData.get("titulo"),
@@ -392,7 +411,7 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="Vagas">Número de Vagas*</Label>
-              <Input type="number" name="vagas" value={curso.vagas ?? ""} onChange={(value) => setCurso((prev) => ({ ...prev, vagas: value }))}/>
+              <Input type="number" name="vagas" value={curso.vagas ?? ""} onChange={(e) => handleInputChange(e, setCurso, "vagas")}/>
             </div>
 
             <div className="grid items-center gap-1.5">
@@ -407,6 +426,10 @@ export default function Curso() {
             <Button type="button" onClick={addAula}>+ Adicionar aula</Button>
           </div>
          
+          {aulas.length === 0 && (
+              <p className="text-gray-500">Nenhuma aula adicionada.</p>
+          )}
+
          {aulas.map((aula, index) => (
           <div key={index} className="flex justify-between gap-5 mb-6 md:grid-cols-5">
             <div className="grid items-center gap-1.5 w-xs">
