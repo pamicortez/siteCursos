@@ -17,15 +17,20 @@ import { useRouter, useParams } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import ImageCropper from "@/components/ui/ImageCropperBase64";
 
-type Collaborator = {
-  name: string;
-  role: string;
-};
 
 type ColaboradorFromAPI = {
   id: number;
   nome: string;
 };
+
+
+interface ProjetoColaborador {
+  id: number;
+  categoria: string;
+  idProjeto: number;
+  idColaborador: number;
+  colaborador: ColaboradorFromAPI;
+}
 
 function ConfirmationModal({ 
   isOpen, 
@@ -84,7 +89,7 @@ export default function Projeto() {
     startDate: '',
     endDate: '',
     category: '',
-    image: '',
+    image: ''
   });
 
   const [collaborators, setCollaborators] = useState<Array<{ name: string; role: string }>>([]);
@@ -187,12 +192,15 @@ export default function Projeto() {
         startDate: data.dataInicio.split('T')[0],
         endDate: data.dataFim ? data.dataFim.split('T')[0] : '',
         category: data.categoria,
-        image: data.imagem,
+        image: data.imagem     
       });
 
-      if (data.colaboradores) {
-        setCollaborators(data.colaboradores);
-      }
+      const mappedCollaborators = data.projetoColaborador.map((colab: ProjetoColaborador) => ({
+        name: colab.colaborador.nome,
+        role: colab.categoria 
+      }));
+
+    setCollaborators(mappedCollaborators);
 
     } catch (error) {
       console.error("Erro ao carregar projeto:", error);
@@ -371,7 +379,7 @@ export default function Projeto() {
         console.error("Erro da API:", errorData);
         setResultDialog({
           title: 'Erro',
-          message: 'Erro ao salvar o projeto, tente novamente mais tarde.',
+          message: 'Erro ao salvar o projeto, tente novamente mais tarde. Erro: ' + errorData,
           isError: true,
           projectId: null
         });
@@ -380,7 +388,7 @@ export default function Projeto() {
       console.error(error);
       setResultDialog({
         title: 'Erro',
-        message: 'Erro ao salvar o projeto, tente novamente mais tarde.',
+        message: 'Erro ao salvar o projeto, tente novamente mais tarde. Erro: ' + error,
         isError: true,
         projectId: null
       });
@@ -420,7 +428,7 @@ export default function Projeto() {
       startDate: '',
       endDate: '',
       category: '',
-      image: '',
+      image: ''
     });
     setCollaborators([{ name: '', role: '' }]);
     setShowCancelDialog(false);
