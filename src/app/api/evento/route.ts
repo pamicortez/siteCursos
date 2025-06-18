@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
-import { Prisma } from '@prisma/client';
+import { Prisma, funcaoProjeto} from '@prisma/client';
 import { tipoParticipacao } from '@prisma/client';
 
 
@@ -127,15 +127,16 @@ export async function POST(request: Request) {
 	  const setParticipacao = new Set(Object.values(tipoParticipacao))
 	  const data: Prisma.EventoCreateInput = await request.json(); // Pega os dados do corpo da requisição
 	  
-	  const { usuarioId, participacao, linkImgVid, ...eventoData } = data as any;
+	  const { dataInicio, dataFim} = data;
+	  const { colaboradores,usuarioId, participacao, linkImgVid, ...eventoData } = data as any;
 
 	  // Validação: usuárioId e funcao são obrigatórios
 	  if (!usuarioId || !participacao) {
 		return NextResponse.json({error: 'Id do usuário e o tipo de participação são obrigatórios'}, {status: 400})
 	  } else if (!setParticipacao.has(participacao)){
 		return NextResponse.json({error: 'Tipo de participação não reconhecido'}, {status: 400})
-	  }else if (!linkImgVid) {
-		return NextResponse.json({error: 'Link da imagem/video do evento é obrigatório'}, {status: 400})
+	  } else if(!linkImgVid){
+		return NextResponse.json({error: 'Imagem é obrigatória'}, {status: 400})
 	  }
   
 	  // Verifica se o usuário existe
@@ -144,10 +145,30 @@ export async function POST(request: Request) {
 		return NextResponse.json({error: 'Usuário não encontrado'}, {status: 404})
 	  }
 
+	// Verificação para garantir que a data de fim não seja anterior à data de início
+	  if (new Date(dataFim) < new Date(dataInicio)) {
+		return NextResponse.json({error: 'O fim do evento é anterior ao início'}, {status: 400});
+	  }
+
 	  const novoEvento = await prisma.evento.create({
 		data:{
-			...eventoData, // Dados do evento que será criado
-		}
+			...eventoData, // Dados do projeto que será criado
+			eventoColaborador: {
+				create: colaboradores.map((colaborador: {categoria: funcaoProjeto, nome: string}) => ({
+					categoria: colaborador.categoria,
+					colaborador: {
+						create: {
+							nome: colaborador.nome,
+						},
+					},
+				})),
+			},
+		},
+		include: {
+			eventoColaborador: {
+				include: {colaborador: true},
+			},
+		},
 	  });
 
 	  // Relação entre o usuário e o evento
@@ -170,6 +191,7 @@ export async function POST(request: Request) {
 	  return NextResponse.json(novoEvento, { status: 201 }); // Retorna o novo evento com status 201
 	} catch (error) {
 	  if (error instanceof Prisma.PrismaClientValidationError){
+		console.error(error.message);
 		return NextResponse.json({error: 'Tipos dos dados incorretos (Ou enum não correspondente)'}, {status: 400})
 	  } 
 	  console.error('Erro ao criar o evento:', error);
@@ -177,36 +199,141 @@ export async function POST(request: Request) {
 	}
   }
 
-  // Método para atualização de um atributo do evento
-  export async function PATCH(request: Request) {
+export async function PATCH(request: Request) {
 	try {
-	  const { id, atributo, novoValor } = await request.json();
-  
-	  // Certificar que todos os dados foram passados
-	  if (!id || !atributo || novoValor === undefined) {
-		return NextResponse.json({ error: "Todos os campos são obrigatórios" }, { status: 400 });
-	  }
-  
+	  const { searchParams } = new URL(request.url);
+	  const id = Number(searchParams.get('id')); // ID do evento
+
+	  const atualizacoes = await request.json();
+	  const colNovos: {nome: string; categoria: funcaoProjeto}[] = atualizacoes.colaboradores || []; 
 	  // Verifica se o evento existe
 		const evento = await prisma.evento.findUnique({ where: { id: id } });
 		if (!evento) {
 			return NextResponse.json({error: 'Evento não encontrado'}, {status: 404})
 		}
 	  // Atributos que NÃO podem ser alterados
-	  const atributosFixos = ["id", "idUsuario"];
+	  const atributosFixos = ["id"];
+
+	  // Verifica se há algum campo proibido na requisição
+	  const camposInvalidos = Object.keys(atualizacoes).filter((chave) =>
+		atributosFixos.includes(chave)
+  	  );
+
+	  if (camposInvalidos.length > 0) {
+		return NextResponse.json(
+			{ error: `Campos não permitidos: ${camposInvalidos.join(", ")}` },
+			{ status: 400 }
+		);
+		}
 	  
-	  if (atributosFixos.includes(atributo)) {
-		return NextResponse.json({ error: "Atributo não pode ser atualizaddo" }, { status: 400 });
-	  }
-  
-	  let valorAtualizado = novoValor;
-  
+	  const {colaboradores, participacao, usuarioId, linkImgVid, imagemId, ...dadosEvento} = atualizacoes;
+
 	  const eventoAtualizado = await prisma.evento.update({
 		where: { id },
-		data: { [atributo]: valorAtualizado },
+		data: dadosEvento,
 	  });
-  
-	  return NextResponse.json(eventoAtualizado, { status: 200 });
+
+	  if (participacao){
+		const eventoUsu = await prisma.eventoUsuario.findFirst({
+			where: {
+				idEvento: id,
+				idUsuario: usuarioId,
+			},
+		});
+
+		if (eventoUsu){
+			await prisma.eventoUsuario.update({
+				where: { id: eventoUsu.id },
+				data: {
+				  tipoParticipacao: participacao,
+				},
+			  });
+		}
+	  }
+
+	  if (linkImgVid){
+			await prisma.imagemEvento.update({
+				where: { idEvento: id,
+						 id: imagemId
+				},
+				data:{
+					link: linkImgVid
+				}
+			})
+	  }
+
+	  if (colaboradores){
+		const colAtuais = await prisma.eventoColaborador.findMany({
+			where: {idEvento: id},
+			include: {colaborador: true},
+		});
+
+		const nomesAtuais = colAtuais.map((projCol) => projCol.colaborador.nome);
+		const nomesNovos = colNovos.map((col) => col.nome);
+
+		const pRemover = colAtuais.filter(
+			(eventCol) => !nomesNovos.includes(eventCol.colaborador.nome)
+		);
+
+		await prisma.eventoColaborador.deleteMany({
+			where: {
+				idEvento: id,
+				idColaborador: {
+					in: pRemover.map((eventCol) => eventCol.idColaborador),
+				},
+			},
+		});
+
+		for (const colab of colNovos){
+			const colExistente = await prisma.colaborador.findFirst({
+				where: {nome: colab.nome},
+			});
+
+			let colId: number;
+			if (colExistente){
+				colId = colExistente.id;
+			} else{
+				const novoCol = await prisma.colaborador.create({
+					data: {nome: colab.nome},
+				});
+				colId = novoCol.id;
+			}
+
+			const assocExist = await prisma.eventoColaborador.findFirst({
+				where: {
+					idEvento: id,
+					idColaborador: colId,
+				},
+			});
+
+			if (!assocExist){
+				await prisma.eventoColaborador.create({
+					data:{
+						idEvento: id,
+						idColaborador: colId,
+						categoria: colab.categoria,
+					},
+				});
+			} else{
+				if (assocExist.categoria !== colab.categoria) {
+					await prisma.eventoColaborador.update({
+					where: { id: assocExist.id },
+					data: { categoria: colab.categoria },
+					});
+				}
+			}
+		}
+	  }
+
+	  const projAtua = await prisma.evento.findUnique({
+		where: {id: id},
+		include: {
+			eventoColaborador: {
+				include: {colaborador: true}
+			}
+		}
+	  })
+	  return NextResponse.json(projAtua, { status: 200 });
   
 	} catch (error) {
 	  console.error(error);
