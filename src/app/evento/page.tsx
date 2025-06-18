@@ -108,7 +108,12 @@ console.log("estado inicial eventoData:", eventoData);
     isError: false,
     eventoId: null as string | null,
   });
-  const [categories, setCategories] = useState<string[]>([]);
+
+  interface Category {
+    value: string;
+    label: string;
+  }
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<ColaboradorFromAPI[]>([]);
   const { data: session, status } = useSession();
@@ -547,8 +552,8 @@ console.log("estado inicial eventoData:", eventoData);
                       <SelectItem value="loading" disabled>Carregando categorias...</SelectItem>
                     ) : (
                       categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
+                        <SelectItem key={category.value} value={category.value}>
+                          {category.label}
                         </SelectItem>
                       ))
                     )}
