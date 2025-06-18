@@ -36,6 +36,7 @@ export default function UserManagement() {
   const [searchTerm, setSearchTerm] = useState<string>('');
 
   // Verifica se está autenticado e se é super
+
   useEffect(() => {
     const fetchUsuario = async () => {
       if (status === 'authenticated' && session?.user?.id) {
@@ -62,7 +63,7 @@ export default function UserManagement() {
     };
 
     fetchUsuario();
-  }, [status, session, router]);
+  }, [status, session, router]); 
 
   useEffect(() => {
     const storedButton = localStorage.getItem('selectedButton');
