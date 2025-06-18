@@ -207,8 +207,6 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
-  console.log("Conteúdo ATUAL do estado 'categories':", categories);
-
   return (
     <>
       <nav

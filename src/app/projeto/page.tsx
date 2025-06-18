@@ -157,16 +157,31 @@ export default function Projeto() {
   }, []);
 
   useEffect(() => {
-    if (status === "loading") return; // espera até o status estar pronto
 
-    if (status !== "authenticated") {
-      router.push("/404"); // ou /home, /login, etc.
-    }
-    if (projectId) {
-      setIsEditMode(true);
-      fetchProjectData(projectId);
-    }
-  }, [projectId]);
+    const intervalId = setInterval(() => {
+      console.log("Verificando status...", status);
+
+      if (status === "loading") {
+        return; // Continua esperando
+      }
+
+      // Se saiu do loading, para o intervalo e toma a ação
+      clearInterval(intervalId);
+
+      if (status !== "authenticated") {
+        router.push("/404"); // Redireciona se não autenticado
+        return;
+      }
+
+      if (projectId) {
+        setIsEditMode(true);
+        fetchProjectData(projectId);
+      }
+    }, 300); 
+    return () => clearInterval(intervalId);
+}, [projectId, status]);
+
+
 
   const fetchProjectData = async (id: string) => {
     try {
