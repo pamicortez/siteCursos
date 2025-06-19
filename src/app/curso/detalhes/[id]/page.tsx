@@ -2,7 +2,7 @@
 import { Badge } from "@/components/ui/badge"
 import {useSession} from "next-auth/react"
 import { useRouter, notFound } from 'next/navigation';
-import { Link, TvMinimalPlay, Headphones, Images } from "lucide-react"
+import { Link, TvMinimalPlay, Headphones, Images, PencilLine } from "lucide-react"
 import {
   Pagination,
   PaginationContent,
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/pagination"
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 
 
@@ -72,114 +73,135 @@ export default function DetalhesCurso() {
   const categoriaMapeada = categories.find((category) => category.value == curso?.categoria)
   
   return (
-    <div>
-        <div className="flex flex-col md:flex-row w-100% h-100 bg-gray-200">
-
-            
-            <div className="w-1/2 px-10">
-              <h1 className="text-5xl font-bold pt-12 pb-10  text-left">{curso?.titulo} </h1>
-              <p className="text-justify" >{curso?.descricao}</p>
-              <div className="flex">
-                  <Badge className="mr-2 my-5">{categoriaMapeada?.label}</Badge>
-              </div>
-              {/* <div>Bibliografia</div> */}
-            </div>
-
-        <div className="w-1/2 flex justify-center items-center">
-          <div className="p-5 min-w-1/2 min-h-1/2 rounded-md border-3 border-[#cac4d0] border-solid flex flex-col justify-center items-center">
-            <p><strong>Instrutor:</strong> {curso?.usuario.Nome}</p>
-            <p><strong>Carga Horária:</strong> {curso?.cargaHoraria}h</p>
-            <p><strong>Última Atualização:</strong> {new Date(curso?.updatedAt).toLocaleDateString("pt-BR")}</p>
-          </div>
+<div>
+  {/* TOPO DO CURSO - CENTRALIZADO E LIMITADO */}
+  <div className="bg-gray-200">
+    <div className="flex flex-col md:flex-row w-full mx-auto px-8 py-10">
+      
+      <div className="w-full md:w-1/2 md:pr-10">
+        <h1 className="text-3xl md:text-5xl font-bold pb-6">{curso?.titulo}</h1>
+        <p className="text-justify">{curso?.descricao}</p>
+        <div className="flex">
+          <Badge className="mr-2 my-5">{categoriaMapeada?.label}</Badge>
         </div>
 
+        <div>
+          <Button asChild size="sm">
+            <a
+              href={curso?.linkInscricao}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+            <PencilLine />
+              Inscreva-se
+            </a>
+          </Button>
+
         </div>
-        
-        <div className="flex flex-col items-center">
-          <h1 className="text-5xl font-bold py-9">Materiais</h1>
-          <div className="flex items-center hover:cursor-pointer">
-             {curso?.linkApostila && (
-                <a
-                  href={curso?.linkApostila}
-                  download={`apostila_${curso.titulo}.pdf`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <Link />
-                  <span className="text-xl font-medium">Apostila</span>
-                </a>
-              )}
+      </div>
 
+      <div className="w-full md:w-1/2 flex justify-center items-start pt-10 md:mt-0">
+        <div className="p-5 rounded-md border-3 border-[#cac4d0] border-solid flex flex-col space-y-2">
+          <p><strong>Instrutor:</strong> {curso?.usuario.Nome}</p>
+          <p><strong>Vagas:</strong> {curso?.vagas}</p>
+          <p><strong>Carga Horária:</strong> {curso?.cargaHoraria}h</p>
+          <p><strong>Método de Avaliação:</strong> {curso?.metodoAvaliacao}</p>
+          <p><strong>Metodologia:</strong> {curso?.metodologia}</p>
+          <p><strong>Última Atualização:</strong> {new Date(curso?.updatedAt).toLocaleDateString("pt-BR")}</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  {/* CONTEÚDO DE MATERIAIS */}
+  <div className="flex flex-col items-center px-4">
+    <h1 className="text-3xl md:text-5xl font-bold py-9 text-center">Materiais</h1>
+
+    <div className="flex items-center hover:cursor-pointer">
+      {curso?.linkApostila && (
+        <a
+          href={curso?.linkApostila}
+          download={`apostila_${curso.titulo}.pdf`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2"
+        >
+          <Link />
+          <span className="text-xl font-medium">Apostila</span>
+        </a>
+      )}
+    </div>
+
+    {curso?.aula.length === 0 && (
+      <p className="text-gray-500 mt-10 text-center">Nenhuma aula adicionada.</p>
+    )}
+
+    <div className="mt-10 w-full md:w-[70%] px-4">
+      {aulasVisiveis.map((aula: any, index: any) => (
+        <div
+          key={index}
+          className="flex flex-col sm:flex-row justify-between p-3 rounded-md border-3 border-[#cac4d0] mb-4"
+        >
+          <p className="font-medium text-xl mb-2 sm:mb-0">{aula.titulo}</p>
+          <div className="flex gap-1 hover:cursor-pointer">
+            {aula.linkVideo && (
+              <a href={absoluteLink(aula.linkVideo)} target="_blank" rel="noopener noreferrer">
+                <TvMinimalPlay />
+              </a>
+            )}
+            {aula.linkPodcast && (
+              <a href={absoluteLink(aula.linkPodcast)} target="_blank" rel="noopener noreferrer">
+                <Headphones />
+              </a>
+            )}
+            {aula.linkPdf && (
+              <a href={aula.linkPdf} target="_blank" rel="noopener noreferrer" download={`${aula.titulo}.pdf`}>
+                <Images />
+              </a>
+            )}
           </div>
+        </div>
+      ))}
+    </div>
 
-          {curso?.aula.length === 0 && (
-              <p className="text-gray-500 mt-10">Nenhuma aula adicionada.</p>
+    {totalPaginas > 1 && (
+      <Pagination className="mt-10 mb-15">
+        <PaginationContent>
+          {paginaAtual > 1 && (
+            <PaginationItem>
+              <PaginationPrevious onClick={() => setPaginaAtual(p => p - 1)} />
+            </PaginationItem>
           )}
 
-        <div className="mt-10 mx-20 w-[90%]">
-          {aulasVisiveis.map((aula: any, index: any) => (
-            <div
-              key={index}
-              className="flex justify-between p-3 rounded-md border-3 border-[#cac4d0] mb-4"
-            >
-              <p className="font-medium text-xl">{aula.titulo}</p>
-              <div className="flex gap-1 hover:cursor-pointer">
-                {aula.linkVideo && (
-                  <a href={absoluteLink(aula.linkVideo)} target="_blank" rel="noopener noreferrer">
-                    <TvMinimalPlay />
-                  </a>
-                )}
-
-                {aula.linkPodcast && (
-                  <a href={absoluteLink(aula.linkPodcast)} target="_blank" rel="noopener noreferrer">
-                    <Headphones />
-                  </a>
-                )}
-
-                {aula.linkPdf && (
-                  <a href={aula.linkPdf} target="_blank" rel="noopener noreferrer" download={`${aula.titulo}.pdf`}>
-                    <Images />
-                  </a>
-                )}
-
-              </div>
-            </div>
+          {[...Array(totalPaginas)].map((_, i) => (
+            <PaginationItem key={i}>
+              <PaginationLink
+                href="#"
+                isActive={i + 1 === paginaAtual}
+                onClick={() => setPaginaAtual(i + 1)}
+              >
+                {i + 1}
+              </PaginationLink>
+            </PaginationItem>
           ))}
-        </div>
 
-        {totalPaginas > 1 && (
-          <Pagination className="mt-10 mb-15">
-            <PaginationContent>
-              {paginaAtual > 1 && (
-                <PaginationItem>
-                  <PaginationPrevious onClick={() => setPaginaAtual(p => p - 1)} />
-                </PaginationItem>
-              )}
+          {paginaAtual < totalPaginas && (
+            <PaginationItem>
+              <PaginationNext onClick={() => setPaginaAtual(p => p + 1)} />
+            </PaginationItem>
+          )}
+        </PaginationContent>
+      </Pagination>
+    )}
 
-              {[...Array(totalPaginas)].map((_, i) => (
-                <PaginationItem key={i}>
-                  <PaginationLink
-                    href="#"
-                    isActive={i + 1 === paginaAtual}
-                    onClick={() => setPaginaAtual(i + 1)}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
-
-              {paginaAtual < totalPaginas && (
-                <PaginationItem>
-                  <PaginationNext onClick={() => setPaginaAtual(p => p + 1)} />
-                </PaginationItem>
-              )}
-            </PaginationContent>
-          </Pagination>
-        )}
-
-        </div>
+    <div className="my-7 w-full md:w-[70%] px-4">
+      <strong>Bibliografia</strong>
+      <p className="text-justify text-sm">{curso?.bibliografia}</p>
     </div>
+  </div>
+</div>
+
   );
 
 }
