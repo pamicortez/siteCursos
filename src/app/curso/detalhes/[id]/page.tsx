@@ -10,11 +10,43 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react"
 
 
+
+export type Curso = {
+  id: number;
+  titulo: string;
+  imagem: string;
+  descricao: string;
+  categoria: string;
+  cargaHoraria: number;
+  linkInscricao: string;
+  vagas: number;
+  bibliografia: string;
+  metodologia: string;
+  metodoAvaliacao: string;
+  linkApostila: string | null;
+  idProjeto: number;
+  idUsuario: number;
+  createdAt: string;
+  updatedAt: string;
+  usuario: {
+    Nome: string
+  },
+  aula: Aula[]
+
+}
+
+type Aula = {
+  id: number,
+  titulo: string,
+  linkPdf: string,
+  linkPodcast: string,
+  linkVideo: string
+}
 
 
 export default function DetalhesCurso() {
@@ -25,7 +57,7 @@ export default function DetalhesCurso() {
   
   const id = params.id;
 
-  const [curso, setCurso] = useState(null); // criar tipo aqui
+  const [curso, setCurso] = useState<Curso | null>(null); // criar tipo aqui
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -74,7 +106,11 @@ useEffect(() => {
     );
   }
 
-  const absoluteLink = (url) => {
+  if (!curso) {
+    return notFound();
+  }
+
+  const absoluteLink = (url: any) => {
     return url.startsWith('http://') || url.startsWith('https://')
       ? url
       : `https://${url}`;
@@ -88,7 +124,7 @@ useEffect(() => {
   ) || [];
 
   const categoriaMapeada = categories.find((category) => category.value == curso?.categoria)
-  const isCourseOwner = curso?.idUsuario == session?.user.id
+  const isCourseOwner = curso?.idUsuario == Number(session?.user.id)
 
   return (
     <div>
@@ -100,7 +136,7 @@ useEffect(() => {
               {isCourseOwner && (
               <button 
                 className="p-0 ml-2 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
-                onClick={() => router.push(`/curso/editar/${curso.id}`)}
+                onClick={() => router.push(`/curso/editar/${curso?.id}`)}
                 aria-label="Editar Curso"
               >
               <img src="/pen.png" alt="Editar" className="w-6 h-6" />
@@ -116,7 +152,7 @@ useEffect(() => {
             <div>
               <Button asChild size="sm">
                 <a
-                  href={curso?.linkInscricao}
+                  href={absoluteLink(curso?.linkInscricao)}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -161,7 +197,7 @@ useEffect(() => {
           )}
         </div>
 
-        {curso?.aula.length === 0 && (
+        {curso.aula.length === 0 && (
           <p className="text-gray-500 mt-10 text-center">Nenhuma aula adicionada.</p>
         )}
 
