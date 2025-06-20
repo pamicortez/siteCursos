@@ -159,8 +159,10 @@ export async function POST(request: Request) {
 	  }
 
 	  // Verificação lógica para garantir que a data de fim não seja anterior à data de início
-	  if (new Date(dataFim) < new Date(dataInicio)) {
-		return NextResponse.json({error: 'O fim do projeto é anterior ao início'}, {status: 400});
+	  if (dataFim){
+		  if (new Date(dataFim) < new Date(dataInicio)) {
+			return NextResponse.json({error: 'O fim do projeto é anterior ao início'}, {status: 400});
+		  }
 	  }
 
 	  const novoProjeto = await prisma.projeto.create({
