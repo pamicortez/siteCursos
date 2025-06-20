@@ -1,7 +1,7 @@
 "use client"
 
-import React, {useState, useEffect} from 'react'
-import {useSession} from "next-auth/react"
+import React, { useState, useEffect } from 'react'
+import { useSession } from "next-auth/react"
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,25 +28,6 @@ type AulaType = {
   podcast: string;
 };
 
-// enum Categoria {
-//   SaudeEBemEstar = "Saúde e Bem-estar",
-//   CienciasBiologicasENaturais = "Ciências Biológicas e Naturais",
-//   TecnologiaEComputacao = "Tecnologia e Computação",
-//   EngenhariaEProducao = "Engenharia e Produção",
-//   CienciasSociaisENegocios = "Ciências Sociais Aplicadas e Negócios",
-//   EducacaoEFormacao = "Educação e Formação de Professores",
-//   CienciasExatas = "Ciências Exatas",
-//   CienciasHumanas = "Ciências Humanas",
-//   MeioAmbienteESustentabilidade = "Meio Ambiente e Sustentabilidade",
-//   LinguagensLetrasEComunicacao = "Linguagens, Letras e Comunicação",
-//   ArtesECultura = "Artes e Cultura",
-//   CienciasAgrarias = "Ciências Agrárias",
-//   PesquisaEInovacao = "Pesquisa e Inovação",
-//   ServicosSociaisEComunitarios = "Serviços Sociais e Comunitários",
-//   GestaoEPlanejamento = "Gestão e Planejamento",
-// }
-
-
 
 export default function Curso() {
 
@@ -70,7 +51,7 @@ export default function Curso() {
     cursoId: null as string | null,
   });
   const [showResultDialog, setShowResultDialog] = useState(false);
-  
+
 
 
   if (!idProjeto) {
@@ -85,20 +66,20 @@ export default function Curso() {
     }
 
     async function loadProjeto() {
-    
-        try {
-          const res = await fetch(`/api/projeto?id=${idProjeto}`); 
-          if (!res.ok) {
-            throw new Error('Falha ao carregar projeto');
-          }
-          const data = await res.json();
-          setProjeto(data);
-          console.log("Dados do projeto carregados:", data);
-        } catch (error) {
-          console.error("Erro ao carregar projeto:", error);
-        } finally {
-          setLoadingInitial(false); // Marca o carregamento inicial como concluído
+
+      try {
+        const res = await fetch(`/api/projeto?id=${idProjeto}`);
+        if (!res.ok) {
+          throw new Error('Falha ao carregar projeto');
         }
+        const data = await res.json();
+        setProjeto(data);
+        console.log("Dados do projeto carregados:", data);
+      } catch (error) {
+        console.error("Erro ao carregar projeto:", error);
+      } finally {
+        setLoadingInitial(false); // Marca o carregamento inicial como concluído
+      }
       console.log(projeto)
     }
 
@@ -114,7 +95,7 @@ export default function Curso() {
         console.error("Erro:", error);
       }
     };
-  
+
     loadCategories();
 
     loadProjeto()
@@ -126,9 +107,9 @@ export default function Curso() {
 
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
 
-  const [aulas, setAulas] = useState<AulaType[]>([{titulo: "", video: "", slide: null, podcast: "" }]);
+  const [aulas, setAulas] = useState<AulaType[]>([{ titulo: "", video: "", slide: null, podcast: "" }]);
   const [showImageCropper, setShowImageCropper] = useState(false);
-  
+
 
   const handleAulasInputChange = (index: number, field: keyof AulaType, value: string | File | null) => {
     const updatedAulas = [...aulas];
@@ -143,7 +124,7 @@ export default function Curso() {
   const addAula = () => {
     setAulas((prev) => [
       ...prev,
-      {titulo: "", video: "", slide: null, podcast: "" }
+      { titulo: "", video: "", slide: null, podcast: "" }
     ]);
   };
 
@@ -159,7 +140,7 @@ export default function Curso() {
     const formData = new FormData(form);
 
 
-     // Função auxiliar para transformar um File em base64
+    // Função auxiliar para transformar um File em base64
     const fileToBase64 = (file: File | null) => {
       return new Promise<string | null>((resolve, reject) => {
         if (!file?.name) return resolve(null);
@@ -173,13 +154,14 @@ export default function Curso() {
     // remove aulas vazias (caso tenha clicado pra add uma nova e nao preencher)
     function removerAulasVazias(aulas: AulaType[]) {
       return aulas.filter((aula) => {
-           return (
-              aula.titulo.trim() !== "" ||
-              aula.video.trim() !== "" ||
-              aula.slide !== null ||
-              aula.podcast.trim() !== ""
-            );
-    })}
+        return (
+          aula.titulo.trim() !== "" ||
+          aula.video.trim() !== "" ||
+          aula.slide !== null ||
+          aula.podcast.trim() !== ""
+        );
+      })
+    }
 
     const aulasFiltradas = removerAulasVazias(aulas)
 
@@ -191,14 +173,46 @@ export default function Curso() {
           linkVideo: aula.video,
           linkPdf: slideBase64,
           linkPodcast: aula.podcast
-          };
-        })
+        };
+      })
     );
 
     const apostilaFile = formData.get("apostila") as File | null;
 
     // Converte pra string base64
     const apostilaBase64 = await fileToBase64(apostilaFile)
+
+    // Verifica se os campos obrigatorios foram preenchidos
+    const camposObrigatorios = ['titulo', 'metodologia', 'inscricao', 'descricao', 'bibliografia', 'cargaHoraria', 'categoria', 'vagas', 'avaliacao'];
+    const faltantes = [];
+
+    for (const campo of camposObrigatorios) {
+      const valorCampo = formData.get(campo);
+
+      // Checa se algum campo é undefined, null, string vazia
+      if (
+        valorCampo === undefined ||
+        valorCampo === null ||
+        (typeof valorCampo === 'string' && valorCampo.trim() === '')
+      ) {
+        faltantes.push(campo);
+      }
+    }
+
+    if (!imagemBase64) {
+      faltantes.push('imagem')
+    }
+
+    if (faltantes.length > 0) {
+      setResultDialog({
+        title: 'Erro!',
+        message: `Os seguintes campos são obrigatórios e precisam ser preenchidos: ${faltantes.join(', ')}.`,
+        isError: true,
+        cursoId: null
+      });
+      setShowResultDialog(true)
+      return
+    }
 
     const data = {
       titulo: formData.get("titulo"),
@@ -232,7 +246,7 @@ export default function Curso() {
           title: 'Sucesso!',
           message: 'Curso criado com sucesso.',
           isError: false,
-          cursoId: res.id 
+          cursoId: res.id
         });
       } else {
         const errorData = await response.json();
@@ -276,7 +290,7 @@ export default function Curso() {
   const isProjectOwner = projeto?.projetoUsuario?.some(
     (user: any) => Number(user.idUsuario) === Number(session?.user?.id)
   );
-  
+
   if (!isProjectOwner) {
     return (
       <div className="text-center py-20">
@@ -286,51 +300,51 @@ export default function Curso() {
       </div>
     );
   }
-  
+
 
   return (
     <div>
       <form onSubmit={handleSubmit}>
-      <div className="px-20 py-12">
-        <h1 className="text-3xl font-bold mb-12 text-center">Criar Curso</h1>
+        <div className="px-20 py-12">
+          <h1 className="text-3xl font-bold mb-12 text-center">Criar Curso</h1>
           <div className="grid gap-6 mb-6 md:grid-cols-3">
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="titulo">Título*</Label>
-              <Input type="text" name="titulo"/>
+              <Input type="text" name="titulo" />
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="metodologia">Metodologia*</Label>
-              <Input type="text" name="metodologia"/>
+              <Input type="text" name="metodologia" />
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="inscricao">Link de Inscrição*</Label>
-              <Input type="text" name="inscricao"/>
+              <Input type="text" name="inscricao" />
             </div>
 
           </div>
 
           <div className="grid gap-6 mb-6 md:grid-cols-2">
 
-              <div className="grid w-full gap-1.5">
-                <Label htmlFor="message">Descrição*</Label>
-                <Textarea name="descricao" />
-              </div>
+            <div className="grid w-full gap-1.5">
+              <Label htmlFor="message">Descrição*</Label>
+              <Textarea name="descricao" />
+            </div>
 
-              <div className="grid w-full gap-1.5">
-                <Label htmlFor="bibliografia">Bibliografia*</Label>
-                <Textarea  name="bibliografia" />
-              </div>
+            <div className="grid w-full gap-1.5">
+              <Label htmlFor="bibliografia">Bibliografia*</Label>
+              <Textarea name="bibliografia" />
+            </div>
 
           </div>
 
           <div className="grid gap-6 mb-6 md:grid-cols-3">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="imagem">Imagem*</Label>
-              <Input 
-                type="file" 
+              <Input
+                type="file"
                 accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
@@ -343,7 +357,7 @@ export default function Curso() {
                     };
                     reader.readAsDataURL(file); // Converte para base64
                   }
-                }} 
+                }}
               />
             </div>
 
@@ -353,21 +367,21 @@ export default function Curso() {
             </div>
 
             <div>
-                <label className="block mb-2 text-sm font-medium text-gray-900">Categoria*</label>
-                <Select name="categoria">
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Escolha..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {categories.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+              <label className="block mb-2 text-sm font-medium text-gray-900">Categoria*</label>
+              <Select name="categoria">
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Escolha..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {categories.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
 
             </div>
 
@@ -387,58 +401,58 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="avaliacao">Método de Avaliação*</Label>
-              <Input type="text" name="avaliacao"/>
+              <Input type="text" name="avaliacao" />
             </div>
 
           </div>
 
 
           <h1 className="text-3xl font-bold mb-3 mt-20 text-center">Aulas</h1>
-          <div className="mb-5 flex justify-end"> 
+          <div className="mb-5 flex justify-end">
             <Button type="button" onClick={addAula}>+ Adicionar aula</Button>
           </div>
 
-            {aulas.length === 0 && (
-              <p className="text-gray-500">Nenhuma aula adicionada.</p>
-            )}
-         
-         {aulas.map((aula, index) => (
-          <div key={index} className="flex justify-between gap-5 mb-6 md:grid-cols-5">
-            <div className="grid items-center gap-1.5 w-xs">
-              <Label htmlFor="titulo">Título</Label>
-              <Input type="text" value={aula.titulo} onChange={(e) => handleAulasInputChange(index, 'titulo', e.target.value)}></Input>
-            </div>
+          {aulas.length === 0 && (
+            <p className="text-gray-500">Nenhuma aula adicionada.</p>
+          )}
 
-            <div className="grid items-center gap-1.5 w-xs">
-              <Label htmlFor="video">Link do Vídeo</Label>
-              <Input type="text" value={aula.video} onChange={(e) => handleAulasInputChange(index, 'video', e.target.value)}></Input>
-            </div>
+          {aulas.map((aula, index) => (
+            <div key={index} className="flex justify-between gap-5 mb-6 md:grid-cols-5">
+              <div className="grid items-center gap-1.5 w-xs">
+                <Label htmlFor="titulo">Título</Label>
+                <Input type="text" value={aula.titulo} onChange={(e) => handleAulasInputChange(index, 'titulo', e.target.value)}></Input>
+              </div>
 
-            <div className="grid items-center gap-1.5 w-xs">
-              <Label htmlFor="slide">Slide</Label>
-              <Input type="file" onChange={(e) => handleAulasInputChange(index, 'slide', e.target.files?.[0] || null)}></Input>
-            </div>
+              <div className="grid items-center gap-1.5 w-xs">
+                <Label htmlFor="video">Link do Vídeo</Label>
+                <Input type="text" value={aula.video} onChange={(e) => handleAulasInputChange(index, 'video', e.target.value)}></Input>
+              </div>
 
-            <div className="grid items-center gap-1.5 w-xs">
-              <Label htmlFor="podcast">Link do Podcast</Label>
-              <Input type="text" value={aula.podcast} onChange={(e) => handleAulasInputChange(index, 'podcast', e.target.value)}></Input>
-            </div>
-            <div className="grid items-center mt-6 w-10">
-              <Button
-                type="button"
-                onClick={() => removeAula(index)}
-                className="hover:cursor-pointer p-2"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        ))}
+              <div className="grid items-center gap-1.5 w-xs">
+                <Label htmlFor="slide">Slide</Label>
+                <Input type="file" onChange={(e) => handleAulasInputChange(index, 'slide', e.target.files?.[0] || null)}></Input>
+              </div>
 
-        <div className='justify-center items-center flex'><Button className='mt-8' type="submit">Salvar</Button></div>
-      
-      </div>
-      
+              <div className="grid items-center gap-1.5 w-xs">
+                <Label htmlFor="podcast">Link do Podcast</Label>
+                <Input type="text" value={aula.podcast} onChange={(e) => handleAulasInputChange(index, 'podcast', e.target.value)}></Input>
+              </div>
+              <div className="grid items-center mt-6 w-10">
+                <Button
+                  type="button"
+                  onClick={() => removeAula(index)}
+                  className="p-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          <div className='justify-center items-center flex'><Button className='mt-8' type="submit">Salvar</Button></div>
+
+        </div>
+
       </form>
 
       <ConfirmationModal
@@ -452,31 +466,31 @@ export default function Curso() {
 
 
       {/* Modal do Image Cropper */}
-          {showImageCropper && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-semibold">Ajustar Imagem</h3>
-                    <button
-                      onClick={() => setShowImageCropper(false)}
-                      className="text-gray-400 hover:text-gray-600 text-2xl"
-                    >
-                      ×
-                    </button>
-                  </div>
-            <ImageCropper
+      {showImageCropper && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">Ajustar Imagem</h3>
+                <button
+                  onClick={() => setShowImageCropper(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              <ImageCropper
                 imageSrc={imagemBase64} // imagem original
                 onUploadSuccess={(base64) => {
                   setImagemBase64(base64);
                   setShowImageCropper(false);
                 }}
-            />
+              />
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </div>
-    
+
   );
 }
