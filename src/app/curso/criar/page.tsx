@@ -182,37 +182,6 @@ export default function Curso() {
     // Converte pra string base64
     const apostilaBase64 = await fileToBase64(apostilaFile)
 
-    // Verifica se os campos obrigatorios foram preenchidos
-    const camposObrigatorios = ['titulo', 'metodologia', 'inscricao', 'descricao', 'bibliografia', 'cargaHoraria', 'categoria', 'vagas', 'avaliacao'];
-    const faltantes = [];
-
-    for (const campo of camposObrigatorios) {
-      const valorCampo = formData.get(campo);
-
-      // Checa se algum campo é undefined, null, string vazia
-      if (
-        valorCampo === undefined ||
-        valorCampo === null ||
-        (typeof valorCampo === 'string' && valorCampo.trim() === '')
-      ) {
-        faltantes.push(campo);
-      }
-    }
-
-    if (!imagemBase64) {
-      faltantes.push('imagem')
-    }
-
-    if (faltantes.length > 0) {
-      setResultDialog({
-        title: 'Erro!',
-        message: `Os seguintes campos são obrigatórios e precisam ser preenchidos: ${faltantes.join(', ')}.`,
-        isError: true,
-        cursoId: null
-      });
-      setShowResultDialog(true)
-      return
-    }
 
     const data = {
       titulo: formData.get("titulo"),
@@ -311,17 +280,17 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="titulo">Título*</Label>
-              <Input type="text" name="titulo" />
+              <Input type="text" name="titulo" required/>
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="metodologia">Metodologia*</Label>
-              <Input type="text" name="metodologia" />
+              <Input type="text" name="metodologia" required/>
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="inscricao">Link de Inscrição*</Label>
-              <Input type="text" name="inscricao" />
+              <Input type="text" name="inscricao" required/>
             </div>
 
           </div>
@@ -330,12 +299,12 @@ export default function Curso() {
 
             <div className="grid w-full gap-1.5">
               <Label htmlFor="message">Descrição*</Label>
-              <Textarea name="descricao" />
+              <Textarea name="descricao" required/>
             </div>
 
             <div className="grid w-full gap-1.5">
               <Label htmlFor="bibliografia">Bibliografia*</Label>
-              <Textarea name="bibliografia" />
+              <Textarea name="bibliografia" required/>
             </div>
 
           </div>
@@ -363,12 +332,12 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="Carga horaria">Carga Horária*</Label>
-              <Input type="number" name="cargaHoraria"></Input>
+              <Input type="number" name="cargaHoraria" required></Input>
             </div>
 
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-900">Categoria*</label>
-              <Select name="categoria">
+              <Select name="categoria" required>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Escolha..." />
                 </SelectTrigger>
@@ -396,12 +365,12 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="Vagas">Número de Vagas*</Label>
-              <Input type="number" name="vagas"></Input>
+              <Input type="number" name="vagas" required></Input>
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="avaliacao">Método de Avaliação*</Label>
-              <Input type="text" name="avaliacao" />
+              <Input type="text" name="avaliacao" required />
             </div>
 
           </div>

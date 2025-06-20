@@ -1,6 +1,6 @@
 "use client"
 import { Badge } from "@/components/ui/badge"
-import { Link, TvMinimalPlay, Headphones, Images, PencilLine } from "lucide-react"
+import { Link, TvMinimalPlay, Headphones, Images, PencilLine, Pencil } from "lucide-react"
 import {
   Pagination,
   PaginationContent,
@@ -10,16 +10,19 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination"
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useSession } from "next-auth/react"
 
 
 
 
 export default function DetalhesCurso() {
 
-
+  const { data: session, status } = useSession();
   const params = useParams();
+  const router = useRouter();
+  
   const id = params.id;
 
   const [curso, setCurso] = useState(null); // criar tipo aqui
@@ -85,6 +88,7 @@ useEffect(() => {
   ) || [];
 
   const categoriaMapeada = categories.find((category) => category.value == curso?.categoria)
+  const isCourseOwner = curso?.idUsuario == session?.user.id
 
   return (
     <div>
@@ -92,7 +96,18 @@ useEffect(() => {
         <div className="flex flex-col md:flex-row w-full mx-auto px-8 py-10">
 
           <div className="w-full md:w-1/2 md:pr-10">
-            <h1 className="text-3xl md:text-5xl font-bold pb-6">{curso?.titulo}</h1>
+            <h1 className="text-3xl md:text-5xl font-bold pb-6">{curso?.titulo}
+              {isCourseOwner && (
+              <button 
+                className="p-0 ml-2 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
+                onClick={() => router.push(`/curso/editar/${curso.id}`)}
+                aria-label="Editar Curso"
+              >
+              <img src="/pen.png" alt="Editar" className="w-6 h-6" />
+            </button>
+        )}
+            </h1>
+            
             <p className="text-justify">{curso?.descricao}</p>
             <div className="flex">
               <Badge className="mr-2 my-5">{categoriaMapeada?.label}</Badge>

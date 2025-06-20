@@ -197,36 +197,6 @@ export default function Curso() {
       apostilaBase64 = await fileToBase64(apostilaFile)
     }
 
-
-    // Verifica se os campos obrigatorios foram preenchidos
-    const camposObrigatorios = ['titulo', 'metodologia', 'descricao', 'inscricao', 'bibliografia', 'cargaHoraria', 'categoria', 'vagas', 'metodoAvaliacao'];
-    const faltantes = [];
-
-    for (const campo of camposObrigatorios) {
-      const valorCampo = formData.get(campo);
-
-      // Checa se algum campo é undefined, null, string vazia
-      if (
-        valorCampo === undefined ||
-        valorCampo === null ||
-        (typeof valorCampo === 'string' && valorCampo.trim() === '')
-      ) {
-        faltantes.push(campo);
-      }
-    }
-
-    if (faltantes.length > 0) {
-
-      setResultDialog({
-        title: 'Erro!',
-        message: `Os seguintes campos são obrigatórios e precisam ser preenchidos: ${faltantes.join(', ')}.`,
-        isError: true,
-        cursoId: null
-      });
-      setShowResultDialog(true)
-      return
-    }
-
     const data = {
       titulo: formData.get("titulo"),
       metodologia: formData.get("metodologia"),
@@ -254,7 +224,6 @@ export default function Curso() {
       });
 
       if (response.ok) {
-        //alert('Curso editado com sucesso!');
         const res = await response.json();
         setResultDialog({
           title: 'Sucesso!',
@@ -263,7 +232,6 @@ export default function Curso() {
           cursoId: res.id
         });
       } else {
-        //alert('Erro ao editar o curso');
         const errorData = await response.json();
         console.error("Erro da API:", errorData);
         setResultDialog({
@@ -323,17 +291,17 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="titulo">Título*</Label>
-              <Input type="text" name="titulo" value={curso.titulo ?? ""} onChange={(e) => handleInputChange(e, setCurso, "titulo")} />
+              <Input required type="text" name="titulo" value={curso.titulo ?? ""} onChange={(e) => handleInputChange(e, setCurso, "titulo")} />
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="metodologia">Metodologia*</Label>
-              <Input type="text" name="metodologia" value={curso.metodologia ?? ""} onChange={(e) => handleInputChange(e, setCurso, "metodologia")} />
+              <Input required type="text" name="metodologia" value={curso.metodologia ?? ""} onChange={(e) => handleInputChange(e, setCurso, "metodologia")} />
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="inscricao">Link de Inscrição*</Label>
-              <Input type="text" name="inscricao" value={curso.linkInscricao ?? ""} onChange={(e) => handleInputChange(e, setCurso, "linkInscricao")} />
+              <Input required type="text" name="inscricao" value={curso.linkInscricao ?? ""} onChange={(e) => handleInputChange(e, setCurso, "linkInscricao")} />
             </div>
 
           </div>
@@ -342,12 +310,12 @@ export default function Curso() {
 
             <div className="grid w-full gap-1.5">
               <Label htmlFor="message">Descrição*</Label>
-              <Textarea placeholder="" name="descricao" value={curso.descricao ?? ""} onChange={(e) => handleInputChange(e, setCurso, "descricao")} />
+              <Textarea required placeholder="" name="descricao" value={curso.descricao ?? ""} onChange={(e) => handleInputChange(e, setCurso, "descricao")} />
             </div>
 
             <div className="grid w-full gap-1.5">
               <Label htmlFor="bibliografia">Bibliografia*</Label>
-              <Textarea placeholder="" name="bibliografia" value={curso.bibliografia ?? ""} onChange={(e) => handleInputChange(e, setCurso, "bibliografia")} />
+              <Textarea required placeholder="" name="bibliografia" value={curso.bibliografia ?? ""} onChange={(e) => handleInputChange(e, setCurso, "bibliografia")} />
             </div>
 
           </div>
@@ -376,12 +344,12 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="Carga horaria">Carga Horária*</Label>
-              <Input type="number" name="cargaHoraria" value={curso.cargaHoraria ?? ""} onChange={(e) => handleInputChange(e, setCurso, "cargaHoraria")} />
+              <Input required type="number" name="cargaHoraria" value={curso.cargaHoraria ?? ""} onChange={(e) => handleInputChange(e, setCurso, "cargaHoraria")} />
             </div>
 
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-900">Categoria*</label>
-              <Select name="categoria" value={curso.categoria ?? ""} onValueChange={(value) => setCurso((prev) => ({ ...prev, categoria: value }))}>
+              <Select required name="categoria" value={curso.categoria ?? ""} onValueChange={(value) => setCurso((prev) => ({ ...prev, categoria: value }))}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Escolha..." />
                 </SelectTrigger>
@@ -408,12 +376,12 @@ export default function Curso() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="Vagas">Número de Vagas*</Label>
-              <Input type="number" name="vagas" value={curso.vagas ?? ""} onChange={(e) => handleInputChange(e, setCurso, "vagas")} />
+              <Input required type="number" name="vagas" value={curso.vagas ?? ""} onChange={(e) => handleInputChange(e, setCurso, "vagas")} />
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="avaliacao">Metodo de Avaliação*</Label>
-              <Input type="text" name="avaliacao" value={curso.metodoAvaliacao ?? ""} onChange={(e) => handleInputChange(e, setCurso, "metodoAvaliacao")} />
+              <Input required type="text" name="avaliacao" value={curso.metodoAvaliacao ?? ""} onChange={(e) => handleInputChange(e, setCurso, "metodoAvaliacao")} />
             </div>
           </div>
 
@@ -479,5 +447,3 @@ export default function Curso() {
 
   );
 }
-
-//image cropper
