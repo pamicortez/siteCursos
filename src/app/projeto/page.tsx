@@ -360,12 +360,12 @@ export default function Projeto() {
       dataInicio: new Date(projectData.startDate).toISOString(),
       dataFim: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
       funcao: cargo,
-      ...(validatedCollaborators.length > 0 && {
-        colaboradores: validatedCollaborators.map(colaborador => ({
+      colaboradores: validatedCollaborators.length > 0
+      ? validatedCollaborators.map(colaborador => ({
           categoria: colaborador.role,
           nome: colaborador.name.trim()
         }))
-      }),
+      : [],
       ...(isEditMode ? {} : { usuarioId:   Number(session?.user?.id) })
     };
     

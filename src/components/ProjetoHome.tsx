@@ -270,7 +270,9 @@ const ProjetoHome: React.FC<ProjetoHomeProps> = ({ idOverride }) => {
           </div>
           <div>
             <p className="text-lg">
-              <strong>Data de Finalização:</strong> {new Date(projeto.dataFim).toLocaleDateString()}
+              <strong>Data de Finalização:</strong>{projeto.dataFim
+                  ? new Date(projeto.dataFim).toLocaleDateString()
+                  : ' Sem data de finalização determinada'}
             </p>
           </div>
         </div>
