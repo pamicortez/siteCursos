@@ -192,7 +192,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
             <h5 className="text-lg font-semibold line-clamp-1 flex-1 mr-2 overflow-hidden">{titulo}</h5>
             {tipoParticipacao && (
               <span className={cn(
-                "px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0",
+                "absolute top-29 left-1/2 transform -translate-x-1/2 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0",
                 getParticipacaoBadgeColor(tipoParticipacao)
               )}>
                 {tipoParticipacao}

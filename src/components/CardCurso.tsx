@@ -135,41 +135,41 @@ const CardCurso: React.FC<CardCursoProps> = ({
   // Função para obter a cor do badge baseado na categoria
   const getCategoriaBadgeColor = (categoria: string) => {
     switch (categoria) {
-      case "LinguagensLetrasEComunicacao":
+      case "Linguagens, Letras e Comunicação":
         return "bg-blue-100 text-blue-800"
-      case "ArtesECultura":
+      case "Artes e Cultura":
         return "bg-purple-100 text-purple-800"
-      case "CienciasAgrarias":
+      case "Ciências Agrárias":
         return "bg-green-100 text-green-800"
-      case "PesquisaEInovacao":
+      case "Pesquisa e Inovação":
         return "bg-violet-100 text-violet-800"
-      case "ServicosSociasEComunitarios":
+      case "Serviços Sociais e Comunitários":
         return "bg-pink-100 text-pink-800"
-      case "GestaoEPlanejamento":
+      case "Gestão e Planejamento":
         return "bg-slate-100 text-slate-800"
-      case "CienciasSociaisAplicadasANegocios":
+      case "Ciências Sociais Aplicadas a Negócios":
         return "bg-indigo-100 text-indigo-800"
-      case "ComunicacaoEInformacao":
+      case "Comunicação e Informação":
         return "bg-cyan-100 text-cyan-800"
-      case "CienciasBiologicasENaturais":
+      case "Ciências Biológicas e Naturais":
         return "bg-emerald-100 text-emerald-800"
-      case "EngenhariaEProducao":
+      case "Engenharia e Produção":
         return "bg-orange-100 text-orange-800"
-      case "TecnologiaEComputacao":
+      case "Tecnologia e Computação":
         return "bg-violet-100 text-violet-800"
-      case "ProducaoEConstrucao":
+      case "Produção e Construção":
         return "bg-amber-100 text-amber-800"
-      case "SaudeEBemEstar":
+      case "Saúde e Bem-Estar":
         return "bg-red-100 text-red-800"
-      case "EducacaoEFormacaoDeProfessores":
+      case "Educação e Formação de Professores":
         return "bg-yellow-100 text-yellow-800"
-      case "NegociosAdministracaoEDireito":
+      case "Negócios, Administração e Direito":
         return "bg-stone-100 text-stone-800"
-      case "CienciasExatas":
+      case "Ciências Exatas":
         return "bg-indigo-100 text-indigo-800"
-      case "CienciasHumanas":
+      case "Ciências Humanas":
         return "bg-rose-100 text-rose-800"
-      case "MeioAmbienteESustentabilidade":
+      case "Meio Ambiente e Sustentabilidade":
         return "bg-teal-100 text-teal-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -246,7 +246,7 @@ const CardCurso: React.FC<CardCursoProps> = ({
 
         <div className="p-4">
           {/* Título */}
-          <h5 className="text-xl font-semibold mb-2 line-clamp-2">{titulo}</h5>
+          <h5 className="text-xl font-semibold mb-2 line-clamp-2 min-h-12">{titulo}</h5>
 
           {/* Categoria */}
           <div className="mb-2">
@@ -262,14 +262,14 @@ const CardCurso: React.FC<CardCursoProps> = ({
           </div>
 
           {/* Descrição */}
-          <p className="text-base text-gray-700 mb-2 line-clamp-3">{descricao}</p>
+          <p className="text-base text-gray-700 mb-6 line-clamp-3">{descricao}</p>
 
           {/* Carga horária e vagas */}
           <div className="flex justify-between items-center mb-3">
-            <p className="text-sm text-gray-500">{cargaHoraria}h</p>
+            <p className="absolute bottom-3 left-3 text-sm text-gray-500">{cargaHoraria}h</p>
             <span
               className={cn(
-                "px-2 py-1 rounded-full text-xs font-medium",
+                "absolute bottom-3 right-3 px-2 py-1 rounded-full text-xs font-medium",
                 hasVagas ? "bg-gray-100 text-gray-800" : "bg-red-100 text-red-800"
               )}
             >

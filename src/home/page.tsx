@@ -23,6 +23,9 @@ interface Projeto {
   categoria: string
   dataInicio: string
   dataFim: string
+  maxCaracteres: number
+  bottomDate: number
+  descricaoLinhas: number
   projetoUsuario?: Array<{
     funcao: string
     idUsuario: number
@@ -54,12 +57,18 @@ interface Evento {
   }>
 }
 
+interface Category {
+  value: string;
+  label: string;
+}
+
 const HomePage: React.FC = () => {
   const [linhas, setLinhas] = useState(2)
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [projetos, setProjetos] = useState<Projeto[]>([])
   const [eventos, setEventos] = useState<Evento[]>([])
   const [cursos, setCursos] = useState<Curso[]>([])
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -113,13 +122,21 @@ const HomePage: React.FC = () => {
 
         // Buscar cursos
         try {
-          const cursosResponse = await fetch("/api/curso")
-          if (cursosResponse.ok) {
-            const cursosData = await cursosResponse.json()
-            setCursos(Array.isArray(cursosData) ? cursosData : [])
-          } else {
+          // Buscar cursos e categorias em paralelo
+          const [cursosResponse, categoriesResponse] = await Promise.all([
+            fetch('/api/curso'),
+            fetch('/api/enums/categoriaCurso')
+          ]);
+
+          if (!cursosResponse.ok || !categoriesResponse.ok) {
             console.error("Erro ao buscar cursos:", cursosResponse.status)
           }
+
+          const cursosData = await cursosResponse.json();
+          const categoriesData = await categoriesResponse.json();
+
+          setCursos(cursosData);
+          setCategories(categoriesData);
         } catch (err) {
           console.error("Erro ao buscar cursos:", err)
         }
@@ -152,6 +169,12 @@ const HomePage: React.FC = () => {
 
     fetchData()
   }, [])
+
+    // Função para obter o label da categoria
+    const getCategoriaLabel = (categoriaValue: string) => {
+      const categoria = categories.find(cat => cat.value === categoriaValue);
+      return categoria?.label || categoriaValue;
+    };
 
   if (loading) {
     return (
@@ -212,11 +235,14 @@ const HomePage: React.FC = () => {
                 imagem={projeto.imagem || "/default-projeto.png"}
                 titulo={projeto.titulo}
                 descricao={projeto.descricao}
-                categoria={projeto.categoria}
+                categoria={getCategoriaLabel(projeto.categoria)} // Passa o label formatado
                 dataInicio={projeto.dataInicio}
                 dataFim={projeto.dataFim}
                 isOwner={false}
                 largura="17rem"
+                maxCaracteres={21}
+                bottomDate={"bottom-5"}
+                descricaoLinhas={"line-clamp-3"}
               />
             ))}
           </Carrossel>
@@ -238,7 +264,7 @@ const HomePage: React.FC = () => {
                 imagem={curso.imagem || "/default-curso.png"}
                 titulo={curso.titulo}
                 descricao={curso.descricao}
-                categoria={curso.categoria}
+                categoria={getCategoriaLabel(curso.categoria)} // Passa o label formatado
                 vagas={curso.vagas}
                 linkInscricao={curso.linkInscricao}
                 cargaHoraria={curso.cargaHoraria || 0}

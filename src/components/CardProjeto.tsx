@@ -17,8 +17,10 @@ interface CardProjetoProps {
   isOwner: boolean
   funcaoUsuario?: "Coordenador" | "Colaborador" | "Bolsista" | "Voluntário" | "Nenhuma"
   onProjetoDeleted?: () => void
-  maxCaracteres?: number // Opcional, padrão será 74
-  largura?: string;
+  maxCaracteres?: number // Opcional, padrão será 14
+  bottomDate?: string
+  largura?: string
+  descricaoLinhas?: string;
 }
 
 const CardProjeto: React.FC<CardProjetoProps> = ({
@@ -32,8 +34,10 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
   isOwner,
   funcaoUsuario,
   onProjetoDeleted,
-  maxCaracteres = 74,
-  largura = "14rem"
+  maxCaracteres = 14,
+  largura = "14rem",
+  bottomDate = "bottom-11",
+  descricaoLinhas = "line-clamp-2"
 }) => {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
@@ -98,44 +102,44 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
     setShowDeleteModal(true)
   }
 
-  // Função para obter a cor do badge baseado na categoria (igual ao CardCurso)
+  // Função para obter a cor do badge baseado na categoria
   const getCategoriaBadgeColor = (categoria: string) => {
     switch (categoria) {
-      case "LinguagensLetrasEComunicacao":
+      case "Linguagens, Letras e Comunicação":
         return "bg-blue-100 text-blue-800"
-      case "ArtesECultura":
+      case "Artes e Cultura":
         return "bg-purple-100 text-purple-800"
-      case "CienciasAgrarias":
+      case "Ciências Agrárias":
         return "bg-green-100 text-green-800"
-      case "PesquisaEInovacao":
+      case "Pesquisa e Inovação":
         return "bg-violet-100 text-violet-800"
-      case "ServicosSociasEComunitarios":
+      case "Serviços Sociais e Comunitários":
         return "bg-pink-100 text-pink-800"
-      case "GestaoEPlanejamento":
+      case "Gestão e Planejamento":
         return "bg-slate-100 text-slate-800"
-      case "CienciasSociaisAplicadasANegocios":
+      case "Ciências Sociais Aplicadas a Negócios":
         return "bg-indigo-100 text-indigo-800"
-      case "ComunicacaoEInformacao":
+      case "Comunicação e Informação":
         return "bg-cyan-100 text-cyan-800"
-      case "CienciasBiologicasENaturais":
+      case "Ciências Biológicas e Naturais":
         return "bg-emerald-100 text-emerald-800"
-      case "EngenhariaEProducao":
+      case "Engenharia e Produção":
         return "bg-orange-100 text-orange-800"
-      case "TecnologiaEComputacao":
+      case "Tecnologia e Computação":
         return "bg-violet-100 text-violet-800"
-      case "ProducaoEConstrucao":
+      case "Produção e Construção":
         return "bg-amber-100 text-amber-800"
-      case "SaudeEBemEstar":
+      case "Saúde e Bem-Estar":
         return "bg-red-100 text-red-800"
-      case "EducacaoEFormacaoDeProfessores":
+      case "Educação e Formação de Professores":
         return "bg-yellow-100 text-yellow-800"
-      case "NegociosAdministracaoEDireito":
+      case "Negócios, Administração e Direito":
         return "bg-stone-100 text-stone-800"
-      case "CienciasExatas":
+      case "Ciências Exatas":
         return "bg-indigo-100 text-indigo-800"
-      case "CienciasHumanas":
+      case "Ciências Humanas":
         return "bg-rose-100 text-rose-800"
-      case "MeioAmbienteESustentabilidade":
+      case "Meio Ambiente e Sustentabilidade":
         return "bg-teal-100 text-teal-800"
       default:
         return "bg-gray-100 text-gray-800"
@@ -216,11 +220,13 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
 
         <div className="p-4 flex-1 flex flex-col">
           <div className="flex justify-between items-start mb-2 flex-shrink-0">
-            <h5 className="text-lg font-semibold line-clamp-2 flex-1 mr-2 overflow-hidden">{titulo}</h5>
+            <h5 className="text-lg font-semibold line-clamp-2 flex-1 mr-2 overflow-hidden min-h-12">
+              {titulo}
+            </h5>
             {funcaoUsuario && (
               <span
                 className={cn(
-                  "px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0",
+                  "absolute top-29 left-1/2 transform -translate-x-1/2 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0",
                   getFuncaoBadgeColor(funcaoUsuario),
                 )}
               >
@@ -238,16 +244,16 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
               )}
             >
               {/* {formatarCategoria(categoria)} */}
-              {truncateText(categoria, 14)}
+              {truncateText(categoria, maxCaracteres)}
             </span>
             <span
               className={cn(
                 "px-2 py-1 rounded-full text-xs font-medium",
                 statusProjeto === "Ativo"
-                  ? "bg-green-100 text-green-800"
+                  ? "bg-blue-100 text-blue-800"
                   : statusProjeto === "Finalizado"
                     ? "bg-red-100 text-red-800"
-                    : "bg-yellow-100 text-yellow-800",
+                    : "bg-orange-100 text-orange-800",
               )}
             >
               {statusProjeto}
@@ -255,15 +261,18 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
           </div>
 
           <div className="h-12 mb-2 flex-shrink-0">
-            <p className="text-sm text-gray-700 line-clamp-2 overflow-hidden">
+            <p className={`text-sm text-gray-700 mb-6 ${descricaoLinhas} overflow-hidden`}>
               {descricao}
             </p>
           </div>
 
           {/* Período do projeto */}
           <div className="text-xs text-gray-500 mb-3 font-medium flex-shrink-0">
-            <p>
-              {formatarData(dataInicio)} - {formatarData(dataFim)}
+            <p className={`absolute ${bottomDate} left-4 text-xs text-gray-500 font-medium`}>
+              <span className="font-semibold">Início:</span> {formatarData(dataInicio)}
+            </p>
+            <p className={`absolute ${bottomDate} right-4 text-xs text-gray-500 font-medium`}>
+              <span className="font-semibold">Fim:</span> {formatarData(dataFim)}
             </p>
           </div>
 
@@ -271,14 +280,14 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
           {canEditProject && (
             <div className="flex justify-between flex-shrink-0" onClick={(e) => e.stopPropagation()}>
               <button
-                className="p-0 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
+                className="absolute bottom-3 left-3 p-0 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
                 onClick={handleEdit}
                 aria-label="Editar projeto"
               >
                 <img src="/pen.png" alt="Editar" className="w-6 h-6" />
               </button>
               <button
-                className="p-0 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
+                className="absolute bottom-3 right-3 p-0 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
                 onClick={handleDeleteClick}
                 disabled={isDeleting}
                 aria-label="Excluir projeto"
