@@ -6,12 +6,28 @@ import { ConfirmationModal } from "./ConfirmationModal";
 import { useRouter } from "next/navigation"; 
 import { useSession } from "next-auth/react"
 
+interface Evento {
+  id: number
+  titulo: string
+  descricao: string
+  dataInicio: string
+  dataFim: string
+  linkParticipacao?: string | null
+  local: string
+  imagemEvento: Array<{
+    id: number
+    link: string
+  }>
+}
+
 interface CardEventoProps {
   idEvento: number;
   titulo: string;
   descricao: string;
-  data: string | Date;
-  linkParticipacao: string;
+  dataInicio: string | Date;
+  dataFim: string | Date;
+  linkParticipacao?: string | null;
+  local: string;
   imagens?: string[]; // Array de URLs das imagens do evento
   isOwner: boolean;
   tipoParticipacao?: 'Ouvinte' | 'Palestrante' | 'Organizador';
@@ -24,8 +40,10 @@ const CardEvento: React.FC<CardEventoProps> = ({
   idEvento, 
   titulo, 
   descricao, 
-  data,
+  dataInicio,
+  dataFim,
   linkParticipacao,
+  local,
   imagens,
   isOwner,
   tipoParticipacao,
@@ -44,16 +62,45 @@ const CardEvento: React.FC<CardEventoProps> = ({
     return text.substring(0, maxLength).trim() + '...';
   };
 
-  // Formatar a data do evento
+  // Formatar data separadamente
   const formatarData = (dataEvento: string | Date) => {
-    const date = new Date(dataEvento);
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    try {
+      const date = new Date(dataEvento);
+      
+      // Verificar se a data é válida
+      if (isNaN(date.getTime())) {
+        return 'Data inválida';
+      }
+
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit', 
+        year: 'numeric'
+      });
+    } catch (error) {
+      console.error('Erro ao formatar data:', error);
+      return 'Data inválida';
+    }
+  };
+
+  // Formatar hora separadamente
+  const formatarHora = (dataEvento: string | Date) => {
+    try {
+      const date = new Date(dataEvento);
+      
+      // Verificar se a data é válida
+      if (isNaN(date.getTime())) {
+        return 'Hora inválida';
+      }
+
+      return date.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      console.error('Erro ao formatar hora:', error);
+      return 'Hora inválida';
+    }
   };
 
   // Verifica se a imagem é base64 ou URL - usa a primeira imagem disponível
@@ -99,7 +146,12 @@ const CardEvento: React.FC<CardEventoProps> = ({
 
   const handleParticipate = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.open(linkParticipacao, '_blank');
+    if (linkParticipacao && linkParticipacao.trim() !== '') {
+      window.open(linkParticipacao, '_blank');
+    } else {
+      // Se não houver link de participação, redireciona para a mesma rota do card
+      router.push(`/evento/${idEvento}`);
+    }
   };
 
   // Função para obter a cor do badge baseado no tipo de participação
@@ -119,7 +171,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
   return (
     <>
       <div 
-        className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-90 flex flex-col"
+        className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-100 flex flex-col"
         style={{ width: largura, margin: "0 auto" }}
         onClick={handleCardClick}
       >
@@ -152,14 +204,27 @@ const CardEvento: React.FC<CardEventoProps> = ({
             <p className="text-sm text-gray-700 line-clamp-2 overflow-hidden">{truncateText(descricao, maxCaracteres)}</p>
           </div>
           
-          <p className="text-xs text-gray-500 mb-3 font-medium flex-shrink-0">{formatarData(data)}</p>
+          {/* Datas e horas separadas */}
+          <div className="mb-2 flex-shrink-0">
+            <p className="text-xs text-gray-500 mb-1 font-medium">
+              <span className="font-semibold">Início:</span> {formatarData(dataInicio)} às {formatarHora(dataInicio)}
+            </p>
+            <p className="text-xs text-gray-500 mb-1 font-medium">
+              <span className="font-semibold">Fim:</span> {formatarData(dataFim)}
+            </p>
+          </div>
           
-          {/* Botão de participação sempre visível */}
+          {/* Local do evento */}
+          <p className="text-xs text-gray-500 mb-3 font-medium flex-shrink-0">
+          <span className="font-semibold">Local:</span> {local}
+          </p>
           
+          {/* Botão de participação - sempre visível e clicável */}
           <div className="mb-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             <button 
-              className="w-full bg-gray-900 hover:bg-gray-600 text-white py-2 px-4 rounded-md transition-colors duration-200 text-sm font-medium"
+              className="w-full py-2 px-4 rounded-md transition-colors duration-200 text-sm font-medium bg-gray-900 hover:bg-gray-600 text-white cursor-pointer"
               onClick={handleParticipate}
+              style={{ height: '2.5rem' }}
             >
               Participar do Evento
             </button>

@@ -44,8 +44,10 @@ interface Evento {
   id: number
   titulo: string
   descricao: string
-  data: string
-  linkParticipacao: string
+  dataInicio: string
+  dataFim: string
+  linkParticipacao?: string | null
+  local: string
   imagemEvento: Array<{
     id: number
     link: string
@@ -262,8 +264,10 @@ const HomePage: React.FC = () => {
                 idEvento={evento.id}
                 titulo={evento.titulo}
                 descricao={evento.descricao}
-                data={evento.data}
-                linkParticipacao={evento.linkParticipacao || "#"}
+                dataInicio={evento.dataInicio}
+                dataFim={evento.dataFim}
+                linkParticipacao={evento.linkParticipacao || null}
+                local={evento.local}
                 imagens={evento.imagemEvento?.map((img) => img.link) || ["/event_lecture.jpg"]}
                 isOwner={false}
                 largura="17rem"

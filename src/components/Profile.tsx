@@ -996,7 +996,6 @@ export default function ProfilePage() {
           ) : (
             <div className="text-center py-8 text-gray-500">
               <p>Nenhum projeto encontrado</p>
-              <p className="text-sm">Debug: Array length = {projetos.length}</p>
             </div>
           )}
           <button
@@ -1017,11 +1016,14 @@ export default function ProfilePage() {
                 <div key={evento.id} className="flex-shrink-0 w-80 h-full mt-1">
 
                   <CardEvento
+                    key={evento.id}
                     idEvento={evento.id}
                     titulo={evento.titulo}
                     descricao={evento.descricao}
-                    data={evento.data}
-                    linkParticipacao={evento.linkParticipacao || "#"}
+                    dataInicio={evento.dataInicio}
+                    dataFim={evento.dataFim}
+                    linkParticipacao={evento.linkParticipacao || null}
+                    local={evento.local}
                     imagens={evento.imagemEvento?.map((img: any) => img.link) || []}
                     isOwner={true}
                     tipoParticipacao={
@@ -1039,7 +1041,6 @@ export default function ProfilePage() {
           ) : (
             <div className="text-center py-8 text-gray-500">
               <p>Nenhum evento encontrado</p>
-              <p className="text-sm">Debug: Array length = {eventos.length}</p>
             </div>
           )}
           <button
@@ -1075,17 +1076,16 @@ export default function ProfilePage() {
             ) : (
               <div className="text-center py-4 text-gray-500">
                 <p>Nenhum link cadastrado</p>
-                <p className="text-sm">
-                  Debug: {usuario?.link ? `Array length = ${usuario.link.length}` : "Array is null/undefined"}
-                </p>
               </div>
             )}
           </div>
 
+
           {/* Publicações */}
-          {usuario.publicacao && usuario.publicacao.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-xl font-semibold mb-4">Publicações ({usuario?.publicacao?.length || 0})</h3>
+
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-xl font-semibold mb-4">Publicações ({usuario?.publicacao?.length || 0})</h3>
+            {usuario.publicacao && usuario.publicacao.length > 0 ? (
               <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                 {usuario.publicacao.map((pub) => (
                   <div key={pub.id} className="p-3 bg-gray-50 rounded">
@@ -1101,8 +1101,12 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                <p>Nenhuma publicação cadastrada</p>
+              </div>
+            )}
+          </div>
 
           {/* Carreira */}
           {usuario.carreira && usuario.carreira.length > 0 && (

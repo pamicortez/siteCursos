@@ -52,11 +52,14 @@ interface Evento {
   id: number
   titulo: string
   descricao: string
-  data: string
-  linkParticipacao: string
-  imagens?: string[]
-  tipoParticipacao?: "Ouvinte" | "Palestrante" | "Organizador"
-  isOwner?: boolean
+  dataInicio: string
+  dataFim: string
+  linkParticipacao?: string | null
+  local: string
+  imagemEvento: Array<{
+    id: number
+    link: string
+  }>
 }
 
 export default function UsuarioProfilePage() {
@@ -266,15 +269,14 @@ export default function UsuarioProfilePage() {
               )}
               <div className="mt-3">
                 <span
-                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                    usuario.tipo === "Normal"
+                  className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${usuario.tipo === "Normal"
                       ? "bg-green-100 text-green-800"
                       : usuario.tipo === "Super"
                         ? "bg-blue-100 text-blue-800"
                         : usuario.tipo === "Pendente"
                           ? "bg-yellow-100 text-yellow-800"
                           : "bg-red-100 text-red-800"
-                  }`}
+                    }`}
                 >
                   {usuario.tipo}
                 </span>
@@ -324,14 +326,16 @@ export default function UsuarioProfilePage() {
                 <div key={evento.id} className="flex-shrink-0 w-80 h-full mt-1">
                   <div className="h-112">
                     <CardEvento
+                      key={evento.id}
                       idEvento={evento.id}
                       titulo={evento.titulo}
                       descricao={evento.descricao}
-                      data={evento.data}
-                      linkParticipacao={evento.linkParticipacao || "#"}
-                      imagens={evento.imagens || []}
+                      dataInicio={evento.dataInicio}
+                      dataFim={evento.dataFim}
+                      linkParticipacao={evento.linkParticipacao || null}
+                      local={evento.local}
+                      imagens={evento.imagemEvento?.map((img) => img.link) || ["/event_lecture.jpg"]}
                       isOwner={false}
-                      tipoParticipacao={evento.tipoParticipacao}
                     />
                   </div>
                 </div>
@@ -401,9 +405,8 @@ export default function UsuarioProfilePage() {
                   <div className="flex justify-between items-start mb-1">
                     <h4 className="font-semibold text-gray-800">{exp.nome}</h4>
                     <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        exp.categoria === "acadêmica" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
-                      }`}
+                      className={`px-2 py-1 rounded text-xs font-medium ${exp.categoria === "acadêmica" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
+                        }`}
                     >
                       {exp.categoria}
                     </span>
