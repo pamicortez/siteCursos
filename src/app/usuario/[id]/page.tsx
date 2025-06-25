@@ -231,7 +231,7 @@ export default function UsuarioProfilePage() {
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-800">Perfil do Usuário</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Docente</h1>
             <button
               onClick={() => router.back()}
               className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition"
