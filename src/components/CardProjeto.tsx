@@ -187,6 +187,22 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
     }
   }
 
+    // Função para obter gênero neutro na função do usuário
+    const getGeneroNeutro = (funcao?: string) => {
+      switch (funcao) {
+        case "Coordenador":
+          return "Coordenador(a)"
+        case "Colaborador":
+          return "Colaborador(a)"
+        case "Bolsista":
+          return "Bolsista"
+        case "Voluntário":
+          return "Voluntário(a)"
+        default:
+          return "Colaborador(a)"
+      }
+    }
+
   // Determinar o status do projeto usando uma única referência de tempo
   const now = new Date()
   const inicio = new Date(dataInicio)
@@ -230,7 +246,7 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
                   getFuncaoBadgeColor(funcaoUsuario),
                 )}
               >
-                {funcaoUsuario}
+                {getGeneroNeutro(funcaoUsuario)}
               </span>
             )}
           </div>

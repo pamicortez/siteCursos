@@ -163,7 +163,7 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
         
         setResultDialog({
           title: 'Acesso Negado',
-          message: "Sua conta não está ativa. Entre em contato com o administrador.",
+          message: "Sua conta não está ativa. Entre em contato com o(a) administrador(a).",
           isError: true,
           fotoPerfil: null,
         })
@@ -424,7 +424,7 @@ const Login: React.FC<LoginProps> = ({ logo }) => {
 
         setResultDialog({
           title: 'Login realizado com sucesso!',
-          message: `Bem vindo, ${session.user.name}`,
+          message: `Boas-vindas, ${session.user.name}`,
           isError: false,
           fotoPerfil: photoToUse,
         })

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
 import { ConfirmationModal } from "./ConfirmationModal";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react"
 
 interface Evento {
@@ -37,9 +37,9 @@ interface CardEventoProps {
 }
 
 const CardEvento: React.FC<CardEventoProps> = ({
-  idEvento, 
-  titulo, 
-  descricao, 
+  idEvento,
+  titulo,
+  descricao,
   dataInicio,
   dataFim,
   linkParticipacao,
@@ -51,7 +51,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
   maxCaracteres = 74,
   largura = "14rem"
 }) => {
-  const router = useRouter(); 
+  const router = useRouter();
   const { data: session, status } = useSession();
   const isLoggedIn = status === "authenticated" && session?.user;
   const [isDeleting, setIsDeleting] = useState(false);
@@ -66,7 +66,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
   const formatarData = (dataEvento: string | Date) => {
     try {
       const date = new Date(dataEvento);
-      
+
       // Verificar se a data é válida
       if (isNaN(date.getTime())) {
         return 'Data inválida';
@@ -74,7 +74,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
 
       return date.toLocaleDateString('pt-BR', {
         day: '2-digit',
-        month: '2-digit', 
+        month: '2-digit',
         year: 'numeric'
       });
     } catch (error) {
@@ -87,7 +87,7 @@ const CardEvento: React.FC<CardEventoProps> = ({
   const formatarHora = (dataEvento: string | Date) => {
     try {
       const date = new Date(dataEvento);
-      
+
       // Verificar se a data é válida
       if (isNaN(date.getTime())) {
         return 'Hora inválida';
@@ -106,13 +106,13 @@ const CardEvento: React.FC<CardEventoProps> = ({
   // Verifica se a imagem é base64 ou URL - usa a primeira imagem disponível
   const primeiraImagem = imagens && imagens.length > 0 ? imagens[0] : null;
   const isBase64 = primeiraImagem?.startsWith('data:image');
-  const imageSrc = primeiraImagem 
+  const imageSrc = primeiraImagem
     ? (isBase64 ? primeiraImagem : primeiraImagem?.startsWith('/') ? primeiraImagem : `/api/images?url=${encodeURIComponent(primeiraImagem)}`)
     : '/event_lecture.jpg'; // Imagem padrão para eventos
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    
+
     try {
       const response = await fetch(`/api/evento?id=${idEvento}`, {
         method: 'DELETE',
@@ -168,25 +168,39 @@ const CardEvento: React.FC<CardEventoProps> = ({
     }
   };
 
+  // Função para obter gênero neutro na função do usuário
+  const getGeneroNeutro = (funcao?: string) => {
+    switch (funcao) {
+      case "Organizador":
+        return "Organizador(a)"
+      case "Palestrante":
+        return "Palestrante"
+      case "Ouvinte":
+        return "Ouvinte"
+      default:
+        return "Ouvinte"
+    }
+  }
+
   return (
     <>
-      <div 
+      <div
         className="bg-white rounded-lg shadow-md overflow-hidden relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg h-100 flex flex-col"
         style={{ width: largura, margin: "0 auto" }}
         onClick={handleCardClick}
       >
         {/* Imagem com fallback */}
         <div className="w-full h-32 overflow-hidden flex-shrink-0">
-          <img 
-            src={imageSrc || "/placeholder.svg"} 
+          <img
+            src={imageSrc || "/placeholder.svg"}
             className="w-full h-full object-cover"
-            alt={titulo} 
+            alt={titulo}
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/event_lecture.jpg';
             }}
           />
         </div>
-        
+
         <div className="p-4 flex-1 flex flex-col">
           <div className="flex justify-between items-start mb-2 flex-shrink-0">
             <h5 className="text-lg font-semibold line-clamp-1 flex-1 mr-2 overflow-hidden">{titulo}</h5>
@@ -195,15 +209,15 @@ const CardEvento: React.FC<CardEventoProps> = ({
                 "absolute top-29 left-1/2 transform -translate-x-1/2 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0",
                 getParticipacaoBadgeColor(tipoParticipacao)
               )}>
-                {tipoParticipacao}
+                {getGeneroNeutro(tipoParticipacao)}
               </span>
             )}
           </div>
-          
+
           <div className="h-12 mb-2 flex-shrink-0">
             <p className="text-sm text-gray-700 line-clamp-2 overflow-hidden">{truncateText(descricao, maxCaracteres)}</p>
           </div>
-          
+
           {/* Datas e horas separadas */}
           <div className="mb-2 flex-shrink-0">
             <p className="text-xs text-gray-500 mb-1 font-medium">
@@ -213,15 +227,15 @@ const CardEvento: React.FC<CardEventoProps> = ({
               <span className="font-semibold">Fim:</span> {formatarData(dataFim)}
             </p>
           </div>
-          
+
           {/* Local do evento */}
           <p className="text-xs text-gray-500 mb-3 font-medium flex-shrink-0">
-          <span className="font-semibold">Local:</span> {local}
+            <span className="font-semibold">Local:</span> {local}
           </p>
-          
+
           {/* Botão de participação - sempre visível e clicável */}
           <div className="mb-3 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-            <button 
+            <button
               className="w-full py-2 px-4 rounded-md transition-colors duration-200 text-sm font-medium bg-gray-900 hover:bg-gray-600 text-white cursor-pointer"
               onClick={handleParticipate}
               style={{ height: '2.5rem' }}
@@ -229,28 +243,28 @@ const CardEvento: React.FC<CardEventoProps> = ({
               Participar do Evento
             </button>
           </div>
-         
-          
+
+
           {/* Botões de ação para proprietários */}
           {isOwner && (
             <div className="flex justify-between flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-              <button 
+              <button
                 className="p-0 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
                 onClick={handleEdit}
                 aria-label="Editar evento"
               >
                 <img src="/pen.png" alt="Editar" className="w-6 h-6" />
               </button>
-              <button 
+              <button
                 className="p-0 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
                 onClick={handleDeleteClick}
                 disabled={isDeleting}
                 aria-label="Excluir evento"
               >
-                <img 
-                  src="/trash.png" 
-                  alt="Excluir" 
-                  className={cn("w-6 h-6", isDeleting && "opacity-50")} 
+                <img
+                  src="/trash.png"
+                  alt="Excluir"
+                  className={cn("w-6 h-6", isDeleting && "opacity-50")}
                 />
               </button>
             </div>
