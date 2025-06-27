@@ -283,13 +283,11 @@ const Navbar = () => {
             {/* User Profile / Login Buttons */}
             <div className="flex items-center justify-end w-1/4 gap-4">
               {hasUser ? (
-                <div className="hidden md:flex items-center" id="user-menu-container">
-                  <button
-                    onClick={toggleUserMenu}
-                    className="flex items-center justify-center w-9 h-9 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors overflow-hidden"
-                    aria-expanded={userMenuOpen}
-                    aria-haspopup="true"
-                  >
+                    <div className="hidden md:flex items-center relative" id="user-menu-container">
+                      <button
+                        onClick={toggleUserMenu}
+                        className="flex items-center justify-center w-9 h-9 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors overflow-hidden"
+                      >
                     {userLoading ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-200"></div>
                     ) : usuario?.fotoPerfil ? (
@@ -305,8 +303,9 @@ const Navbar = () => {
 
                   <div
                     className={cn(
-                      "absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-800 py-2 shadow-lg ring-1 ring-gray-700 focus:outline-none transition-all duration-200 ease-in-out",
-                      userMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+                      "absolute right-0 w-48 rounded-md bg-gray-800 py-2 shadow-lg ring-1 ring-gray-700 transition-all duration-200",
+                      "top-[calc(100%_+_0.25rem)]",
+                      userMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
                     )}
                   >
                     <div className="px-4 py-2 text-sm text-gray-200 border-b border-gray-700">
