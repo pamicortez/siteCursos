@@ -54,7 +54,7 @@ export default function DetalhesCurso() {
   const { data: session, status } = useSession();
   const params = useParams();
   const router = useRouter();
-  
+
   const id = params.id;
 
   const [curso, setCurso] = useState<Curso | null>(null); // criar tipo aqui
@@ -68,7 +68,7 @@ export default function DetalhesCurso() {
     label: string;
   }
 
-useEffect(() => {
+  useEffect(() => {
     async function loadCursoAndCategories() {
       try {
         // Load Curso
@@ -99,7 +99,7 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]"> 
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
         <p className="ml-4 text-lg text-gray-700">Carregando curso...</p>
       </div>
@@ -128,29 +128,39 @@ useEffect(() => {
 
   return (
     <div>
-      <div className="bg-gray-200">
-        <div className="flex flex-col md:flex-row w-full mx-auto px-8 py-10">
+      <div
+        className="bg-gray-200 bg-cover bg-center bg-no-repeat relative min-h-[400px]"
+        style={{
+          backgroundImage: curso?.imagem ? `url(${curso.imagem})` : undefined,
+        }}
+      >
+        {/* Overlay para melhorar legibilidade */}
+        <div className="absolute inset-0 bg-black/20"></div>
+
+        {/* Conteúdo com z-index para ficar acima da overlay */}
+        <div className="relative z-10 flex flex-col md:flex-row w-full mx-auto px-8 py-10">
 
           <div className="w-full md:w-1/2 md:pr-10">
-            <h1 className="text-3xl md:text-5xl font-bold pb-6">{curso?.titulo}
+            <h1 className="text-3xl md:text-5xl font-bold pb-6 text-white drop-shadow-lg">
+              {curso?.titulo}
               {isCourseOwner && (
-              <button 
-                className="p-0 ml-2 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
-                onClick={() => router.push(`/curso/editar/${curso?.id}`)}
-                aria-label="Editar Curso"
-              >
-              <img src="/pen.png" alt="Editar" className="w-6 h-6" />
-            </button>
-        )}
+                <button
+                  className="p-0 ml-2 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
+                  onClick={() => router.push(`/curso/editar/${curso?.id}`)}
+                  aria-label="Editar Curso"
+                >
+                  <img src="/pen.png" alt="Editar" className="w-6 h-6" />
+                </button>
+              )}
             </h1>
-            
-            <p className="text-justify">{curso?.descricao}</p>
+
+            <p className="text-justify text-white drop-shadow-md">{curso?.descricao}</p>
             <div className="flex">
               <Badge className="mr-2 my-5">{categoriaMapeada?.label}</Badge>
             </div>
 
             <div>
-              <Button asChild size="sm">
+              <Button asChild size="sm" className="transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-white/50 hover:scale-105 hover:brightness-110">
                 <a
                   href={absoluteLink(curso?.linkInscricao)}
                   target="_blank"
@@ -160,12 +170,11 @@ useEffect(() => {
                   Inscreva-se
                 </a>
               </Button>
-
             </div>
           </div>
 
           <div className="w-full md:w-1/2 flex justify-center items-start pt-10 md:mt-0">
-            <div className="p-5 rounded-md border-3 border-[#cac4d0] border-solid flex flex-col space-y-2">
+            <div className="p-5 rounded-lg shadow-md flex flex-col space-y-2 bg-gray-900/80 backdrop-blur-sm text-gray-200">
               <p><strong>Instrutor:</strong> {curso?.usuario.Nome}</p>
               <p><strong>Vagas:</strong> {curso?.vagas}</p>
               <p><strong>Carga Horária:</strong> {curso?.cargaHoraria}h</p>
