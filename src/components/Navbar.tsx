@@ -520,16 +520,16 @@ const Navbar = () => {
         </div>
       </nav>
 
- {/* Espaçador dinâmico */}
-  <div 
-    className={cn(
-      "w-full transition-all duration-300",
-      scrolled ? "h-[72px]" : "h-[96px]", // Valores exatos em pixels
-      "bg-transparent" // Garante que não afeta o visual
-    )}
-  />
-    </>
-  );
+    {/* Espaçador dinâmico */}
+      <div 
+        className={cn(
+          "w-full transition-all duration-300",
+          scrolled ? "h-[72px]" : "h-[96px]", 
+          "bg-transparent"
+        )}
+      />
+        </>
+      );
 };
 
 export default Navbar;
