@@ -309,26 +309,40 @@ export default function DetalhesEvento() {
           </div>
         )}
 
-        {/* Grid de todas as imagens (oculto por padrão) */}
-        {mostrarTodasImagens && evento.imagemEvento.length > 0 && (
-          <div className="w-full md:w-[70%] px-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 mb-12">
-              {evento.imagemEvento.map((imagem, index) => (
-                <div
-                  key={index}
-                  className="aspect-video bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
-                  onClick={() => handleOpenImageModal(imagem.link)}
-                >
-                  <img
-                    src={imagem.link}
-                    alt={`Imagem do evento ${index + 1}`}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-              ))}
-            </div>
+        {/* Grid de todas as imagens com animação deslizante */}
+        <div 
+          className={`w-full md:w-[70%] px-4 overflow-hidden transition-all duration-500 ease-in-out ${
+            mostrarTodasImagens 
+              ? 'max-h-[2000px] opacity-100' 
+              : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div 
+            className={`transform transition-all duration-500 ease-in-out ${
+              mostrarTodasImagens 
+                ? 'translate-y-0' 
+                : '-translate-y-4'
+            }`}
+          >
+            {evento.imagemEvento.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 mb-12">
+                {evento.imagemEvento.map((imagem, index) => (
+                  <div
+                    key={index}
+                    className="aspect-video bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
+                    onClick={() => handleOpenImageModal(imagem.link)}
+                  >
+                    <img
+                      src={imagem.link}
+                      alt={`Imagem do evento ${index + 1}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Modal de Imagem */}
