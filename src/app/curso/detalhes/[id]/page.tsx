@@ -149,7 +149,7 @@ export default function DetalhesCurso() {
                   onClick={() => router.push(`/curso/editar/${curso?.id}`)}
                   aria-label="Editar Curso"
                 >
-                  <img src="/pen.png" alt="Editar" className="w-6 h-6" />
+                  <img src="/pen.png" alt="Editar" className="w-6 h-6 filter brightness-0 invert" />
                 </button>
               )}
             </h1>
