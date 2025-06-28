@@ -1,343 +1,374 @@
 "use client"
-
-import type React from "react"
-import { useEffect, useState } from "react"
-import CardCursoWithButton from "@/components/CardCursoWithButton"
-import { Button } from "@/components/ui/button"
-import { useParams, useRouter } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
+import { PencilLine } from "lucide-react"
+import { useEffect, useState } from "react";
+import { notFound, useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react"
-import { Evento } from "@prisma/client"
+import Carrossel from "@/components/Carrossel"
+import CardImagem from "@/components/CardImagem"
 
-interface Evento {
-  id: number
-  titulo: string
-  imagem: string
-  descricao: string
-  categoria: string
-  dataInicio: string
-  dataFim: string
-  eventoUsuario: {
-    id: number
-    idEvento: number
-    idUsuario: number
-    funcao: string
-    usuario: {
-      Nome: string
-    }
-  }[]
-  curso: any[]
-  eventoColaborador: {
-    id: number
-    categoria: string
-    idEvento: number
-    idColaborador: number
-    colaborador: {
-      id: number
-      nome: string
-    }
-  }[]
+export type Evento = {
+  id: number;
+  titulo: string;
+  descricao: string;
+  dataInicio: string;
+  dataFim: string;
+  linkParticipacao: string | null;
+  categoria: string;
+  local: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  eventoUsuario: EventoUsuario[];
+  imagemEvento: ImagemEvento[];
+  eventoColaborador: EventoColaborador[];
 }
 
-const EventoHome: React.FC = () => {
-  const router = useRouter()
-  const { data: session, status } = useSession()
-  const [isOwner, setIsOwner] = useState(false)
-  const [evento, setEvento] = useState<Evento | null>(null)
-  const { id } = useParams()
-  const [refreshKey, setRefreshKey] = useState(0)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+type EventoUsuario = {
+  id: number;
+  idUsuario: number;
+  idEvento: number;
+  tipoParticipacao: string;
+  usuario: {
+    id: number;
+    Nome: string;
+  };
+}
 
-  const handleCursoDeleted = () => {
-    setRefreshKey((prev) => prev + 1)
-  }
+type ImagemEvento = {
+  id: number;
+  link: string;
+  idEvento: number;
+}
+
+type EventoColaborador = {
+  id: number;
+  categoria: string;
+  idEvento: number;
+  idColaborador: number;
+  colaborador: {
+    id: number;
+    nome: string;
+  };
+}
+
+interface Category {
+  value: string;
+  label: string;
+}
+
+export default function DetalhesEvento() {
+  const { data: session, status } = useSession();
+  const params = useParams();
+  const router = useRouter();
+
+  const id = params.id;
+
+  const [evento, setEvento] = useState<Evento | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [mostrarTodasImagens, setMostrarTodasImagens] = useState(false);
+
+  // Estados para o modal de imagem
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [isImageModalClosing, setIsImageModalClosing] = useState(false);
 
   useEffect(() => {
-    const fetchEvento = async () => {
+    async function loadEventoAndCategories() {
       try {
-        setError(null)
-        setLoading(true)
-
-        // Debug: Verificar o ID recebido
-        console.log("🔍 Debug fetchEvento:")
-        console.log("- id:", id)
-        console.log("- typeof id:", typeof id)
-
-        if (id === "TESTEINTERNO") {
-          const eventoFalso: Evento = {
-            id: 999,
-            titulo: "Evento Meu",
-            imagem: "/evento1.jpg",
-            descricao: "Capacitando educadores e gestores com metodologias ativas e tecnologia educacional.",
-            categoria: "Programação",
-            dataInicio: "2023-10-01",
-            dataFim: "2023-11-30",
-            eventoUsuario: [
-              {
-                id: 1,
-                idEvento: 999,
-                idUsuario: 1,
-                funcao: "Coordenador",
-                usuario: { Nome: "Fulano" },
-              },
-            ],
-            eventoColaborador: [
-              {
-                id: 1,
-                categoria: "Instrutor",
-                idEvento: 999,
-                idColaborador: 1,
-                colaborador: {
-                  id: 1,
-                  nome: "Maria Oliveira",
-                },
-              },
-              {
-                id: 2,
-                categoria: "Tutor",
-                idEvento: 999,
-                idColaborador: 2,
-                colaborador: {
-                  id: 2,
-                  nome: "Carlos Souza",
-                },
-              },
-            ],
-            curso: [
-              {
-                id: 1,
-                imagem: "/proj1.jpg",
-                nome: "Python",
-                descricao: "Curso intensivo de programação em Python para iniciantes e avançados.",
-                cargahoraria: "40 horas",
-              },
-              {
-                id: 2,
-                imagem: "/prof3.jpg",
-                nome: "Inglês",
-                descricao: "Curso de inglês básico a avançado, focado em conversação e gramática.",
-                cargahoraria: "60 horas",
-              },
-              {
-                id: 3,
-                imagem: "/prof4.jpg",
-                nome: "Sistemas Embarcados",
-                descricao: "Curso completo sobre sistemas embarcados com prática em hardware e software.",
-                cargahoraria: "80 horas",
-              },
-              {
-                id: 4,
-                imagem: "/prof5.jpg",
-                nome: "C/C++",
-                descricao: "Curso aprofundado em C e C++ com projetos práticos e desafios de programação.",
-                cargahoraria: "70 horas",
-              },
-            ],
-          }
-          setEvento(eventoFalso)
-          setIsOwner(true)
-          setLoading(false)
-          return
+        // Load Evento
+        const resEvento = await fetch(`/api/evento?id=${id}`);
+        if (!resEvento.ok) {
+          throw new Error('Failed to load event');
         }
+        const dataEvento = await resEvento.json();
+        setEvento(dataEvento);
 
-        if (status === "loading") return
-
-        // Validar se o ID é válido
-        if (!id || isNaN(Number(id))) {
-          console.error("❌ ID inválido:", id)
-          router.push("/404")
-          return
+        // Load Categories
+        const resCategories = await fetch("/api/enums/categoriaCurso");
+        if (!resCategories.ok) {
+          throw new Error("Erro ao buscar categorias de evento");
         }
+        const dataCategories = await resCategories.json();
+        setCategories(dataCategories);
 
-        console.log("📡 Fazendo fetch para:", `/api/evento?id=${id}`)
-        const res = await fetch(`/api/evento?id=${id}`)
-
-        console.log("📡 Response status:", res.status)
-
-        if (!res.ok) {
-          if (res.status === 404) {
-            console.error("❌ Evento não encontrado")
-            router.push("/404")
-            return
-          }
-          throw new Error(`Erro na requisição: ${res.status}`)
-        }
-
-        const data: Evento = await res.json()
-        console.log("📦 Dados recebidos:", data)
-
-        // Verificar se o evento existe (apenas verificar se tem ID)
-        if (!data || !data.id) {
-          console.error("❌ Evento não encontrado nos dados")
-          router.push("/404")
-          return
-        }
-
-        setEvento(data)
-
-        // Verificar se o usuário é proprietário (apenas se estiver logado)
-        if (session?.user?.id && data.eventoUsuario) {
-          const isEventoOwner = data.eventoUsuario.some((user) => Number(user.idUsuario) === Number(session.user.id))
-          console.log("👤 É proprietário:", isEventoOwner)
-          setIsOwner(isEventoOwner)
-        }
       } catch (error) {
-        console.error("❌ Erro ao buscar eventos:", error)
-        setError("Erro interno, tente mais tarde")
+        console.error("Erro ao carregar dados:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
+    loadEventoAndCategories();
+  }, [id]);
 
-    fetchEvento()
-  }, [id, refreshKey, status, session, router])
+  // Funções para controlar o modal de imagem
+  const handleOpenImageModal = (imageUrl: string) => {
+    setSelectedImage(imageUrl);
+    setShowImageModal(true);
+  };
 
-  const handleAdicionarCurso = () => {
-    router.push(`/curso/criar?idEvento=${id}`)
-  }
+  const handleCloseImageModal = () => {
+    setIsImageModalClosing(true);
+    setTimeout(() => {
+      setShowImageModal(false);
+      setIsImageModalClosing(false);
+      setSelectedImage(null);
+    }, 700); // Duração da animação de fade out
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+        <p className="ml-4 text-lg text-gray-700">Carregando evento...</p>
       </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-2">
-        <div className="text-center py-10">
-          <p className="text-red-600 text-lg font-medium">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      </div>
-    )
+    );
   }
 
   if (!evento) {
-    return (
-      <div className="container mx-auto px-4 py-2">
-        <p className="text-center text-gray-500">Evento não encontrado</p>
-      </div>
-    )
+    return notFound();
   }
 
+  const absoluteLink = (url: any) => {
+    return url.startsWith('http://') || url.startsWith('https://')
+      ? url
+      : `https://${url}`;
+  }
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("pt-BR") + " às " + date.toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
+  }
+
+  const categoriaMapeada = categories.find((category) => category.value === evento?.categoria);
+
+  // Encontra o coordenador (usuário com tipo de participação 'Coordenador' ou o primeiro da lista)
+  const coordenador = evento?.eventoUsuario?.find(eu => eu.tipoParticipacao === 'Coordenador') || evento?.eventoUsuario?.[0];
+
+  // Verifica se o usuário atual é o coordenador do evento
+  const isEventOwner = coordenador?.idUsuario === Number(session?.user.id);
+
+  // Pega a primeira imagem para o background
+  const backgroundImage = evento?.imagemEvento?.[0]?.link;
+
   return (
-    <div className="container mx-auto px-4 py-2">
-      <div className="flex justify-between items-center my-4">
-        <h1 className="text-3xl font-bold">{evento.titulo}</h1>
-        {isOwner && (
-          <Button
-            type="button"
-            className="bg-black text-white hover:bg-gray-800 text-base"
-            onClick={handleAdicionarCurso}
-          >
-            + Adicionar Curso
-          </Button>
+    <div>
+      <div
+        className="bg-gray-200 bg-cover bg-center bg-no-repeat relative min-h-[400px]"
+        style={{
+          backgroundImage: backgroundImage ? `url(${backgroundImage})` : undefined,
+        }}
+      >
+        {/* Overlay para melhorar legibilidade */}
+        <div className="absolute inset-0 bg-black/20"></div>
+
+        {/* Conteúdo com z-index para ficar acima da overlay */}
+        <div className="relative z-10 flex flex-col md:flex-row w-full mx-auto px-8 py-10">
+
+          <div className="w-full md:w-1/2 md:pr-10">
+            <h1 className="text-3xl md:text-5xl font-bold pb-6 text-white drop-shadow-lg">
+              {evento?.titulo}
+              {isEventOwner && (
+                <button
+                  className="p-0 ml-2 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
+                  onClick={() => router.push(`/evento/editar/${evento?.id}`)}
+                  aria-label="Editar Evento"
+                >
+                  <img
+                    src="/pen.png"
+                    alt="Editar"
+                    className="w-6 h-6 filter brightness-0 invert"
+                  />
+                </button>
+              )}
+            </h1>
+
+            <p className="text-justify text-white drop-shadow-md">{evento?.descricao}</p>
+            <div className="flex">
+              <Badge className="mr-2 my-5">{categoriaMapeada?.label}</Badge>
+            </div>
+
+            {evento?.linkParticipacao && (
+              <div>
+                <Button asChild size="sm" className="transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-white/50 hover:scale-105 hover:brightness-110">
+                  <a
+                    href={absoluteLink(evento?.linkParticipacao)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <PencilLine />
+                    Participar
+                  </a>
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="w-full md:w-1/2 flex justify-center items-start pt-10 md:mt-0">
+            <div className="p-5 rounded-lg shadow-md flex flex-col space-y-2 bg-gray-900/80 backdrop-blur-sm text-gray-200">
+              <p><strong>Início:</strong> {formatDateTime(evento?.dataInicio)}</p>
+              <p><strong>Fim:</strong> {formatDateTime(evento?.dataFim)}</p>
+              <p><strong>Local:</strong> {evento?.local}</p>
+              <p><strong>Coordenador:</strong> {coordenador?.usuario?.Nome || 'Não informado'}</p>
+              <div>
+                <strong>Colaboradores:</strong>
+                <ul className="list-disc pl-5 mt-2 text-sm line-clamp-1">
+                  {(!evento.eventoColaborador || evento.eventoColaborador.length === 0) &&
+                    (!evento.eventoUsuario || !evento.eventoUsuario.some((u) => u.tipoParticipacao !== "Coordenador")) ? (
+                    <li>Nenhum colaborador</li>
+                  ) : (
+                    <>
+                      {/* Lista de colaboradores externos */}
+                      {evento.eventoColaborador?.map((colab, index) => (
+                        <li key={`colab-${index}`}>
+                          {colab.colaborador.nome} - {colab.categoria}
+                        </li>
+                      ))}
+
+                      {/* Usuários do sistema que não são coordenadores */}
+                      {evento.eventoUsuario
+                        ?.filter((u) => u.tipoParticipacao !== "Coordenador")
+                        .map((user, index) => (
+                          <li key={`user-${index}`}>
+                            {user.usuario.Nome} - {user.tipoParticipacao}
+                          </li>
+                        ))}
+                    </>
+                  )}
+                </ul>
+              </div>
+              <p><strong>Última Atualização:</strong> {new Date(evento?.updatedAt).toLocaleDateString("pt-BR")}</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* CONTEÚDO DE IMAGENS */}
+      <div className="flex flex-col items-center px-4">
+        <div className="container mx-auto">
+          <div className="mt-12">
+            <h1 className="px-8 text-center text-3xl font-bold">Galeria</h1>
+            {evento.imagemEvento.length > 0 ? (
+              <Carrossel
+                children={(() => {
+                  // Prepara os cards das imagens
+                  const imageCards = evento.imagemEvento.map((imagem, index) => (
+                    <div
+                      key={`image-${index}`}
+                      onClick={() => handleOpenImageModal(imagem.link)}
+                      className="cursor-pointer"
+                    >
+                      <CardImagem
+                        src={imagem.link}
+                        alt={`Imagem do evento ${index + 1}`}
+                      />
+                    </div>
+                  ));
+
+                  // Se houver menos de 3 imagens, adiciona cards vazios para completar
+                  if (imageCards.length < 4) {
+                    const emptyCardsNeeded = 3 - imageCards.length;
+                    for (let i = 0; i < emptyCardsNeeded; i++) {
+                      imageCards.push(
+                        <div
+                          key={`empty-${i}`}
+                          className="bg-gray-100 rounded-lg shadow-md overflow-hidden"
+                        >
+                          <div className="w-72 h-42 flex items-center justify-center text-gray-400">
+                          </div>
+                        </div>
+                      );
+                    }
+                  }
+
+                  return imageCards;
+                })()}
+                linhas={1}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <p>Nenhuma imagem encontrada</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Botão para mostrar todas as imagens */}
+        {evento.imagemEvento.length > 0 && (
+          <div className="mt-8">
+            <Button
+              onClick={() => setMostrarTodasImagens(!mostrarTodasImagens)}
+              variant="outline"
+              className="mb-6"
+            >
+              {mostrarTodasImagens ? 'Ocultar' : `Todas as Imagens (${evento.imagemEvento.length})`}
+            </Button>
+          </div>
+        )}
+
+        {/* Grid de todas as imagens (oculto por padrão) */}
+        {mostrarTodasImagens && evento.imagemEvento.length > 0 && (
+          <div className="w-full md:w-[70%] px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 mb-12">
+              {evento.imagemEvento.map((imagem, index) => (
+                <div
+                  key={index}
+                  className="aspect-video bg-gray-100 rounded-lg overflow-hidden cursor-pointer"
+                  onClick={() => handleOpenImageModal(imagem.link)}
+                >
+                  <img
+                    src={imagem.link}
+                    alt={`Imagem do evento ${index + 1}`}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
-      <p className="text-xl text-gray-700 mb-6">{evento.descricao}</p>
-
-      <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-lg">
-              <strong>Data de Início:</strong> {new Date(evento.dataInicio).toLocaleDateString()}
-            </p>
-          </div>
-          <div>
-            <p className="text-lg">
-              <strong>Data de Finalização:</strong> {new Date(evento.dataFim).toLocaleDateString()}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-lg">
-              <strong>Coordenador:</strong>{" "}
-              {
-                // Primeiro verifica em eventoUsuario
-                evento.eventoUsuario?.find((u) => u.funcao === "Coordenador")?.usuario?.Nome ??
-                  // Se não encontrar, verifica em eventoColaborador
-                  evento.eventoColaborador?.find((c) => c.categoria === "Coordenador")?.colaborador?.nome ??
-                  "Não informado"
-              }
-            </p>
-          </div>
-          <div>
-            <p className="text-lg">
-              <strong>Categoria:</strong> {evento.categoria}
-            </p>
-          </div>
-        </div>
-
-        <div>
-          <strong className="text-lg">Colaboradores:</strong>
-          <ul className="list-disc pl-5 mt-2 text-base">
-            {(!evento.eventoColaborador || evento.eventoColaborador.length === 0) &&
-            (!evento.eventoUsuario || !evento.eventoUsuario.some((u) => u.funcao !== "Coordenador")) ? (
-              <li>Nenhum colaborador</li>
-            ) : (
-              <>
-                {/* Lista de colaboradores externos */}
-                {evento.eventoColaborador?.map((colab, index) => (
-                  <li key={`colab-${index}`}>
-                    {colab.colaborador.nome} - {colab.categoria}
-                  </li>
-                ))}
-
-                {/* Usuários do sistema que não são coordenadores */}
-                {evento.eventoUsuario
-                  ?.filter((u) => u.funcao !== "Coordenador")
-                  .map((user, index) => (
-                    <li key={`user-${index}`}>
-                      {user.usuario.Nome} - {user.funcao}
-                    </li>
-                  ))}
-              </>
-            )}
-          </ul>
-        </div>
-      </div>
-
-      <hr
-        style={{
-          border: "none",
-          borderTop: "1px solid #e5e7eb",
-          margin: "24px 0",
-        }}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-10">
-        {evento.curso && evento.curso.length > 0 ? (
-          evento.curso.map((curso, index) => (
-            <div key={index} className="m-0 p-0 flex">
-              <CardCursoWithButton
-                key={`${curso.nome}-${index}`}
-                idCurso={curso.id}
-                imagem={curso.imagem}
-                nome={curso.nome}
-                descricao={curso.descricao}
-                cargahoraria={curso.cargahoraria}
-                isOwner={isOwner}
-                onCursoDeleted={handleCursoDeleted}
+      {/* Modal de Imagem */}
+      {showImageModal && selectedImage && (
+        <div
+          className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-700 ease-in-out ${isImageModalClosing
+              ? 'bg-slate-600/0 backdrop-blur-none opacity-0'
+              : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
+            }`}
+          style={{
+            backdropFilter: isImageModalClosing ? 'blur(0px)' : 'blur(8px)',
+            background: isImageModalClosing
+              ? 'rgba(71, 85, 105, 0)'
+              : 'rgba(71, 85, 105, 0.4)'
+          }}
+          onClick={handleCloseImageModal}
+        >
+          <div
+            className={`bg-white rounded-lg shadow-2xl max-w-4xl max-h-[90vh] w-full overflow-hidden transform transition-all duration-700 ease-in-out ${isImageModalClosing
+                ? 'scale-95 opacity-0 translate-y-4'
+                : 'scale-100 opacity-100 translate-y-0'
+              }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative">
+              <button
+                onClick={handleCloseImageModal}
+                className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-light leading-none transition-colors duration-200"
+              >
+                ×
+              </button>
+              <img
+                src={selectedImage}
+                alt="Imagem ampliada"
+                className="w-full h-auto max-h-[90vh] object-contain"
               />
             </div>
-          ))
-        ) : (
-          <p className="col-span-3 text-center text-gray-500">Nenhum evento cadastrado.</p>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
-  )
+  );
 }
-
-export default EventoHome
