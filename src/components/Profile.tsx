@@ -580,7 +580,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-700">Usuário não encontrado</h2>
+          <h2 className="text-xl font-semibold text-gray-700">Usuário não encontrado.</h2>
           <button
             onClick={() => router.push("/login")}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
@@ -930,7 +930,7 @@ export default function ProfilePage() {
             </Carrossel>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <p>Nenhum projeto encontrado</p>
+              <p>Nenhum projeto encontrado.</p>
             </div>
           )}
           <button
@@ -975,7 +975,7 @@ export default function ProfilePage() {
             </Carrossel>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <p>Nenhum evento encontrado</p>
+              <p>Nenhum evento encontrado.</p>
             </div>
           )}
           <button

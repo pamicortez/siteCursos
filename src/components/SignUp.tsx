@@ -126,17 +126,14 @@ export default function SignUpPage() {
       },
     ],
   })
-  // Após as outras declarações de useState
   const [isClient, setIsClient] = useState(false)
   const [isSendingCode, setIsSendingCode] = useState(false)
   const [isVerifyingCode, setIsVerifyingCode] = useState(false)
 
-  // Adicione este useEffect logo após os outros useEffects
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  // Redirect se já estiver logado
   useEffect(() => {
     if (status === "authenticated" && isClient) {
       router.push("/profile")
@@ -145,7 +142,6 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (formData.isEmailVerified && currentStep === 2) {
-      // Se por algum motivo estiver na etapa 2 com e-mail já verificado
       setCurrentStep(3);
     }
   }, [formData.isEmailVerified, currentStep]);
@@ -223,7 +219,7 @@ export default function SignUpPage() {
       else if (formData.password.length < 8) newErrors.password = "Senha deve ter pelo menos 8 caracteres"
       if (!formData.confirmPassword) newErrors.confirmPassword = "Confirmação de senha é obrigatória"
       else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Senhas não coincidem"
-    } else if (step === 2) { // Nova validação para etapa de confirmação
+    } else if (step === 2) {
       if (!formData.emailVerificationCode) {
         newErrors.emailVerificationCode = "Código de verificação é obrigatório"
       } else if (formData.emailVerificationCode.length !== 6) {
@@ -242,11 +238,9 @@ export default function SignUpPage() {
   const handleNext = async () => {
     if (validateStep(currentStep)) {
       if (currentStep === 1) {
-        // Se o e-mail já foi verificado, pula para a etapa 3
         if (formData.isEmailVerified) {
           setCurrentStep(3);
         } else {
-          // Se não foi verificado, envia o código (mas não muda de etapa automaticamente)
           await handleSendVerificationCode();
         }
       } 
@@ -261,10 +255,8 @@ export default function SignUpPage() {
 
   const handlePrevious = () => {
   if (currentStep === 3 && formData.isEmailVerified) {
-    // Se estiver na etapa 3 e e-mail verificado, volta para etapa 1
     setCurrentStep(1);
   } else {
-    // Volta normalmente para outras situações
     setCurrentStep(prev => Math.max(prev - 1, 1));
   }
 }
@@ -272,7 +264,6 @@ export default function SignUpPage() {
   const handleCreateAccount = async () => {
     setLoading(true)
     try {
-      // Filtrar arrays vazios e preparar dados para o backend
       const filteredData = {
         Nome: formData.Nome,
         email: formData.email,
@@ -317,7 +308,6 @@ export default function SignUpPage() {
     }
   }
 
-
   const handleCloseModal = () => {
     setIsModalClosing(true)
     setTimeout(() => {
@@ -328,7 +318,6 @@ export default function SignUpPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Esta função pode ser simplificada ou removida se não for mais necessária
   }
 
   const handleFinish = () => {
@@ -356,19 +345,17 @@ export default function SignUpPage() {
       isError: false
     });
     setShowResultDialog(true);
-    setCurrentStep(2); // Só avança se não houver erro
+    setCurrentStep(2);
   } catch (error: any) {
     if (error.response?.status === 409) {
-      // Email já cadastrado - mostra erro no campo e não exibe popup
       setErrors(prev => ({
         ...prev,
         email: 'Este email já está cadastrado'
       }));
-      setCurrentStep(1); // Permanece na etapa 1
-      return; // Sai sem mostrar popup
+      setCurrentStep(1);
+      return;
     }
     
-    // Outros erros mostram popup normalmente
     setResultDialog({
       title: 'Erro',
       message: error.response?.data?.error || 'Falha ao enviar código. Tente novamente.',
