@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma, funcaoProjeto} from '@prisma/client';
-import { tipoParticipacao } from '@prisma/client';
+import { tipoParticipacao as typeParticipacao} from '@prisma/client';
 
 
 // Método GET para retornar todos os eventos
@@ -124,18 +124,23 @@ export async function DELETE(request: Request) {
 // Método para criar um novo evento. É preciso ter um usuário
 export async function POST(request: Request) {
 	try {
-	  const setParticipacao = new Set(Object.values(tipoParticipacao))
+	  const setParticipacao = new Set(Object.values(typeParticipacao))
 	  const data: Prisma.EventoCreateInput = await request.json(); // Pega os dados do corpo da requisição
 	  
 	  const { dataInicio, dataFim} = data;
-	  const { colaboradores,usuarioId, participacao, linkImgVid, ...eventoData } = data as any;
+	  const { colaboradores,usuarioId, tipoParticipacao, imagem, ...eventoData } = data as any;
 
 	  // Validação: usuárioId e funcao são obrigatórios
-	  if (!usuarioId || !participacao) {
+	  console.log("A")
+	  if (!usuarioId || !tipoParticipacao) {
+		console.log("B")
 		return NextResponse.json({error: 'Id do usuário e o tipo de participação são obrigatórios'}, {status: 400})
-	  } else if (!setParticipacao.has(participacao)){
+	  } else if (!setParticipacao.has(tipoParticipacao)){
+		console.log("C")
 		return NextResponse.json({error: 'Tipo de participação não reconhecido'}, {status: 400})
-	  } else if(!linkImgVid){
+	  } else if(!imagem){
+		console.log("D")
+		console.log(data)
 		return NextResponse.json({error: 'Imagem é obrigatória'}, {status: 400})
 	  }
   
@@ -147,6 +152,7 @@ export async function POST(request: Request) {
 
 	// Verificação para garantir que a data de fim não seja anterior à data de início
 	  if (new Date(dataFim) < new Date(dataInicio)) {
+		console.log("E")
 		return NextResponse.json({error: 'O fim do evento é anterior ao início'}, {status: 400});
 	  }
 
@@ -176,14 +182,14 @@ export async function POST(request: Request) {
 		data:{
 			idEvento: novoEvento.id,
 			idUsuario: usuarioId,
-			tipoParticipacao: participacao
+			tipoParticipacao: tipoParticipacao
 		}
 	  })
 
 	  // Imagem/video do evento
 	  const novoImagemEvento = await prisma.imagemEvento.create({
 		data: {
-			link: linkImgVid,
+			link: imagem,
 			idEvento: novoEvento.id
 		}
 	  })
@@ -192,6 +198,7 @@ export async function POST(request: Request) {
 	} catch (error) {
 	  if (error instanceof Prisma.PrismaClientValidationError){
 		console.error(error.message);
+		console.log("F")
 		return NextResponse.json({error: 'Tipos dos dados incorretos (Ou enum não correspondente)'}, {status: 400})
 	  } 
 	  console.error('Erro ao criar o evento:', error);
