@@ -126,17 +126,14 @@ export default function SignUpPage() {
       },
     ],
   })
-  // Após as outras declarações de useState
   const [isClient, setIsClient] = useState(false)
   const [isSendingCode, setIsSendingCode] = useState(false)
   const [isVerifyingCode, setIsVerifyingCode] = useState(false)
 
-  // Adicione este useEffect logo após os outros useEffects
   useEffect(() => {
     setIsClient(true)
   }, [])
 
-  // Redirect se já estiver logado
   useEffect(() => {
     if (status === "authenticated" && isClient) {
       router.push("/profile")
@@ -145,7 +142,6 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (formData.isEmailVerified && currentStep === 2) {
-      // Se por algum motivo estiver na etapa 2 com e-mail já verificado
       setCurrentStep(3);
     }
   }, [formData.isEmailVerified, currentStep]);
@@ -223,7 +219,7 @@ export default function SignUpPage() {
       else if (formData.password.length < 8) newErrors.password = "Senha deve ter pelo menos 8 caracteres"
       if (!formData.confirmPassword) newErrors.confirmPassword = "Confirmação de senha é obrigatória"
       else if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Senhas não coincidem"
-    } else if (step === 2) { // Nova validação para etapa de confirmação
+    } else if (step === 2) {
       if (!formData.emailVerificationCode) {
         newErrors.emailVerificationCode = "Código de verificação é obrigatório"
       } else if (formData.emailVerificationCode.length !== 6) {
@@ -240,32 +236,27 @@ export default function SignUpPage() {
   }
 
   const handleNext = async () => {
-  if (validateStep(currentStep)) {
-    if (currentStep === 1) {
-      // Se o e-mail já foi verificado, pula para a etapa 3
-      if (formData.isEmailVerified) {
-        setCurrentStep(3);
-      } else {
-        // Se não foi verificado, envia o código e vai para etapa 2
-        await handleSendVerificationCode();
-        setCurrentStep(2);
+    if (validateStep(currentStep)) {
+      if (currentStep === 1) {
+        if (formData.isEmailVerified) {
+          setCurrentStep(3);
+        } else {
+          await handleSendVerificationCode();
+        }
+      } 
+      else if (currentStep === 4) {
+        await handleCreateAccount();
+      } 
+      else {
+        setCurrentStep(prev => Math.min(prev + 1, 5));
       }
-    } 
-    else if (currentStep === 4) {
-      await handleCreateAccount();
-    } 
-    else {
-      setCurrentStep(prev => Math.min(prev + 1, 5));
     }
   }
-}
 
   const handlePrevious = () => {
   if (currentStep === 3 && formData.isEmailVerified) {
-    // Se estiver na etapa 3 e e-mail verificado, volta para etapa 1
     setCurrentStep(1);
   } else {
-    // Volta normalmente para outras situações
     setCurrentStep(prev => Math.max(prev - 1, 1));
   }
 }
@@ -273,7 +264,6 @@ export default function SignUpPage() {
   const handleCreateAccount = async () => {
     setLoading(true)
     try {
-      // Filtrar arrays vazios e preparar dados para o backend
       const filteredData = {
         Nome: formData.Nome,
         email: formData.email,
@@ -318,7 +308,6 @@ export default function SignUpPage() {
     }
   }
 
-
   const handleCloseModal = () => {
     setIsModalClosing(true)
     setTimeout(() => {
@@ -329,7 +318,6 @@ export default function SignUpPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Esta função pode ser simplificada ou removida se não for mais necessária
   }
 
   const handleFinish = () => {
@@ -345,28 +333,39 @@ export default function SignUpPage() {
   }
 
   const handleSendVerificationCode = async () => {
-  setIsSendingCode(true)
+  setIsSendingCode(true);
   try {
-    await axios.post("/api/solicitar-email", {
+    const response = await axios.post("/api/solicitar-email", {
       email: formData.email
-    })
+    });
+
     setResultDialog({
       title: 'Código enviado',
       message: 'Enviamos um código de verificação para seu e-mail.',
       isError: false
-    })
-    setShowResultDialog(true)
+    });
+    setShowResultDialog(true);
+    setCurrentStep(2);
   } catch (error: any) {
+    if (error.response?.status === 409) {
+      setErrors(prev => ({
+        ...prev,
+        email: 'Este email já está cadastrado'
+      }));
+      setCurrentStep(1);
+      return;
+    }
+    
     setResultDialog({
       title: 'Erro',
       message: error.response?.data?.error || 'Falha ao enviar código. Tente novamente.',
       isError: true
-    })
-    setShowResultDialog(true)
+    });
+    setShowResultDialog(true);
   } finally {
-    setIsSendingCode(false)
+    setIsSendingCode(false);
   }
-}
+};
 
 const handleVerifyCode = async () => {
   setIsVerifyingCode(true)
@@ -476,6 +475,22 @@ const handleVerifyCode = async () => {
           {/* Step 1: Basic Information */}
           {currentStep === 1 && (
             <div className="space-y-4">
+
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-yellow-700">
+                      <strong>Atenção:</strong> Cadastro será liberado apenas para professores.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <h3 className="text-xl font-semibold mb-4 text-gray-800">Informações Básicas</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
