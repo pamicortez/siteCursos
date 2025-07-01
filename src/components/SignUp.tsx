@@ -240,25 +240,24 @@ export default function SignUpPage() {
   }
 
   const handleNext = async () => {
-  if (validateStep(currentStep)) {
-    if (currentStep === 1) {
-      // Se o e-mail já foi verificado, pula para a etapa 3
-      if (formData.isEmailVerified) {
-        setCurrentStep(3);
-      } else {
-        // Se não foi verificado, envia o código e vai para etapa 2
-        await handleSendVerificationCode();
-        setCurrentStep(2);
+    if (validateStep(currentStep)) {
+      if (currentStep === 1) {
+        // Se o e-mail já foi verificado, pula para a etapa 3
+        if (formData.isEmailVerified) {
+          setCurrentStep(3);
+        } else {
+          // Se não foi verificado, envia o código (mas não muda de etapa automaticamente)
+          await handleSendVerificationCode();
+        }
+      } 
+      else if (currentStep === 4) {
+        await handleCreateAccount();
+      } 
+      else {
+        setCurrentStep(prev => Math.min(prev + 1, 5));
       }
-    } 
-    else if (currentStep === 4) {
-      await handleCreateAccount();
-    } 
-    else {
-      setCurrentStep(prev => Math.min(prev + 1, 5));
     }
   }
-}
 
   const handlePrevious = () => {
   if (currentStep === 3 && formData.isEmailVerified) {
@@ -345,28 +344,41 @@ export default function SignUpPage() {
   }
 
   const handleSendVerificationCode = async () => {
-  setIsSendingCode(true)
+  setIsSendingCode(true);
   try {
-    await axios.post("/api/solicitar-email", {
+    const response = await axios.post("/api/solicitar-email", {
       email: formData.email
-    })
+    });
+
     setResultDialog({
       title: 'Código enviado',
       message: 'Enviamos um código de verificação para seu e-mail.',
       isError: false
-    })
-    setShowResultDialog(true)
+    });
+    setShowResultDialog(true);
+    setCurrentStep(2); // Só avança se não houver erro
   } catch (error: any) {
+    if (error.response?.status === 409) {
+      // Email já cadastrado - mostra erro no campo e não exibe popup
+      setErrors(prev => ({
+        ...prev,
+        email: 'Este email já está cadastrado'
+      }));
+      setCurrentStep(1); // Permanece na etapa 1
+      return; // Sai sem mostrar popup
+    }
+    
+    // Outros erros mostram popup normalmente
     setResultDialog({
       title: 'Erro',
       message: error.response?.data?.error || 'Falha ao enviar código. Tente novamente.',
       isError: true
-    })
-    setShowResultDialog(true)
+    });
+    setShowResultDialog(true);
   } finally {
-    setIsSendingCode(false)
+    setIsSendingCode(false);
   }
-}
+};
 
 const handleVerifyCode = async () => {
   setIsVerifyingCode(true)
@@ -476,6 +488,22 @@ const handleVerifyCode = async () => {
           {/* Step 1: Basic Information */}
           {currentStep === 1 && (
             <div className="space-y-4">
+
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-yellow-700">
+                      <strong>Atenção:</strong> Cadastro será liberado apenas para professores.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <h3 className="text-xl font-semibold mb-4 text-gray-800">Informações Básicas</h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

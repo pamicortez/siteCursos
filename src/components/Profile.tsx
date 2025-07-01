@@ -129,7 +129,6 @@ export default function ProfilePage() {
   const [editMode, setEditMode] = useState(false)
   const [showImageCropper, setShowImageCropper] = useState(false)
   const [isModalClosing, setIsModalClosing] = useState(false)
-  // const [error, setError] = useState<string | null>(null)
   const [showResultDialog, setShowResultDialog] = useState(false)
   const [resultDialog, setResultDialog] = useState({
     title: '',
@@ -155,17 +154,14 @@ export default function ProfilePage() {
     }>,
   })
 
-  // Função auxiliar para fazer requests com tratamento de erro
   const fetchWithErrorHandling = async (url: string) => {
     try {
       const response = await fetch(url)
 
-      // Verifica se a resposta é bem-sucedida
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      // Verifica o Content-Type para garantir que é JSON
       const contentType = response.headers.get("content-type")
       if (!contentType || !contentType.includes("application/json")) {
         const text = await response.text()
@@ -180,19 +176,16 @@ export default function ProfilePage() {
     }
   }
 
-  // Redirect se não estiver logado
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/login")
     }
   }, [status, router])
 
-  // Carregar dados do usuário
   useEffect(() => {
     const fetchUsuario = async () => {
       if (session?.user?.id) {
         try {
-          //setError(null)
           const data = await fetchWithErrorHandling(`/api/usuario?id=${session.user.id}`)
           setUsuario(data)
           setFormData({
@@ -208,7 +201,6 @@ export default function ProfilePage() {
           })
         } catch (error) {
           console.error("Erro ao carregar usuário:", error)
-          //setError("Erro ao carregar dados do usuário")
           setResultDialog({
             title: 'Erro',
             message: "Erro ao carregar dados do usuário",
@@ -224,17 +216,14 @@ export default function ProfilePage() {
     fetchUsuario()
   }, [session])
 
-  // Carregar projetos do usuário - CORRIGIDO: usando endpoint correto baseado no schema
   useEffect(() => {
     const fetchProjetos = async () => {
       if (session?.user?.id) {
         try {
-          // Busca projetos através da tabela de relacionamento projetoUsuario
           const data = await fetchWithErrorHandling(`/api/usuario/${session.user.id}/projetos`)
           setProjetos(Array.isArray(data) ? data : [])
         } catch (error) {
           console.error("Erro ao carregar projetos:", error)
-          // Em caso de erro 404, define array vazio
           setProjetos([])
         }
       }
@@ -243,17 +232,14 @@ export default function ProfilePage() {
     fetchProjetos()
   }, [session])
 
-  // Carregar eventos do usuário - CORRIGIDO: usando endpoint correto baseado no schema
   useEffect(() => {
     const fetchEventos = async () => {
       if (session?.user?.id) {
         try {
-          // Busca eventos através da tabela de relacionamento eventoUsuario
           const data = await fetchWithErrorHandling(`/api/usuario/${session.user.id}/eventos`)
           setEventos(Array.isArray(data) ? data : [])
         } catch (error) {
           console.error("Erro ao carregar eventos:", error)
-          // Em caso de erro 404, define array vazio
           setEventos([])
         }
       }
@@ -289,7 +275,6 @@ export default function ProfilePage() {
     }))
   }
 
-  // Função para adicionar item ao array
   const addArrayItem = (arrayName: "links" | "publicacoes" | "carreira") => {
     setFormData((prev) => ({
       ...prev,
@@ -304,7 +289,6 @@ export default function ProfilePage() {
     }))
   }
 
-  // Função para remover item do array
   const removeArrayItem = (arrayName: "links" | "publicacoes" | "carreira", index: number) => {
     setFormData((prev) => ({
       ...prev,
@@ -312,7 +296,6 @@ export default function ProfilePage() {
     }))
   }
 
-  // Função para alterar item específico do array
   const handleArrayInputChange = (
     arrayName: "links" | "publicacoes" | "carreira",
     index: number,
@@ -329,15 +312,11 @@ export default function ProfilePage() {
     setShowResultDialog(false)
   }
 
-  // FUNÇÃO CORRIGIDA - handleSave
   const handleSave = async () => {
     try {
       setLoading(true)
-      //setError(null)
 
-      // Verificar se o usuário está autenticado
       if (!session?.user?.id) {
-        //setError("Você precisa estar logado para editar seu perfil")
         setResultDialog({
           title: 'Erro',
           message: "Você precisa estar logado para editar seu perfil",
@@ -347,9 +326,7 @@ export default function ProfilePage() {
         return
       }
 
-      // Validar dados básicos antes de enviar
       if (!formData.Nome.trim()) {
-        //setError("Nome é obrigatório")
         setResultDialog({
           title: 'Erro',
           message: "Nome é obrigatório",
@@ -360,7 +337,6 @@ export default function ProfilePage() {
       }
 
       if (!formData.email.trim()) {
-        //setError("Email é obrigatório")
         setResultDialog({
           title: 'Erro',
           message: "Email é obrigatório",
@@ -370,10 +346,8 @@ export default function ProfilePage() {
         return
       }
 
-      // Validar formato do email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (!emailRegex.test(formData.email)) {
-        //setError("Email inválido")
         setResultDialog({
           title: 'Erro',
           message: "Email inválido",
@@ -383,9 +357,7 @@ export default function ProfilePage() {
         return
       }
 
-      // Preparar todos os dados em um único objeto
       const allUserData = {
-        // Dados básicos do usuário (apenas os que foram alterados)
         ...(formData.Nome !== usuario?.Nome && { Nome: formData.Nome.trim() }),
         ...(formData.email !== usuario?.email && { email: formData.email.toLowerCase().trim() }),
         ...(formData.Titulacao !== usuario?.Titulacao && { Titulacao: formData.Titulacao }),
@@ -399,7 +371,6 @@ export default function ProfilePage() {
           resumoPessoal: formData.resumoPessoal.trim(),
         }),
 
-        // Arrays relacionados - filtrar apenas itens válidos
         links: formData.links
           .filter((link) => link.link.trim() !== "" && link.tipo.trim() !== "")
           .map((link) => ({
@@ -437,17 +408,15 @@ export default function ProfilePage() {
 
       console.log("Dados sendo enviados:", allUserData)
 
-      // Fazer a requisição com headers corretos e aguardar a sessão ser válida
       const response = await fetch(`/api/usuario/editar?id=${session.user.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // Importante: incluir cookies de sessão
+        credentials: "include",
         body: JSON.stringify(allUserData),
       })
 
-      // Verificar se a resposta está OK antes de tentar fazer parse
       if (!response.ok) {
         let errorMessage = `Erro ${response.status}: ${response.statusText}`
 
@@ -458,21 +427,17 @@ export default function ProfilePage() {
           console.warn("Não foi possível fazer parse do erro:", parseError)
         }
 
-        // Tratar diferentes códigos de status
         switch (response.status) {
           case 401:
-            //setError("Sessão expirada. Faça login novamente.")
             setResultDialog({
               title: 'Erro',
               message: "Sessão expirada. Faça login novamente.",
               isError: true,
             })
             setShowResultDialog(true)
-            // Opcional: redirecionar para login após um delay
             setTimeout(() => router.push("/login"), 2000)
             return
           case 403:
-            //setError("Você não tem permissão para editar este perfil.")
             setResultDialog({
               title: 'Erro',
               message: "Você não tem permissão para editar este perfil.",
@@ -481,7 +446,6 @@ export default function ProfilePage() {
             setShowResultDialog(true)
             return
           case 409:
-            //setError("Este email já está sendo usado por outro usuário.")
             setResultDialog({
               title: 'Erro',
               message: "Este email já está sendo usado por outro usuário.",
@@ -490,7 +454,6 @@ export default function ProfilePage() {
             setShowResultDialog(true)
             return
           case 400:
-            //setError(`Erro de validação: ${errorMessage}`)
             setResultDialog({
               title: 'Erro',
               message: `Erro de validação: ${errorMessage}`,
@@ -503,15 +466,12 @@ export default function ProfilePage() {
         }
       }
 
-      // Parse da resposta de sucesso
       const data = await response.json()
 
-      // Verificar se os dados foram retornados corretamente
       if (!data || !data.id) {
         throw new Error("Nenhum dado válido foi retornado do servidor")
       }
 
-      // Atualizar estado local com dados atualizados
       setUsuario(data)
       setFormData({
         Nome: data.Nome || "",
@@ -526,7 +486,6 @@ export default function ProfilePage() {
       })
 
       setEditMode(false)
-      //setError(null)
 
       setResultDialog({
         title: 'Sucesso!',
@@ -537,9 +496,7 @@ export default function ProfilePage() {
     } catch (error: any) {
       console.error("Erro ao atualizar perfil:", error)
 
-      // Tratamento de erro mais específico
       if (error.name === "TypeError" && error.message.includes("fetch")) {
-        //setError("Erro de conexão. Verifique sua internet e tente novamente.")
         setResultDialog({
           title: 'Erro',
           message: "Erro de conexão. Verifique sua internet e tente novamente.",
@@ -547,7 +504,6 @@ export default function ProfilePage() {
         })
         setShowResultDialog(true)
       } else if (error.message.includes("JSON")) {
-        //setError("Erro no formato dos dados. Tente novamente.")
         setResultDialog({
           title: 'Erro',
           message: "Erro no formato dos dados. Tente novamente.",
@@ -555,7 +511,6 @@ export default function ProfilePage() {
         })
         setShowResultDialog(true)
       } else if (error.message.includes("NetworkError") || error.message.includes("Failed to fetch")) {
-        //setError("Erro de rede. Verifique sua conexão e tente novamente.")
         setResultDialog({
           title: 'Erro',
           message: "Erro de rede. Verifique sua conexão e tente novamente.",
@@ -563,7 +518,6 @@ export default function ProfilePage() {
         })
         setShowResultDialog(true)
       } else {
-        //setError(error.message || "Erro ao atualizar perfil. Tente novamente.")
         setResultDialog({
           title: 'Erro',
           message: error.message || "Erro ao atualizar perfil. Tente novamente.",
@@ -586,7 +540,7 @@ export default function ProfilePage() {
     setTimeout(() => {
       setShowImageCropper(false)
       setIsModalClosing(false)
-    }, 700) // Duração da animação de fade out
+    }, 700)
   }
 
   const isValidTipoParticipacao = (tipo: string): tipo is "Ouvinte" | "Palestrante" | "Organizador" => {
@@ -622,23 +576,6 @@ export default function ProfilePage() {
     )
   }
 
-  // if (error) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center">
-  //       <div className="text-center">
-  //         <h2 className="text-xl font-semibold text-red-600 mb-2">Erro</h2>
-  //         <p className="text-gray-700">{error}</p>
-  //         <button
-  //           onClick={() => window.location.reload()}
-  //           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-  //         >
-  //           Tentar novamente
-  //         </button>
-  //       </div>
-  //     </div>
-  //   )
-  // }
-
   if (!usuario) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -662,34 +599,15 @@ export default function ProfilePage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-gray-800">Meu Perfil</h1>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              {editMode ? (
-                <>
-                  <button
-                    onClick={handleSave}
-                    disabled={loading}
-                    className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-600 transition disabled:opacity-50"
-                  >
-                    {loading ? "Salvando..." : "Salvar"}
-                  </button>
-                  <button
-                    onClick={() => setEditMode(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition"
-                  >
-                    Cancelar
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => setEditMode(true)}
-                  className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-600 transition"
-                >
-                  Editar Perfil
-                </button>
-              )}
-            </div>
+            {!editMode && (
+              <button
+                onClick={() => setEditMode(true)}
+                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-600 transition"
+              >
+                Editar Perfil
+              </button>
+            )}
           </div>
-          {/* {error && <div className="mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>} */}
         </div>
 
         {/* Foto de Perfil e Informações Básicas */}
@@ -958,6 +876,23 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Botões de Salvar e Cancelar - Agora no final do formulário */}
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+              <button
+                onClick={handleSave}
+                disabled={loading}
+                className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-600 transition disabled:opacity-50"
+              >
+                {loading ? "Salvando..." : "Salvar"}
+              </button>
+              <button
+                onClick={() => setEditMode(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         )}
