@@ -131,16 +131,11 @@ export async function POST(request: Request) {
 	  const { colaboradores,usuarioId, tipoParticipacao, imagem, ...eventoData } = data as any;
 
 	  // Validação: usuárioId e funcao são obrigatórios
-	  console.log("A")
 	  if (!usuarioId || !tipoParticipacao) {
-		console.log("B")
 		return NextResponse.json({error: 'Id do usuário e o tipo de participação são obrigatórios'}, {status: 400})
 	  } else if (!setParticipacao.has(tipoParticipacao)){
-		console.log("C")
 		return NextResponse.json({error: 'Tipo de participação não reconhecido'}, {status: 400})
 	  } else if(!imagem){
-		console.log("D")
-		console.log(data)
 		return NextResponse.json({error: 'Imagem é obrigatória'}, {status: 400})
 	  }
   
@@ -152,7 +147,6 @@ export async function POST(request: Request) {
 
 	// Verificação para garantir que a data de fim não seja anterior à data de início
 	  if (new Date(dataFim) < new Date(dataInicio)) {
-		console.log("E")
 		return NextResponse.json({error: 'O fim do evento é anterior ao início'}, {status: 400});
 	  }
 
@@ -198,7 +192,6 @@ export async function POST(request: Request) {
 	} catch (error) {
 	  if (error instanceof Prisma.PrismaClientValidationError){
 		console.error(error.message);
-		console.log("F")
 		return NextResponse.json({error: 'Tipos dos dados incorretos (Ou enum não correspondente)'}, {status: 400})
 	  } 
 	  console.error('Erro ao criar o evento:', error);
@@ -233,14 +226,14 @@ export async function PATCH(request: Request) {
 		);
 		}
 	  
-	  const {colaboradores, participacao, usuarioId, linkImgVid, imagemId, ...dadosEvento} = atualizacoes;
+	  const {colaboradores, tipoParticipacao, usuarioId, imagem, imagemId, ...dadosEvento} = atualizacoes;
 
 	  const eventoAtualizado = await prisma.evento.update({
 		where: { id },
 		data: dadosEvento,
 	  });
 
-	  if (participacao){
+	  if (tipoParticipacao){
 		const eventoUsu = await prisma.eventoUsuario.findFirst({
 			where: {
 				idEvento: id,
@@ -252,19 +245,19 @@ export async function PATCH(request: Request) {
 			await prisma.eventoUsuario.update({
 				where: { id: eventoUsu.id },
 				data: {
-				  tipoParticipacao: participacao,
+				  tipoParticipacao: tipoParticipacao,
 				},
 			  });
 		}
 	  }
 
-	  if (linkImgVid){
+	  if (imagem){
 			await prisma.imagemEvento.update({
 				where: { idEvento: id,
 						 id: imagemId
 				},
 				data:{
-					link: linkImgVid
+					link: imagem
 				}
 			})
 	  }
