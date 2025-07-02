@@ -23,6 +23,11 @@ type ColaboradorFromAPI = {
   nome: string;
 };
 
+type User = {
+  id: number;
+  Nome: string;
+  email: string;
+}
 
 interface ProjetoColaborador {
   id: number;
@@ -77,6 +82,11 @@ function ConfirmationModal({
   );
 }
 
+type SuggestionItem = {
+  label: string;
+  nome: string;
+};
+
 export default function Projeto() {
   const router = useRouter();
   const params = useParams();
@@ -114,8 +124,8 @@ export default function Projeto() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<ColaboradorFromAPI[]>([]);
-  const [suggestions, setSuggestions] = useState<{index: number, names: string[]} | null>(null);
+  const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<User[]>([]);
+  const [suggestions, setSuggestions] = useState<{ index: number; names: SuggestionItem[] } | null>(null);
   const { data: session, status } = useSession();
   const [showImageCropper, setShowImageCropper] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null); // base64 da imagem original
@@ -141,7 +151,7 @@ export default function Projeto() {
 
     const fetchColaboradores = async () => {
       try {
-        const response = await fetch("/api/colaborador");
+        const response = await fetch("/api/usuario?tipo=Ativo");
         if (!response.ok) {
           throw new Error("Erro ao buscar colaboradores");
         }
@@ -281,20 +291,43 @@ export default function Projeto() {
       name: normalizedValue,
     };
     setCollaborators(updatedCollaborators);
-  
+    
     // Mostrar sugestões se houver texto
     if (normalizedValue.length > 0) {
       const matchedNames = colaboradoresDisponiveis
-        .filter(colab => colab.nome.toLowerCase().includes(normalizedValue.toLowerCase()))
-        .map(colab => colab.nome)
+        .filter(colab => {
+                const isNotCurrentUser = colab.id !== Number(session?.user?.id);
+                const matchesNome = colab.Nome.toLowerCase().includes(normalizedValue.toLowerCase());
+                const matchesEmail = colab.email.toLowerCase().includes(normalizedValue.toLowerCase());
+
+                console.log({
+                  colabId: colab.id,
+                  sessionUserId: Number(session?.user?.id),
+                  isNotCurrentUser,
+                  matchesNome,
+                  matchesEmail,
+                  shouldInclude: isNotCurrentUser && (matchesNome || matchesEmail)
+                });
+
+                return isNotCurrentUser && (matchesNome || matchesEmail);
+              })
+            .map(colab => ({
+                    label: `${colab.Nome} (${colab.email})`,
+                    nome: colab.Nome
+              }))
         .slice(0, 5); // Limita a 5 sugestões
       
-      setSuggestions(matchedNames.length > 0 ? {index, names: matchedNames} : null);
+      setSuggestions(matchedNames.length > 0 ? { index, names: matchedNames } : null);
     } else {
       setSuggestions(null);
     }
   };
-
+    const handleSelectSuggestion = (nome: string, index: number) => {
+      const updated = [...collaborators];
+      updated[index].name = nome;
+      setCollaborators(updated);
+      setSuggestions(null);
+    };
   const handleCollaboratorRoleChange = (index: number, value: string) => {
     const updatedCollaborators = [...collaborators];
     updatedCollaborators[index] = {
@@ -604,19 +637,19 @@ export default function Projeto() {
                     value={collaborator.name}
                     onChange={(e) => handleCollaboratorNameChange(index, e.target.value)}
                   />
-                  {suggestions?.index === index && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
-                      {suggestions.names.map((name, i) => (
-                        <div 
-                          key={i}
-                          className="p-2 hover:bg-gray-100 cursor-pointer"
-                          onClick={() => selectSuggestion(index, name)}
-                        >
-                          {name}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+{suggestions?.index === index && (
+  <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
+    {suggestions.names.map((nameObj, i) => (
+      <div 
+        key={i}
+        className="p-2 hover:bg-gray-100 cursor-pointer"
+        onClick={() => selectSuggestion(index, nameObj.nome)} // pega só o nome
+      >
+        {nameObj.label} {/* mostra Nome (email) */}
+      </div>
+    ))}
+  </div>
+)}
                 </div>
                 <div className="flex items-center gap-1">
                   <Select
