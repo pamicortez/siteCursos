@@ -3,6 +3,26 @@ import prisma from '@/lib/prismaClient';
 import { Prisma, funcaoProjeto} from '@prisma/client';
 import { tipoParticipacao as typeParticipacao} from '@prisma/client';
 
+const categoriaFormatada: Record<string, string> = {
+  ArtesECultura: "Artes e Cultura",
+  CienciasAgrarias: "Ciências Agrárias",
+  CienciasBiologicasENaturais: "Ciências Biológicas e Naturais",
+  CienciasExatas: "Ciências Exatas",
+  CienciasHumanas: "Ciências Humanas",
+  CienciasSociaisAplicadasANegocios: "Ciências Sociais Aplicadas a Negócios",
+  ComunicacaoEInformacao: "Comunicação e Informação",
+  EducacaoEFormacaoDeProfessores: "Educação e Formação de Professores",
+  EngenhariaEProducao: "Engenharia e Produção",
+  GestaoEPlanejamento: "Gestão e Planejamento",
+  LinguagensLetrasEComunicacao: "Linguagens, Letras e Comunicação",
+  MeioAmbienteESustentabilidade: "Meio Ambiente e Sustentabilidade",
+  NegociosAdministracaoEDireito: "Negócios, Administração e Direito",
+  PesquisaEInovacao: "Pesquisa e Inovação",
+  ProducaoEConstrucao: "Produção e Construção",
+  SaudeEBemEstar: "Saúde e Bem-Estar",
+  ServicosSociasEComunitarios: "Serviços Sociais e Comunitários",
+  TecnologiaEComputacao: "Tecnologia e Computação"
+};
 
 // Método GET para retornar todos os eventos
 export async function GET(request: Request) {
@@ -33,7 +53,12 @@ export async function GET(request: Request) {
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
-			return NextResponse.json(eventos);
+			return NextResponse.json(
+				eventos.map(c => ({
+					...c,
+					categoriaFormatada: categoriaFormatada[c.categoria as keyof typeof categoriaFormatada] || c.categoria
+				}))
+			);
 		}
 		// === Buscando eventos com id ===
 		else if (id) {
@@ -51,7 +76,15 @@ export async function GET(request: Request) {
 				}
 			});
 		
-			return NextResponse.json(evento);
+			if (evento) {
+				return NextResponse.json({
+					...evento,
+					categoriaFormatada: categoriaFormatada[evento.categoria as keyof typeof categoriaFormatada] || evento.categoria
+			});
+			} else {
+				return new NextResponse('Projeto não encontrado', { status: 404 });
+			}
+
 		}
 		// === Buscando eventos com data >= data_inicio e data <= data_fim ===
 		else if (data_fim && data_inicio) {
@@ -72,7 +105,12 @@ export async function GET(request: Request) {
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
             });
-            return NextResponse.json(eventos);
+            return NextResponse.json(
+				eventos.map(c => ({
+					...c,
+					categoriaFormatada: categoriaFormatada[c.categoria as keyof typeof categoriaFormatada] || c.categoria
+				}))
+			);
 		}
 		// === Buscando todos os eventos === 
 		else {
@@ -90,7 +128,12 @@ export async function GET(request: Request) {
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
-			return NextResponse.json(eventos);
+			return NextResponse.json(
+				eventos.map(e => ({
+					...e,
+					categoriaFormatada: categoriaFormatada[e.categoria as keyof typeof categoriaFormatada] || e.categoria
+				}))
+			);
 		}
 	  } catch (error) {
 		console.error('Erro ao buscar eventos:', error);

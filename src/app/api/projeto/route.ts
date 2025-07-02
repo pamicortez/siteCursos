@@ -9,6 +9,28 @@ import { Prisma, funcaoProjeto} from '@prisma/client';
 - Quais outros  tipos de filtros deve ter para a busca de projetos?
 */
 
+const categoriaFormatada: Record<string, string> = {
+  ArtesECultura: "Artes e Cultura",
+  CienciasAgrarias: "Ciências Agrárias",
+  CienciasBiologicasENaturais: "Ciências Biológicas e Naturais",
+  CienciasExatas: "Ciências Exatas",
+  CienciasHumanas: "Ciências Humanas",
+  CienciasSociaisAplicadasANegocios: "Ciências Sociais Aplicadas a Negócios",
+  ComunicacaoEInformacao: "Comunicação e Informação",
+  EducacaoEFormacaoDeProfessores: "Educação e Formação de Professores",
+  EngenhariaEProducao: "Engenharia e Produção",
+  GestaoEPlanejamento: "Gestão e Planejamento",
+  LinguagensLetrasEComunicacao: "Linguagens, Letras e Comunicação",
+  MeioAmbienteESustentabilidade: "Meio Ambiente e Sustentabilidade",
+  NegociosAdministracaoEDireito: "Negócios, Administração e Direito",
+  PesquisaEInovacao: "Pesquisa e Inovação",
+  ProducaoEConstrucao: "Produção e Construção",
+  SaudeEBemEstar: "Saúde e Bem-Estar",
+  ServicosSociasEComunitarios: "Serviços Sociais e Comunitários",
+  TecnologiaEComputacao: "Tecnologia e Computação"
+};
+
+
 // Método GET para retornar todos os projetos
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
@@ -35,7 +57,12 @@ export async function GET(request: Request) {
 				}, 
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'} 
 			});
-			return NextResponse.json(projetos);
+			return NextResponse.json(
+				projetos.map(p => ({
+					...p,
+					categoriaFormatada: categoriaFormatada[p.categoria as keyof typeof categoriaFormatada] || p.categoria
+				}))
+			);
 		}
 		// === Buscando projetos com id ===
 		else if (id) {
@@ -52,7 +79,14 @@ export async function GET(request: Request) {
 					projetoColaborador: { include: { colaborador: true } },
 				},
 			});
-			return NextResponse.json(projeto); // Retorna a resposta em formato JSON
+			if (projeto) {
+			return NextResponse.json({
+				...projeto,
+				categoriaFormatada: categoriaFormatada[projeto.categoria as keyof typeof categoriaFormatada] || projeto.categoria
+			});
+			} else {
+				return new NextResponse('Projeto não encontrado', { status: 404 });
+			} // Retorna a resposta em formato JSON
 		}
 		// === Buscando projetos com título ===
 		else if (titulo) {
@@ -74,7 +108,13 @@ export async function GET(request: Request) {
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
-			return NextResponse.json(projetos);
+			return NextResponse.json(
+				projetos.map(p => ({
+					...p,
+					categoriaFormatada: categoriaFormatada[p.categoria as keyof typeof categoriaFormatada] || p.categoria
+				}))
+			);
+
 		}
 		// === Buscando projetos com categoria ===
 		else if (categoria) {
@@ -91,7 +131,12 @@ export async function GET(request: Request) {
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
-			return NextResponse.json(projetos);
+			return NextResponse.json(
+				projetos.map(p => ({
+					...p,
+					categoriaFormatada: categoriaFormatada[p.categoria as keyof typeof categoriaFormatada] || p.categoria
+				}))
+			);
 		}
 		// === Buscando todos os projetos === 
 		else {
@@ -108,7 +153,12 @@ export async function GET(request: Request) {
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
-			return NextResponse.json(projetos);
+			return NextResponse.json(
+				projetos.map(p => ({
+					...p,
+					categoriaFormatada: categoriaFormatada[p.categoria as keyof typeof categoriaFormatada] || p.categoria
+				}))
+			);
 		}
 	  } catch (error) {
 		console.error('Erro ao buscar projetos:', error);

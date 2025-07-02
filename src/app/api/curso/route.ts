@@ -3,6 +3,27 @@ import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
 import { connect } from 'http2';
 
+const categoriaFormatada: Record<string, string> = {
+  ArtesECultura: "Artes e Cultura",
+  CienciasAgrarias: "Ciências Agrárias",
+  CienciasBiologicasENaturais: "Ciências Biológicas e Naturais",
+  CienciasExatas: "Ciências Exatas",
+  CienciasHumanas: "Ciências Humanas",
+  CienciasSociaisAplicadasANegocios: "Ciências Sociais Aplicadas a Negócios",
+  ComunicacaoEInformacao: "Comunicação e Informação",
+  EducacaoEFormacaoDeProfessores: "Educação e Formação de Professores",
+  EngenhariaEProducao: "Engenharia e Produção",
+  GestaoEPlanejamento: "Gestão e Planejamento",
+  LinguagensLetrasEComunicacao: "Linguagens, Letras e Comunicação",
+  MeioAmbienteESustentabilidade: "Meio Ambiente e Sustentabilidade",
+  NegociosAdministracaoEDireito: "Negócios, Administração e Direito",
+  PesquisaEInovacao: "Pesquisa e Inovação",
+  ProducaoEConstrucao: "Produção e Construção",
+  SaudeEBemEstar: "Saúde e Bem-Estar",
+  ServicosSociasEComunitarios: "Serviços Sociais e Comunitários",
+  TecnologiaEComputacao: "Tecnologia e Computação"
+};
+
 
 // Método GET para retornar todos os cursos
 export async function GET(request: Request) {
@@ -30,7 +51,12 @@ export async function GET(request: Request) {
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
-			return NextResponse.json(cursos);
+			return NextResponse.json(
+				cursos.map(c => ({
+					...c,
+					categoriaFormatada: categoriaFormatada[c.categoria as keyof typeof categoriaFormatada] || c.categoria
+				}))
+			);
 		}
 		// === Buscando cursos com idUsuario ===
 		else if (idUsuario) {
@@ -49,7 +75,12 @@ export async function GET(request: Request) {
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
-			return NextResponse.json(cursos);
+			return NextResponse.json(
+				cursos.map(c => ({
+					...c,
+					categoriaFormatada: categoriaFormatada[c.categoria as keyof typeof categoriaFormatada] || c.categoria
+				}))
+			);
 		}
 		// === Buscando cursos com idCurso ===
 		else if (idCurso){
@@ -66,7 +97,15 @@ export async function GET(request: Request) {
 				aula: true, // Inclui as aulas relacionadas
 				},
 			});
-			return NextResponse.json(curso);
+			if (curso) {
+				return NextResponse.json({
+					...curso,
+					categoriaFormatada: categoriaFormatada[curso.categoria as keyof typeof categoriaFormatada] || curso.categoria
+				});
+			} else {
+				return new NextResponse('Projeto não encontrado', { status: 404 });
+			}
+
 		}
 		// === Buscando cursos com categoria ===
 		else if (categoria) {
@@ -85,7 +124,12 @@ export async function GET(request: Request) {
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
-			return NextResponse.json(cursos);
+			return NextResponse.json(
+				cursos.map(c => ({
+					...c,
+					categoriaFormatada: categoriaFormatada[c.categoria as keyof typeof categoriaFormatada] || c.categoria
+				}))
+			);
 		}
 		// === Buscando todos os cursos === 
 		else {
@@ -102,7 +146,13 @@ export async function GET(request: Request) {
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			  });
-			  return NextResponse.json(cursos); // Retorna todos os cursos
+			  return NextResponse.json(
+				cursos.map(c => ({
+					...c,
+					categoriaFormatada: categoriaFormatada[c.categoria as keyof typeof categoriaFormatada] || c.categoria
+				}))
+			);
+
 		}
 	  } catch (error) {
 		console.error('Erro ao buscar cursos:', error);
