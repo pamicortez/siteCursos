@@ -1,8 +1,28 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma, funcaoProjeto} from '@prisma/client';
-import { tipoParticipacao } from '@prisma/client';
+import { tipoParticipacao as typeParticipacao} from '@prisma/client';
 
+const categoriaFormatada: Record<string, string> = {
+  ArtesECultura: "Artes e Cultura",
+  CienciasAgrarias: "Ciências Agrárias",
+  CienciasBiologicasENaturais: "Ciências Biológicas e Naturais",
+  CienciasExatas: "Ciências Exatas",
+  CienciasHumanas: "Ciências Humanas",
+  CienciasSociaisAplicadasANegocios: "Ciências Sociais Aplicadas a Negócios",
+  ComunicacaoEInformacao: "Comunicação e Informação",
+  EducacaoEFormacaoDeProfessores: "Educação e Formação de Professores",
+  EngenhariaEProducao: "Engenharia e Produção",
+  GestaoEPlanejamento: "Gestão e Planejamento",
+  LinguagensLetrasEComunicacao: "Linguagens, Letras e Comunicação",
+  MeioAmbienteESustentabilidade: "Meio Ambiente e Sustentabilidade",
+  NegociosAdministracaoEDireito: "Negócios, Administração e Direito",
+  PesquisaEInovacao: "Pesquisa e Inovação",
+  ProducaoEConstrucao: "Produção e Construção",
+  SaudeEBemEstar: "Saúde e Bem-Estar",
+  ServicosSociasEComunitarios: "Serviços Sociais e Comunitários",
+  TecnologiaEComputacao: "Tecnologia e Computação"
+};
 
 // Método GET para retornar todos os eventos
 export async function GET(request: Request) {
@@ -33,7 +53,12 @@ export async function GET(request: Request) {
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
 		
-			return NextResponse.json(eventos);
+			return NextResponse.json(
+				eventos.map(c => ({
+					...c,
+					categoriaFormatada: categoriaFormatada[c.categoria as keyof typeof categoriaFormatada] || c.categoria
+				}))
+			);
 		}
 		// === Buscando eventos com id ===
 		else if (id) {
@@ -51,7 +76,15 @@ export async function GET(request: Request) {
 				}
 			});
 		
-			return NextResponse.json(evento);
+			if (evento) {
+				return NextResponse.json({
+					...evento,
+					categoriaFormatada: categoriaFormatada[evento.categoria as keyof typeof categoriaFormatada] || evento.categoria
+			});
+			} else {
+				return new NextResponse('Projeto não encontrado', { status: 404 });
+			}
+
 		}
 		// === Buscando eventos com data >= data_inicio e data <= data_fim ===
 		else if (data_fim && data_inicio) {
@@ -72,7 +105,12 @@ export async function GET(request: Request) {
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
             });
-            return NextResponse.json(eventos);
+            return NextResponse.json(
+				eventos.map(c => ({
+					...c,
+					categoriaFormatada: categoriaFormatada[c.categoria as keyof typeof categoriaFormatada] || c.categoria
+				}))
+			);
 		}
 		// === Buscando todos os eventos === 
 		else {
@@ -90,7 +128,12 @@ export async function GET(request: Request) {
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
 			});
-			return NextResponse.json(eventos);
+			return NextResponse.json(
+				eventos.map(e => ({
+					...e,
+					categoriaFormatada: categoriaFormatada[e.categoria as keyof typeof categoriaFormatada] || e.categoria
+				}))
+			);
 		}
 	  } catch (error) {
 		console.error('Erro ao buscar eventos:', error);
@@ -124,18 +167,18 @@ export async function DELETE(request: Request) {
 // Método para criar um novo evento. É preciso ter um usuário
 export async function POST(request: Request) {
 	try {
-	  const setParticipacao = new Set(Object.values(tipoParticipacao))
+	  const setParticipacao = new Set(Object.values(typeParticipacao))
 	  const data: Prisma.EventoCreateInput = await request.json(); // Pega os dados do corpo da requisição
 	  
 	  const { dataInicio, dataFim} = data;
-	  const { colaboradores,usuarioId, participacao, linkImgVid, ...eventoData } = data as any;
+	  const { colaboradores,usuarioId, tipoParticipacao, imagem, ...eventoData } = data as any;
 
 	  // Validação: usuárioId e funcao são obrigatórios
-	  if (!usuarioId || !participacao) {
+	  if (!usuarioId || !tipoParticipacao) {
 		return NextResponse.json({error: 'Id do usuário e o tipo de participação são obrigatórios'}, {status: 400})
-	  } else if (!setParticipacao.has(participacao)){
+	  } else if (!setParticipacao.has(tipoParticipacao)){
 		return NextResponse.json({error: 'Tipo de participação não reconhecido'}, {status: 400})
-	  } else if(!linkImgVid){
+	  } else if(!imagem){
 		return NextResponse.json({error: 'Imagem é obrigatória'}, {status: 400})
 	  }
   
@@ -176,14 +219,14 @@ export async function POST(request: Request) {
 		data:{
 			idEvento: novoEvento.id,
 			idUsuario: usuarioId,
-			tipoParticipacao: participacao
+			tipoParticipacao: tipoParticipacao
 		}
 	  })
 
 	  // Imagem/video do evento
 	  const novoImagemEvento = await prisma.imagemEvento.create({
 		data: {
-			link: linkImgVid,
+			link: imagem,
 			idEvento: novoEvento.id
 		}
 	  })
@@ -226,14 +269,14 @@ export async function PATCH(request: Request) {
 		);
 		}
 	  
-	  const {colaboradores, participacao, usuarioId, linkImgVid, imagemId, ...dadosEvento} = atualizacoes;
+	  const {colaboradores, tipoParticipacao, usuarioId, imagem, imagemId, ...dadosEvento} = atualizacoes;
 
 	  const eventoAtualizado = await prisma.evento.update({
 		where: { id },
 		data: dadosEvento,
 	  });
 
-	  if (participacao){
+	  if (tipoParticipacao){
 		const eventoUsu = await prisma.eventoUsuario.findFirst({
 			where: {
 				idEvento: id,
@@ -245,19 +288,19 @@ export async function PATCH(request: Request) {
 			await prisma.eventoUsuario.update({
 				where: { id: eventoUsu.id },
 				data: {
-				  tipoParticipacao: participacao,
+				  tipoParticipacao: tipoParticipacao,
 				},
 			  });
 		}
 	  }
 
-	  if (linkImgVid){
+	  if (imagem){
 			await prisma.imagemEvento.update({
 				where: { idEvento: id,
 						 id: imagemId
 				},
 				data:{
-					link: linkImgVid
+					link: imagem
 				}
 			})
 	  }

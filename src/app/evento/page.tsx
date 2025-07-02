@@ -1,6 +1,4 @@
-
 "use client"
-//import 'dotenv/config'
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
@@ -15,18 +13,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Trash2 } from 'lucide-react';
-import { useSession } from "next-auth/react";
 import { useRouter, useParams } from 'next/navigation';
+import { useSession } from "next-auth/react";
+import ImageCropper from "@/components/ui/ImageCropperBase64";
 
-type Collaborator = {
-  name: string;
-  role: string;
-};
 
 type ColaboradorFromAPI = {
   id: number;
   nome: string;
 };
+
+
+interface EventoColaborador {
+  id: number;
+  categoria: string;
+  idEvento: number;
+  idColaborador: number;
+  colaborador: ColaboradorFromAPI;
+}
 
 function ConfirmationModal({ 
   isOpen, 
@@ -48,7 +52,7 @@ function ConfirmationModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200">
         <h2 className="text-xl font-bold mb-4">{title}</h2>
         <p className="mb-6">{message}</p>
@@ -77,28 +81,25 @@ export default function Evento() {
   const router = useRouter();
   const params = useParams();
   const eventoId = params?.id as string | undefined;
-  
 
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [eventoData, setEventoData] = useState({
-  title: '',
-  description: '',
-  startDate: '',
-  endDate: '',
-  startTime: '',
-  endTime: '',
-  category: '',
-  image: '',
-  local: '',
+    title: '',
+    description: '',
+    local: '',
+    link: '',
+    startDate: '',
+    startTime: '',
+    endDate: '',
+    endTime: '',
+    category: '',
+    image: ''
   });
-console.log("estado inicial eventoData:", eventoData);
 
-  const [collaborators, setCollaborators] = useState<Collaborator[]>([
-    { name: '', role: '' },
-  ]);
-
+  const [collaborators, setCollaborators] = useState<Array<{ name: string; role: string }>>([]);
   const [cargosColaborador, setCargosColaborador] = useState<string[]>([]);
-  const [cargo, setCargo] = useState<string>("Coordenador");
+  // Este estado não é mais enviado diretamente, mas pode ser mantido para lógica de UI se necessário.
+  const [cargo, setCargo] = useState<string>("Organizador");
   const [loadingCargos, setLoadingCargos] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showResultDialog, setShowResultDialog] = useState(false);
@@ -113,21 +114,21 @@ console.log("estado inicial eventoData:", eventoData);
     value: string;
     label: string;
   }
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<ColaboradorFromAPI[]>([]);
-  const { data: session, status } = useSession();
   const [suggestions, setSuggestions] = useState<{index: number, names: string[]} | null>(null);
+  const { data: session, status } = useSession();
   const [showImageCropper, setShowImageCropper] = useState(false);
-  const [tempImage, setTempImage] = useState<string | null>(null); // 
-
+  const [tempImage, setTempImage] = useState<string | null>(null);
+  
+  
   useEffect(() => {
     const fetchCargosColaborador = async () => {
       try {
         const response = await fetch("/api/enums/colaboradorCategoria");
-        if (!response.ok) {
-          throw new Error("Erro ao buscar cargos de colaborador");
-        }
+        if (!response.ok) throw new Error("Erro ao buscar cargos de colaborador");
         const data = await response.json();
         setCargosColaborador(data);
       } catch (error) {
@@ -140,9 +141,7 @@ console.log("estado inicial eventoData:", eventoData);
     const fetchColaboradores = async () => {
       try {
         const response = await fetch("/api/colaborador");
-        if (!response.ok) {
-          throw new Error("Erro ao buscar colaboradores");
-        }
+        if (!response.ok) throw new Error("Erro ao buscar colaboradores");
         const data = await response.json();
         setColaboradoresDisponiveis(data);
       } catch (error) {
@@ -155,11 +154,18 @@ console.log("estado inicial eventoData:", eventoData);
   }, []);
 
   useEffect(() => {
+    if (status === "loading") return;
+
+    if (status !== "authenticated") {
+      router.push("/404");
+      return;
+    }
+
     if (eventoId) {
       setIsEditMode(true);
       fetchEventoData(eventoId);
     }
-  }, [eventoId]);
+  }, [eventoId, status]);
 
   const fetchEventoData = async (id: string) => {
     try {
@@ -167,19 +173,47 @@ console.log("estado inicial eventoData:", eventoData);
       if (!response.ok) throw new Error('Evento não encontrado');
 
       const data = await response.json();
+
+      const isEventoOwner = data.eventoUsuario?.some(
+        (user: any) => Number(user.idUsuario) === Number(session?.user?.id)
+      );
+      
+      if (!isEventoOwner) {
+        router.push("/home");
+        return;
+      }
+      
+      const formatDateTime = (dateTimeString?: string) => {
+        if (!dateTimeString) return { date: '', time: '' };
+        const dateObj = new Date(dateTimeString);
+        const date = dateObj.toISOString().split('T')[0];
+        const time = dateObj.toTimeString().split(' ')[0].substring(0, 5);
+        return { date, time };
+      };
+
+      const { date: startDate, time: startTime } = formatDateTime(data.dataInicio);
+      const { date: endDate, time: endTime } = formatDateTime(data.dataFim);
+
       setEventoData({
         title: data.titulo,
         description: data.descricao,
-        startDate: data.dataInicio.split('T')[0],
-        endDate: data.dataFim ? data.dataFim.split('T')[0] : '',
-        category: data.categoria,
-        image: data.imagem,
         local: data.local,
+        link: data.linkParticipacao || '',
+        startDate,
+        startTime,
+        endDate,
+        endTime,
+        category: data.categoria,
+        image: data.imagem || ''    
       });
 
-      if (data.colaboradores) {
-        setCollaborators(data.colaboradores);
-      }
+      const mappedCollaborators = data.eventoColaborador.map((colab: EventoColaborador) => ({
+        name: colab.colaborador.nome,
+        role: colab.categoria 
+      }));
+
+      setCollaborators(mappedCollaborators);
+
     } catch (error) {
       console.error("Erro ao carregar evento:", error);
     }
@@ -189,9 +223,7 @@ console.log("estado inicial eventoData:", eventoData);
     const fetchCategories = async () => {
       try {
         const response = await fetch("/api/enums/categoriaCurso");
-        if (!response.ok) {
-          throw new Error("Erro ao buscar categorias de evento");
-        }
+        if (!response.ok) throw new Error("Erro ao buscar categorias de evento");
         const data = await response.json();
         setCategories(data);
       } catch (error) {
@@ -206,55 +238,32 @@ console.log("estado inicial eventoData:", eventoData);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setEventoData(prevState => ({
-      ...prevState,
-      [name]: value,
-    }));
+    setEventoData(prevState => ({ ...prevState, [name]: value }));
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      
-      reader.onloadend = () => {
-        const base64String = reader.result as string;
-        setEventoData(prevState => ({
-          ...prevState,
-          image: base64String 
-        }));
-      };
-      
-      reader.readAsDataURL(file);
-    }
+    const file = e.target.files?.[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setTempImage(base64);
+      setShowImageCropper(true);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleCollaboratorNameChange = (index: number, value: string) => {
-    // Permite espaços entre palavras, mas remove espaços extras no início/final
-    const trimmedValue = value.trimStart(); // Mantém espaços no meio, mas remove no início
-    
-    // Verifica se há múltiplos espaços consecutivos e substitui por um único
-    const normalizedValue = trimmedValue.replace(/\s+/g, ' ');
-    
-    // Verifica se há mais de duas palavras (nome + sobrenome)
-    const wordCount = normalizedValue.split(' ').filter(word => word.length > 0).length;
-    if (wordCount > 2) {
-      return; // Não permite mais de dois nomes
-    }
-  
     const updatedCollaborators = [...collaborators];
-    updatedCollaborators[index] = {
-      ...updatedCollaborators[index],
-      name: normalizedValue,
-    };
+    updatedCollaborators[index] = { ...updatedCollaborators[index], name: value };
     setCollaborators(updatedCollaborators);
   
-    // Mostrar sugestões se houver texto
-    if (normalizedValue.length > 0) {
+    if (value.length > 0) {
       const matchedNames = colaboradoresDisponiveis
-        .filter(colab => colab.nome.toLowerCase().includes(normalizedValue.toLowerCase()))
+        .filter(colab => colab.nome.toLowerCase().includes(value.toLowerCase()))
         .map(colab => colab.nome)
-        .slice(0, 5); // Limita a 5 sugestões
+        .slice(0, 5);
       
       setSuggestions(matchedNames.length > 0 ? {index, names: matchedNames} : null);
     } else {
@@ -264,29 +273,27 @@ console.log("estado inicial eventoData:", eventoData);
 
   const handleCollaboratorRoleChange = (index: number, value: string) => {
     const updatedCollaborators = [...collaborators];
-    updatedCollaborators[index] = {
-      ...updatedCollaborators[index],
-      role: value,
-    };
+    updatedCollaborators[index] = { ...updatedCollaborators[index], role: value };
     setCollaborators(updatedCollaborators);
   };
 
   const addCollaborator = useCallback(() => {
+    const last = collaborators[collaborators.length - 1];
+    if (last && (!last.name.trim() || !last.role.trim())) {
+      alert("Preencha o nome e o cargo do colaborador antes de adicionar outro.");
+      return;
+    }
     setCollaborators([...collaborators, { name: '', role: '' }]);
   }, [collaborators]);
 
   const removeCollaborator = (index: number) => {
-    const updatedCollaborators = collaborators.filter((_, i) => i !== index);
-    setCollaborators(updatedCollaborators);
+    setCollaborators(collaborators.filter((_, i) => i !== index));
     setSuggestions(null);
   };
 
   const selectSuggestion = (index: number, name: string) => {
     const updatedCollaborators = [...collaborators];
-    updatedCollaborators[index] = {
-      ...updatedCollaborators[index],
-      name: name,
-    };
+    updatedCollaborators[index] = { ...updatedCollaborators[index], name: name };
     setCollaborators(updatedCollaborators);
     setSuggestions(null);
   };
@@ -294,41 +301,45 @@ console.log("estado inicial eventoData:", eventoData);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validação dos nomes dos colaboradores (remove espaços extras)
-    const validatedCollaborators = collaborators.map(colab => ({
-      ...colab,
-      name: colab.name.trim().replace(/\s+/g, ' '), 
-    }));
+    const dataInicioISO = new Date(`${eventoData.startDate}T${eventoData.startTime}`).toISOString();
+    const dataFimISO = new Date(`${eventoData.endDate}T${eventoData.endTime}`).toISOString();
+
+    const validatedCollaborators = collaborators
+      .filter(c => c.name.trim() && c.role)
+      .map(colab => ({
+        ...colab,
+        name: colab.name.trim().replace(/\s+/g, ' '), 
+      }));
 
     const requestBody = {
       titulo: eventoData.title,
-      imagem: eventoData.image,
       descricao: eventoData.description,
+      local: eventoData.local,
+      linkParticipacao: eventoData.link || null,
+      imagem: eventoData.image || null,
       categoria: eventoData.category,
-      dataInicio: new Date(eventoData.startDate).toISOString(),
-      dataFim: eventoData.endDate ? new Date(eventoData.endDate).toISOString() : null,
-      funcao: cargo,
+      dataInicio: dataInicioISO,
+      dataFim: dataFimISO,
+      // ===== CORREÇÃO PRINCIPAL =====
+      // Enviando um valor VÁLIDO para o enum `tipoParticipacao` do schema.
+      tipoParticipacao: 'Organizador', 
       colaboradores: validatedCollaborators.map(colaborador => ({
-        categoria: colaborador.role,
-        nome: colaborador.name.trim() // Garante que não há espaços extras
-      })),
-     ...(isEditMode ? {} : { usuarioId:   Number(session?.user?.id) })
+          categoria: colaborador.role,
+          nome: colaborador.name.trim()
+        })),
+      ...(isEditMode ? {} : { usuarioId: Number(session?.user?.id) })
     };
-    
-    console.log(requestBody)
   
     try {
-      const rout = isEditMode ? `/api/evento?id=${eventoId}` : "/api/evento";
-      const response = await fetch(rout, {
+      const route = isEditMode ? `/api/evento?id=${eventoId}` : "/api/evento";
+      const response = await fetch(route, {
         method: isEditMode ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
   
+      const data = await response.json();
       if (response.ok) {
-        const data = await response.json();
         setResultDialog({
           title: 'Sucesso!',
           message: isEditMode ? 'Evento atualizado com sucesso.' : 'Evento criado com sucesso.',
@@ -336,20 +347,13 @@ console.log("estado inicial eventoData:", eventoData);
           eventoId: data.id 
         });
       } else {
-        const errorData = await response.json();
-        console.error("Erro da API:", errorData);
-        setResultDialog({
-          title: 'Erro',
-          message: 'Erro ao salvar o evento, tente novamente mais tarde.',
-          isError: true,
-          eventoId: null
-        });
+        throw new Error(data.message || 'Erro desconhecido da API');
       }
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error("Erro ao submeter:", error);
       setResultDialog({
         title: 'Erro',
-        message: 'Erro ao salvar o evento, tente novamente mais tarde.',
+        message: 'Erro ao salvar o evento. ' + error.message,
         isError: true,
         eventoId: null
       });
@@ -367,14 +371,7 @@ console.log("estado inicial eventoData:", eventoData);
   };
 
   const handleCancelClick = () => {
-    const hasData = eventoData.title || 
-                    eventoData.description || 
-                    eventoData.startDate || 
-                    eventoData.endDate || 
-                    eventoData.category || 
-                    eventoData.image || 
-                   collaborators.some(c => c.name || c.role);
-    
+    const hasData = Object.values(eventoData).some(val => val !== '') || collaborators.some(c => c.name || c.role);
     if (hasData) {
       setShowCancelDialog(true);
     } else {
@@ -382,26 +379,15 @@ console.log("estado inicial eventoData:", eventoData);
     }
   };
 
-
-
   const handleConfirmCancel = () => {
     setEventoData({
-      title: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      startTime: '',
-      endTime: '',
-      category: '',
-      image: '',
+      title: '', description: '', local: '', link: '',
+      startDate: '', startTime: '', endDate: '', endTime: '',
+      category: '', image: ''
     });
-    setCollaborators([{ name: '', role: '' }]);
+    setCollaborators([]);
     setShowCancelDialog(false);
     router.push('/home');
-  };
-
-  const handleContinueEditing = () => {
-    setShowCancelDialog(false);
   };
 
   return (
@@ -410,247 +396,142 @@ console.log("estado inicial eventoData:", eventoData);
         <div className="py-12">
           <h1 className="text-3xl font-bold mb-12 text-center">{isEditMode ? 'Editar Evento' : 'Criar Evento'}</h1>
 
+          {/* Título */}
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="title">Título do evento*</Label>
-              <Input
-                type="text"
-                id="title"
-                name="title"
-                value={eventoData.title || ''}
-                onChange={handleChange}
-                required
-              />
+              <Input type="text" id="title" name="title" value={eventoData.title} onChange={handleChange} required />
             </div>
           </div>
 
+          {/* Descrição */}
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="description">Descrição do evento*</Label>
-              <textarea
-                id="description"
-                name="description"
-                value={eventoData.description}
-                onChange={handleChange}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                required
-              />
+              <textarea id="description" name="description" value={eventoData.description} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 min-h-[100px]" required />
             </div>
           </div>
 
+          {/* Local */}
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="local">Local do evento*</Label>
-              <textarea
-                id="local"
-                name="local"
-                value={eventoData.local}
-                onChange={handleChange}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                required
-              />
+              <Input id="local" name="local" value={eventoData.local} onChange={handleChange} required />
+            </div>
+          </div>
+
+          {/* Link do Evento */}
+          <div className="grid gap-8 mb-8">
+            <div className="grid items-center gap-1.5">
+              <Label htmlFor="link">Link do evento</Label>
+              <Input type="url" id="link" name="link" placeholder="https://exemplo.com ou www.exemplo.com" value={eventoData.link} onChange={handleChange} />
             </div>
           </div>
           
+          {/* Cargo do Usuário (UI Apenas, a lógica foi corrigida no handleSubmit) */}
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
-              <Label className="text-sm font-medium text-gray-700">Meu cargo no evento*</Label>
+              <Label className="text-sm font-medium text-gray-700">Meu papel na criação deste evento*</Label>
               <div className="flex items-center space-x-6 mt-2">
                 <label className="inline-flex items-center space-x-2">
-                  <input 
-                    type="radio" 
-                    className="h-4 w-4 accent-black border-gray-300 focus:ring-black cursor-pointer"
-                    name="cargo"
-                    value="Coordenador"
-                    checked={cargo === "Coordenador"}
-                    onChange={() => setCargo("Coordenador")}
-                  />
-                  <span className="text-sm text-gray-700">Coordenador</span>
-                </label>
-                <label className="inline-flex items-center space-x-2">
-                  <input 
-                    type="radio" 
-                    className="h-4 w-4 accent-black border-gray-300 focus:ring-black cursor-pointer"
-                    name="cargo"
-                    value="Colaborador"
-                    checked={cargo === "Colaborador"}
-                    onChange={() => setCargo("Colaborador")}
-                  />
-                  <span className="text-sm text-gray-700">Colaborador</span>
+                  <input type="radio" className="h-4 w-4 accent-black" name="cargo" value="Organizador" checked={cargo === "Organizador"} onChange={() => setCargo("Organizador")} />
+                  <span className="text-sm text-gray-700">Organizador</span>
                 </label>
               </div>
             </div>
           </div>
 
+          {/* Data e Hora de Início */}
           <div className="grid gap-8 mb-8 md:grid-cols-2">
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="startDate">Data de início do evento*</Label>
-              <Input
-                type="date"
-                id="startDate"
-                name="startDate"
-                value={eventoData.startDate}
-                onChange={handleChange}
-                required
-              />
+              <Label htmlFor="startDate">Data de início*</Label>
+              <Input type="date" id="startDate" name="startDate" value={eventoData.startDate} onChange={handleChange} required />
             </div>
-
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="endDate">Data de finalização do evento</Label>
-              <Input
-                type="date"
-                id="endDate"
-                name="endDate"
-                value={eventoData.endDate}
-                onChange={handleChange}
-              />
+              <Label htmlFor="startTime">Horário de início*</Label>
+              <Input type="time" id="startTime" name="startTime" value={eventoData.startTime} onChange={handleChange} required />
             </div>
           </div>
 
-<div className="grid gap-8 mb-8 md:grid-cols-2">
-  <div className="grid items-center gap-1.5">
-    <Label htmlFor="startTime">Hora de início do evento*</Label>
-    <Input
-      type="time"
-      id="startTime"
-      name="startTime"
-      value={eventoData.startTime}
-      onChange={handleChange}
-      required
-    />
-  </div>
+          {/* Data e Hora de Término */}
+          <div className="grid gap-8 mb-8 md:grid-cols-2">
+            <div className="grid items-center gap-1.5">
+              <Label htmlFor="endDate">Data de finalização*</Label>
+              <Input type="date" id="endDate" name="endDate" value={eventoData.endDate} onChange={handleChange} min={eventoData.startDate} required />
+            </div>
+            <div className="grid items-center gap-1.5">
+              <Label htmlFor="endTime">Horário de término*</Label>
+              <Input type="time" id="endTime" name="endTime" value={eventoData.endTime} onChange={handleChange} required />
+            </div>
+          </div>
 
-  <div className="grid items-center gap-1.5">
-    <Label htmlFor="endTime">Hora de término do evento</Label>
-    <Input
-      type="time"
-      id="endTime"
-      name="endTime"
-      value={eventoData.endTime}
-      onChange={handleChange}
-    />
-  </div>
-</div>
-
-
+          {/* Categoria e Imagem */}
           <div className="grid gap-8 mb-8 md:grid-cols-2">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="category">Categoria do evento*</Label>
-              <Select
-                value={eventoData.category}
-                onValueChange={(value) => setEventoData(prevState => ({
-                  ...prevState,
-                  category: value,
-                }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione uma categoria" />
-                </SelectTrigger>
+              <Select value={eventoData.category} onValueChange={(value) => setEventoData(prevState => ({...prevState, category: value}))} required>
+                <SelectTrigger><SelectValue placeholder="Selecione uma categoria" /></SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
-                    {loadingCategories ? (
-                      <SelectItem value="loading" disabled>Carregando categorias...</SelectItem>
-                    ) : (
-                      categories.map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))
-                    )}
+                    {loadingCategories ? <SelectItem value="loading" disabled>Carregando...</SelectItem> : categories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                    ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
-
             <div className="grid items-center gap-1.5">
               <Label htmlFor="image">Imagem do evento</Label>
-              <Input
-                type="file"
-                id="image"
-                name="image"
-                onChange={handleImageChange}
-                accept="image/png, image/jpeg, image/jpg, image/webp"
-              />
+              <Input type="file" id="image" name="image" onChange={handleImageChange} accept="image/png, image/jpeg, image/jpg, image/webp" />
             </div>
           </div>
 
+          {/* Colaboradores */}
           <div className="grid gap-8 mb-8">
             <div className="flex justify-between items-center">
               <Label>Colaboradores</Label>
-              <Button type="button" onClick={addCollaborator} className="w-fit">
-                + Adicionar colaborador
-              </Button>
+              <Button type="button" onClick={addCollaborator} className="w-fit">+ Adicionar colaborador</Button>
             </div>
+            {collaborators.length === 0 && <p className="text-gray-500">Nenhum colaborador adicionado.</p>}
             {collaborators.map((collaborator, index) => (
               <div key={index} className="grid gap-6 md:grid-cols-2 items-end">
                 <div className="grid items-center gap-1.5 relative">
-                  <Input
-                    type="text"
-                    placeholder="Nome do colaborador"
-                    value={collaborator.name}
-                    onChange={(e) => handleCollaboratorNameChange(index, e.target.value)}
-                  />
+                  <Input type="text" placeholder="Nome do colaborador" value={collaborator.name} onChange={(e) => handleCollaboratorNameChange(index, e.target.value)} />
                   {suggestions?.index === index && (
                     <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
                       {suggestions.names.map((name, i) => (
-                        <div 
-                          key={i}
-                          className="p-2 hover:bg-gray-100 cursor-pointer"
-                          onClick={() => selectSuggestion(index, name)}
-                        >
-                          {name}
-                        </div>
+                        <div key={i} className="p-2 hover:bg-gray-100 cursor-pointer" onClick={() => selectSuggestion(index, name)}>{name}</div>
                       ))}
                     </div>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Select
-                    value={collaborator.role}
-                    onValueChange={(value) => handleCollaboratorRoleChange(index, value)}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Selecione o cargo" />
-                    </SelectTrigger>
+                  <Select value={collaborator.role} onValueChange={(value) => handleCollaboratorRoleChange(index, value)}>
+                    <SelectTrigger><SelectValue placeholder="Selecione o cargo" /></SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {loadingCargos ? (
-                          <SelectItem value="loading" disabled>Carregando...</SelectItem>
-                        ) : (
-                          cargosColaborador.map((cargo) => (
-                            <SelectItem key={cargo} value={cargo}>
-                              {cargo}
-                            </SelectItem>
-                          ))
-                        )}
+                        {loadingCargos ? <SelectItem value="loading" disabled>Carregando...</SelectItem> : cargosColaborador.map((cargo) => (
+                          <SelectItem key={cargo} value={cargo}>{cargo}</SelectItem>
+                        ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => removeCollaborator(index)}
-                    className="text-black hover:text-black hover:bg-gray-100 p-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <Button type="button" variant="ghost" onClick={() => removeCollaborator(index)} className="text-black hover:text-black hover:bg-gray-100 p-2"><Trash2 className="h-4 w-4" /></Button>
                 </div>
               </div>
             ))}
           </div>
 
           <div className="flex justify-between mt-8">
-            <Button type="button" variant="outline" onClick={handleCancelClick}>
-              Cancelar
-            </Button>
-            <Button type="submit">Salvar</Button>
+            <Button type="button" variant="outline" onClick={handleCancelClick}>Cancelar</Button>
+            <Button type="submit">Salvar Evento</Button>
           </div>
         </div>
       </form>
 
       <ConfirmationModal
         isOpen={showCancelDialog}
-        onClose={handleContinueEditing}
+        onClose={() => setShowCancelDialog(false)}
         onConfirm={handleConfirmCancel}
         title="Tem certeza que deseja cancelar?"
         message="Todas as alterações não salvas serão perdidas."
@@ -661,11 +542,32 @@ console.log("estado inicial eventoData:", eventoData);
       <ConfirmationModal
         isOpen={showResultDialog}
         onConfirm={handleSuccessConfirm}
+        onClose={resultDialog.isError ? () => setShowResultDialog(false) : undefined}
         title={resultDialog.title}
         message={resultDialog.message}
         confirmText="OK"
         variant={resultDialog.isError ? 'destructive' : 'default'}
       />
+
+      {showImageCropper && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">Alterar Imagem do Evento</h3>
+                <button onClick={() => setShowImageCropper(false)} className="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+              </div>
+              <ImageCropper
+                  imageSrc={tempImage}
+                  onUploadSuccess={(base64) => {
+                    setEventoData(prev => ({ ...prev, image: base64 }));
+                    setShowImageCropper(false);
+                  }}
+                />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
