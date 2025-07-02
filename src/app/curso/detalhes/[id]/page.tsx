@@ -22,6 +22,7 @@ export type Curso = {
   imagem: string;
   descricao: string;
   categoria: string;
+  categoriaFormatada: string;
   cargaHoraria: number;
   linkInscricao: string;
   vagas: number;
@@ -60,7 +61,6 @@ export default function DetalhesCurso() {
   const [curso, setCurso] = useState<Curso | null>(null); // criar tipo aqui
   const [paginaAtual, setPaginaAtual] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState<Category[]>([]);
   const aulasPorPagina = 3;
 
   interface Category {
@@ -79,13 +79,6 @@ export default function DetalhesCurso() {
         const dataCurso = await resCurso.json();
         setCurso(dataCurso);
 
-        // Load Categories
-        const resCategories = await fetch("/api/enums/categoriaCurso");
-        if (!resCategories.ok) {
-          throw new Error("Erro ao buscar categorias de evento");
-        }
-        const dataCategories = await resCategories.json();
-        setCategories(dataCategories);
 
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -123,7 +116,6 @@ export default function DetalhesCurso() {
     paginaAtual * aulasPorPagina
   ) || [];
 
-  const categoriaMapeada = categories.find((category) => category.value == curso?.categoria)
   const isCourseOwner = curso?.idUsuario == Number(session?.user.id)
 
   return (
@@ -154,9 +146,11 @@ export default function DetalhesCurso() {
               )}
             </h1>
 
-            <p className="text-justify text-white drop-shadow-md">{curso?.descricao}</p>
+            <div className="px-2 py-0.5 rounded-lg shadow-md bg-gray-900/60 backdrop-blur-sm text-gray-200 text-justify
+ inline-block max-w-[90%] break-words whitespace-normal">
+              {curso?.descricao}</div>
             <div className="flex">
-              <Badge className="mr-2 my-5">{categoriaMapeada?.label}</Badge>
+              <Badge className="mr-2 my-5">{curso.categoriaFormatada}</Badge>
             </div>
 
             <div>

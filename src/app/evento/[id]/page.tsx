@@ -16,6 +16,7 @@ export type Evento = {
   dataFim: string;
   linkParticipacao: string | null;
   categoria: string;
+  categoriaFormatada: string;
   local: string;
   createdAt: string;
   updatedAt: string;
@@ -67,7 +68,6 @@ export default function DetalhesEvento() {
 
   const [evento, setEvento] = useState<Evento | null>(null);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [mostrarTodasImagens, setMostrarTodasImagens] = useState(false);
 
   // Estados para o modal de imagem
@@ -85,14 +85,6 @@ export default function DetalhesEvento() {
         }
         const dataEvento = await resEvento.json();
         setEvento(dataEvento);
-
-        // Load Categories
-        const resCategories = await fetch("/api/enums/categoriaCurso");
-        if (!resCategories.ok) {
-          throw new Error("Erro ao buscar categorias de evento");
-        }
-        const dataCategories = await resCategories.json();
-        setCategories(dataCategories);
 
       } catch (error) {
         console.error("Erro ao carregar dados:", error);
@@ -142,8 +134,6 @@ export default function DetalhesEvento() {
     return date.toLocaleDateString("pt-BR") + " às " + date.toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
   }
 
-  const categoriaMapeada = categories.find((category) => category.value === evento?.categoria);
-
   // Encontra o coordenador (usuário com tipo de participação 'Coordenador' ou o primeiro da lista)
   const coordenador = evento?.eventoUsuario?.find(eu => eu.tipoParticipacao === 'Coordenador') || evento?.eventoUsuario?.[0];
 
@@ -185,9 +175,12 @@ export default function DetalhesEvento() {
               )}
             </h1>
 
-            <p className="text-justify text-white drop-shadow-md">{evento?.descricao}</p>
+            <div className="px-2 py-0.5 rounded-lg shadow-md bg-gray-900/60 backdrop-blur-sm text-gray-200 text-justify
+ inline-block max-w-[90%] break-words whitespace-normal">
+              {evento?.descricao}
+            </div>
             <div className="flex">
-              <Badge className="mr-2 my-5">{categoriaMapeada?.label}</Badge>
+              <Badge className="mr-2 my-5">{evento.categoriaFormatada}</Badge>
             </div>
 
             {evento?.linkParticipacao && (
@@ -310,19 +303,17 @@ export default function DetalhesEvento() {
         )}
 
         {/* Grid de todas as imagens com animação deslizante */}
-        <div 
-          className={`w-full md:w-[70%] px-4 overflow-hidden transition-all duration-500 ease-in-out ${
-            mostrarTodasImagens 
-              ? 'max-h-[2000px] opacity-100' 
-              : 'max-h-0 opacity-0'
-          }`}
-        >
-          <div 
-            className={`transform transition-all duration-500 ease-in-out ${
-              mostrarTodasImagens 
-                ? 'translate-y-0' 
-                : '-translate-y-4'
+        <div
+          className={`w-full md:w-[70%] px-4 overflow-hidden transition-all duration-500 ease-in-out ${mostrarTodasImagens
+            ? 'max-h-[2000px] opacity-100'
+            : 'max-h-0 opacity-0'
             }`}
+        >
+          <div
+            className={`transform transition-all duration-500 ease-in-out ${mostrarTodasImagens
+              ? 'translate-y-0'
+              : '-translate-y-4'
+              }`}
           >
             {evento.imagemEvento.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6 mb-12">
@@ -349,8 +340,8 @@ export default function DetalhesEvento() {
       {showImageModal && selectedImage && (
         <div
           className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-700 ease-in-out ${isImageModalClosing
-              ? 'bg-slate-600/0 backdrop-blur-none opacity-0'
-              : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
+            ? 'bg-slate-600/0 backdrop-blur-none opacity-0'
+            : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
             }`}
           style={{
             backdropFilter: isImageModalClosing ? 'blur(0px)' : 'blur(8px)',
@@ -362,8 +353,8 @@ export default function DetalhesEvento() {
         >
           <div
             className={`bg-white rounded-lg shadow-2xl max-w-4xl max-h-[90vh] w-full overflow-hidden transform transition-all duration-700 ease-in-out ${isImageModalClosing
-                ? 'scale-95 opacity-0 translate-y-4'
-                : 'scale-100 opacity-100 translate-y-0'
+              ? 'scale-95 opacity-0 translate-y-4'
+              : 'scale-100 opacity-100 translate-y-0'
               }`}
             onClick={(e) => e.stopPropagation()}
           >

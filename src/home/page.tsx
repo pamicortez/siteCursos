@@ -21,6 +21,7 @@ interface Projeto {
   imagem: string
   descricao: string
   categoria: string
+  categoriaFormatada: string
   dataInicio: string
   dataFim: string
   maxCaracteres: number
@@ -39,6 +40,7 @@ interface Curso {
   descricao: string
   cargaHoraria: number
   categoria: string
+  categoriaFormatada: string
   vagas: number
   linkInscricao: string
 }
@@ -68,7 +70,6 @@ const HomePage: React.FC = () => {
   const [projetos, setProjetos] = useState<Projeto[]>([])
   const [eventos, setEventos] = useState<Evento[]>([])
   const [cursos, setCursos] = useState<Curso[]>([])
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -123,20 +124,17 @@ const HomePage: React.FC = () => {
         // Buscar cursos
         try {
           // Buscar cursos e categorias em paralelo
-          const [cursosResponse, categoriesResponse] = await Promise.all([
+          const [cursosResponse] = await Promise.all([
             fetch('/api/curso'),
-            fetch('/api/enums/categoriaCurso')
           ]);
 
-          if (!cursosResponse.ok || !categoriesResponse.ok) {
+          if (!cursosResponse.ok) {
             console.error("Erro ao buscar cursos:", cursosResponse.status)
           }
 
           const cursosData = await cursosResponse.json();
-          const categoriesData = await categoriesResponse.json();
-
           setCursos(cursosData);
-          setCategories(categoriesData);
+
         } catch (err) {
           console.error("Erro ao buscar cursos:", err)
         }
@@ -170,11 +168,6 @@ const HomePage: React.FC = () => {
     fetchData()
   }, [])
 
-    // Função para obter o label da categoria
-    const getCategoriaLabel = (categoriaValue: string) => {
-      const categoria = categories.find(cat => cat.value === categoriaValue);
-      return categoria?.label || categoriaValue;
-    };
 
   if (loading) {
     return (
@@ -235,7 +228,7 @@ const HomePage: React.FC = () => {
                 imagem={projeto.imagem || "/default-projeto.png"}
                 titulo={projeto.titulo}
                 descricao={projeto.descricao}
-                categoria={getCategoriaLabel(projeto.categoria)} // Passa o label formatado
+                categoria={projeto.categoriaFormatada} // Passa o label formatado
                 dataInicio={projeto.dataInicio}
                 dataFim={projeto.dataFim}
                 isOwner={false}
@@ -264,7 +257,7 @@ const HomePage: React.FC = () => {
                 imagem={curso.imagem || "/default-curso.png"}
                 titulo={curso.titulo}
                 descricao={curso.descricao}
-                categoria={getCategoriaLabel(curso.categoria)} // Passa o label formatado
+                categoria={curso.categoriaFormatada} // Passa o label formatado
                 vagas={curso.vagas}
                 linkInscricao={curso.linkInscricao}
                 cargaHoraria={curso.cargaHoraria || 0}

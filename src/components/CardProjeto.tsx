@@ -187,29 +187,36 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
     }
   }
 
-    // Função para obter gênero neutro na função do usuário
-    const getGeneroNeutro = (funcao?: string) => {
-      switch (funcao) {
-        case "Coordenador":
-          return "Coordenador(a)"
-        case "Colaborador":
-          return "Colaborador(a)"
-        case "Bolsista":
-          return "Bolsista"
-        case "Voluntário":
-          return "Voluntário(a)"
-        default:
-          return "Colaborador(a)"
-      }
+  // Função para obter gênero neutro na função do usuário
+  const getGeneroNeutro = (funcao?: string) => {
+    switch (funcao) {
+      case "Coordenador":
+        return "Coordenador(a)"
+      case "Colaborador":
+        return "Colaborador(a)"
+      case "Bolsista":
+        return "Bolsista"
+      case "Voluntário":
+        return "Voluntário(a)"
+      default:
+        return "Colaborador(a)"
     }
+  }
 
   // Determinar o status do projeto usando uma única referência de tempo
   const now = new Date()
   const inicio = new Date(dataInicio)
-  const fim = new Date(dataFim)
 
-  const isProjetoAtivo = now >= inicio && now <= fim
-  const statusProjeto = isProjetoAtivo ? "Ativo" : now > fim ? "Finalizado" : "Não Iniciado"
+  const fim = dataFim === null ? null : new Date(dataFim)
+
+  const isProjetoAtivo = fim === null ? true : (now >= inicio && now <= fim)
+  const statusProjeto = fim === null
+    ? "Ativo"
+    : isProjetoAtivo
+      ? "Ativo"
+      : now > fim
+        ? "Finalizado"
+        : "Não Iniciado"
 
   // Apenas coordenadores podem editar/deletar projetos
   // const canEditProject = funcaoUsuario === "Coordenador"
@@ -287,9 +294,11 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
             <p className={`absolute ${bottomDate} left-4 text-xs text-gray-500 font-medium`}>
               <span className="font-semibold">Início:</span> {formatarData(dataInicio)}
             </p>
-            <p className={`absolute ${bottomDate} right-4 text-xs text-gray-500 font-medium`}>
-              <span className="font-semibold">Fim:</span> {formatarData(dataFim)}
-            </p>
+            {dataFim !== null && (
+              <p className={`absolute ${bottomDate} right-4 text-xs text-gray-500 font-medium`}>
+                <span className="font-semibold">Fim:</span> {formatarData(dataFim)}
+              </p>
+            )}
           </div>
 
           {/* Botões de ação apenas para coordenadores */}

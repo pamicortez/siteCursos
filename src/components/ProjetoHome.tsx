@@ -6,6 +6,7 @@ import CardCursoWithButton from "@/components/CardCursoWithButton"
 import { Button } from "@/components/ui/button"
 import { useParams, useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
+import { Badge } from "@/components/ui/badge"
 
 interface Projeto {
   id: number
@@ -13,6 +14,7 @@ interface Projeto {
   imagem: string
   descricao: string
   categoria: string
+  categoriaFormatada: string
   dataInicio: string
   dataFim: string
   projetoUsuario: {
@@ -75,6 +77,7 @@ const ProjetoHome: React.FC<ProjetoHomeProps> = ({ idOverride }) => {
             imagem: "/proj1.jpg",
             descricao: "Capacitando educadores e gestores com metodologias ativas e tecnologia educacional.",
             categoria: "Programação",
+            categoriaFormatada: "Programação",
             dataInicio: "2023-10-01",
             dataFim: "2023-11-30",
             projetoUsuario: [
@@ -234,107 +237,99 @@ const ProjetoHome: React.FC<ProjetoHomeProps> = ({ idOverride }) => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-2">
-      <div className="flex justify-between items-center my-4">
-      <h1 className="text-3xl font-bold flex items-center gap-3">
-        {projeto.titulo}
-        {isOwner && (
-          <button 
-            className="p-0 ml-2 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
-            onClick={() => router.push(`/projeto/editar/${projeto.id}`)}
-            aria-label="Editar Projeto"
-          >
-            <img src="/pen.png" alt="Editar" className="w-6 h-6" />
-          </button>
-        )}
-      </h1>
-        {isOwner && (
-          <Button
-            type="button"
-            className="bg-black text-white hover:bg-gray-800 text-base"
-            onClick={handleAdicionarCurso}
-          >
-            + Adicionar Curso
-          </Button>
-        )}
-      </div>
-
-      <p className="text-xl text-gray-700 mb-6">{projeto.descricao}</p>
-
-      <div className="mb-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-lg">
-              <strong>Data de Início:</strong> {new Date(projeto.dataInicio).toLocaleDateString()}
-            </p>
-          </div>
-          <div>
-            <p className="text-lg">
-              <strong>Data de Finalização:</strong>{projeto.dataFim
-                  ? new Date(projeto.dataFim).toLocaleDateString()
-                  : ' Sem data de finalização determinada'}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-lg">
-              <strong>Coordenador:</strong>{" "}
-              {
-                // Primeiro verifica em projetoUsuario
-                projeto.projetoUsuario?.find((u) => u.funcao === "Coordenador")?.usuario?.Nome ??
-                  // Se não encontrar, verifica em projetoColaborador
-                  projeto.projetoColaborador?.find((c) => c.categoria === "Coordenador")?.colaborador?.nome ??
-                  "Não informado"
-              }
-            </p>
-          </div>
-          <div>
-            <p className="text-lg">
-              <strong>Categoria:</strong> {projeto.categoria}
-            </p>
-          </div>
-        </div>
-
-        <div>
-          <strong className="text-lg">Colaboradores:</strong>
-          <ul className="list-disc pl-5 mt-2 text-base">
-            {(!projeto.projetoColaborador || projeto.projetoColaborador.length === 0) &&
-            (!projeto.projetoUsuario || !projeto.projetoUsuario.some((u) => u.funcao !== "Coordenador")) ? (
-              <li>Nenhum colaborador</li>
-            ) : (
-              <>
-                {/* Lista de colaboradores externos */}
-                {projeto.projetoColaborador?.map((colab, index) => (
-                  <li key={`colab-${index}`}>
-                    {colab.colaborador.nome} - {colab.categoria}
-                  </li>
-                ))}
-
-                {/* Usuários do sistema que não são coordenadores */}
-                {projeto.projetoUsuario
-                  ?.filter((u) => u.funcao !== "Coordenador")
-                  .map((user, index) => (
-                    <li key={`user-${index}`}>
-                      {user.usuario.Nome} - {user.funcao}
-                    </li>
-                  ))}
-              </>
-            )}
-          </ul>
-        </div>
-      </div>
-
-      <hr
+    <div>
+      <div
+        className="bg-gray-200 bg-cover bg-center bg-no-repeat relative min-h-[400px]"
         style={{
-          border: "none",
-          borderTop: "1px solid #e5e7eb",
-          margin: "24px 0",
+          backgroundImage: projeto?.imagem ? `url(${projeto.imagem})` : undefined,
         }}
-      />
+      >
+        {/* Overlay para melhorar legibilidade */}
+        <div className="absolute inset-0 bg-black/20"></div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-10">
+        {/* Conteúdo com z-index para ficar acima da overlay */}
+        <div className="relative z-10 flex flex-col md:flex-row w-full mx-auto px-8 py-10">
+
+          <div className="w-full md:w-1/2 md:pr-10">
+            <h1 className="text-3xl md:text-5xl font-bold pb-6 text-white drop-shadow-lg">
+              {projeto.titulo}
+              {isOwner && (
+                <button
+                  className="p-0 ml-2 border-none bg-transparent cursor-pointer hover:opacity-70 transition-opacity"
+                  onClick={() => router.push(`/projeto/editar/${projeto.id}`)}
+                  aria-label="Editar Projeto"
+                >
+                  <img src="/pen.png" alt="Editar" className="w-6 h-6 filter brightness-0 invert" />
+                </button>
+              )}
+            </h1>
+
+
+            <div className="px-2 py-0.5 rounded-lg shadow-md bg-gray-900/60 backdrop-blur-sm text-gray-200 text-justify
+ inline-block max-w-[90%] break-words whitespace-normal">
+              {projeto.descricao}
+            </div>
+            <div className="flex">
+              <Badge className="mr-2 my-5">{projeto.categoriaFormatada}</Badge>
+            </div>
+
+            <div>
+              {isOwner && (
+                <Button
+                  size="sm"
+                  className="transition-all duration-300 ease-in-out hover:shadow-lg hover:shadow-white/50 hover:scale-105 hover:brightness-110"
+                  onClick={handleAdicionarCurso}
+                >
+                  + Adicionar Curso
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="w-full md:w-1/2 flex justify-center items-start pt-10 md:mt-0">
+            <div className="p-5 rounded-lg shadow-md flex flex-col space-y-2 bg-gray-900/80 backdrop-blur-sm text-gray-200">
+              <p><strong>Data de Início:</strong> {new Date(projeto.dataInicio).toLocaleDateString()}</p>
+              <p><strong>Data de Finalização:</strong> {projeto.dataFim
+                ? new Date(projeto.dataFim).toLocaleDateString()
+                : 'Sem data determinada'}</p>
+              <p><strong>Coordenador:</strong> {
+                projeto.projetoUsuario?.find((u) => u.funcao === "Coordenador")?.usuario?.Nome ??
+                projeto.projetoColaborador?.find((c) => c.categoria === "Coordenador")?.colaborador?.nome ??
+                "Não informado"
+              }</p>
+              <div>
+                <strong>Colaboradores:</strong>
+                <div className="mt-1 max-h-24 overflow-y-auto">
+                  {(!projeto.projetoColaborador || projeto.projetoColaborador.length === 0) &&
+                    (!projeto.projetoUsuario || !projeto.projetoUsuario.some((u) => u.funcao !== "Coordenador")) ? (
+                    <span className="text-sm">Nenhum colaborador</span>
+                  ) : (
+                    <div className="text-sm space-y-1">
+                      {projeto.projetoColaborador?.map((colab, index) => (
+                        <div key={`colab-${index}`}>
+                          {colab.colaborador.nome} - {colab.categoria}
+                        </div>
+                      ))}
+                      {projeto.projetoUsuario
+                        ?.filter((u) => u.funcao !== "Coordenador")
+                        .map((user, index) => (
+                          <div key={`user-${index}`}>
+                            {user.usuario.Nome} - {user.funcao}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <h1 className="mt-12 px-8 text-center text-3xl font-bold">Cursos Associados</h1>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-10 mb-12 mt-12">
         {projeto.curso && projeto.curso.length > 0 ? (
           projeto.curso.map((curso, index) => (
             <div key={index} className="m-0 p-0 flex">
