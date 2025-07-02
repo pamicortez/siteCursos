@@ -637,19 +637,19 @@ export default function Projeto() {
                     value={collaborator.name}
                     onChange={(e) => handleCollaboratorNameChange(index, e.target.value)}
                   />
-{suggestions?.index === index && (
-  <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
-    {suggestions.names.map((nameObj, i) => (
-      <div 
-        key={i}
-        className="p-2 hover:bg-gray-100 cursor-pointer"
-        onClick={() => selectSuggestion(index, nameObj.nome)} // pega só o nome
-      >
-        {nameObj.label} {/* mostra Nome (email) */}
-      </div>
-    ))}
-  </div>
-)}
+                  {suggestions?.index === index && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
+                      {suggestions.names.map((nameObj, i) => (
+                        <div 
+                          key={i}
+                          className="p-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => selectSuggestion(index, nameObj.nome)} // pega só o nome
+                        >
+                          {nameObj.label} {/* mostra Nome (email) */}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-1">
                   <Select
