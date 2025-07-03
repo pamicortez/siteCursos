@@ -297,7 +297,7 @@ model projetoColaborador {
 
 model eventoColaborador {
   id          Int      @id @default(autoincrement()) // ID único para cada associação
-  categoria   colaboradorCategoria
+  categoria   tipoParticipacao
   idEvento   Int      // Relacionamento com o projeto
   evento     Evento @relation(fields: [idEvento], references: [id], onDelete: Cascade)
   idColaborador   Int      // Relacionamento com o colaborador
