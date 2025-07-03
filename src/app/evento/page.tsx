@@ -17,7 +17,6 @@ import { useRouter, useParams } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import ImageCropper from "@/components/ui/ImageCropperBase64";
 
-
 type ColaboradorFromAPI = {
   id: number;
   nome: string;
@@ -127,7 +126,7 @@ export default function Evento() {
   useEffect(() => {
     const fetchCargosColaborador = async () => {
       try {
-        const response = await fetch("/api/enums/colaboradorCategoria");
+        const response = await fetch("/api/enums/tipoParticipacao");
         if (!response.ok) throw new Error("Erro ao buscar cargos de colaborador");
         const data = await response.json();
         setCargosColaborador(data);
