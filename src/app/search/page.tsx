@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation"; // importar hooks
-import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { HorizontalCard } from "@/components/ui/horizontal_card";
 import {
   Select,
@@ -22,13 +21,11 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Footer2 } from "@/components/ui/footer";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Inicializa os estados lendo os parâmetros da URL ou valores padrão
   const [filter, setFilter] = useState(searchParams.get("filter") ?? "curso");
   const [categoria, setCategoria] = useState(searchParams.get("categoria") ?? "");
   const [searchTerm, setSearchTerm] = useState(searchParams.get("searchTerm") ?? "");
@@ -37,12 +34,10 @@ export default function SearchPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [items, setItems] = useState([]);
 
-  // Estados para as categorias/formações
-  const [formacoes, setFormacoes] = useState<string[]>([]); // para usuários
+  const [formacoes, setFormacoes] = useState<string[]>([]);
   const [categoriasCursos, setCategoriasCursos] = useState<string[]>([]);
   const [categoriasProjetos, setCategoriasProjetos] = useState<string[]>([]);
 
-  // Lista fixa usada para cursos quando não buscar da API
   const categoriasFixas = [
     "Linguagens, Letras e Comunicação",
     "Artes e Cultura",
@@ -64,18 +59,12 @@ export default function SearchPage() {
     "Meio Ambiente e Sustentabilidade",
   ];
 
-  // Funções de fetch (idem seu código original)...
   const fetchFormacoesAcademicas = async () => {
     try {
       const response = await fetch("http://localhost:3000/api/usuario");
       const usuarios = await response.json();
-
-      const formacoes = usuarios
-        .map((usuario: any) => usuario.formacaoAcademica)
-        .filter(Boolean);
-
-      const formacoesDistintas = Array.from(new Set(formacoes));
-      return formacoesDistintas;
+      const formacoes = usuarios.map((u: any) => u.formacaoAcademica).filter(Boolean);
+      return Array.from(new Set(formacoes));
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       return [];
@@ -86,13 +75,8 @@ export default function SearchPage() {
     try {
       const response = await fetch("http://localhost:3000/api/curso");
       const cursos = await response.json();
-
-      const categorias = cursos
-        .map((curso: any) => curso.categoria)
-        .filter(Boolean);
-
-      const categoriasDistintas = Array.from(new Set(categorias));
-      return categoriasDistintas;
+      const categorias = cursos.map((c: any) => c.categoria).filter(Boolean);
+      return Array.from(new Set(categorias));
     } catch (error) {
       console.error("Erro ao buscar categorias de cursos:", error);
       return [];
@@ -103,25 +87,19 @@ export default function SearchPage() {
     try {
       const response = await fetch("http://localhost:3000/api/projeto");
       const projetos = await response.json();
-
-      const categorias = projetos
-        .map((projeto: any) => projeto.categoria)
-        .filter(Boolean);
-
-      const categoriasDistintas = Array.from(new Set(categorias));
-      return categoriasDistintas;
+      const categorias = projetos.map((p: any) => p.categoria).filter(Boolean);
+      return Array.from(new Set(categorias));
     } catch (error) {
       console.error("Erro ao buscar categorias de projetos:", error);
       return [];
     }
   };
 
-  // Resetar categoria e carregar categorias/formações quando filtro mudar
   useEffect(() => {
-    setCategoria(""); // resetar categoria ao trocar filtro
+    setCategoria("");
 
     if (filter === "usuario") {
-      fetchFormacoesAcademicas().then((data) => setFormacoes(data));
+      fetchFormacoesAcademicas().then(setFormacoes);
       setCategoriasCursos([]);
       setCategoriasProjetos([]);
     } else if (filter === "curso") {
@@ -131,7 +109,7 @@ export default function SearchPage() {
       setFormacoes([]);
       setCategoriasProjetos([]);
     } else if (filter === "projeto") {
-      fetchCategoriasProjetos().then((data) => setCategoriasProjetos(data));
+      fetchCategoriasProjetos().then(setCategoriasProjetos);
       setFormacoes([]);
       setCategoriasCursos([]);
     } else {
@@ -141,56 +119,45 @@ export default function SearchPage() {
     }
   }, [filter]);
 
-  // Buscar dados quando filtros, categoria, searchTerm ou ordem mudarem
   useEffect(() => {
     const fetchData = async () => {
       let url = `http://localhost:3000/api/${filter}`;
       const params = new URLSearchParams();
 
       if (categoria) {
-        params.append(
-          filter === "usuario" ? "formacaoAcademica" : "categoria",
-          categoria
-        );
+        params.append(filter === "usuario" ? "formacaoAcademica" : "categoria", categoria);
       }
-
       if (searchTerm) {
         params.append(filter === "usuario" ? "nome" : "titulo", searchTerm);
       }
-
       if (ordem === "recente") {
         params.append("ordem", "recente");
       }
 
       url += `?${params.toString()}`;
-
       try {
         const response = await fetch(url);
         const data = await response.json();
         setItems(data);
-        setCurrentPage(1); // resetar página ao buscar novos dados
+        setCurrentPage(1);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
       }
     };
-
     fetchData();
   }, [filter, categoria, searchTerm, ordem]);
 
-  // Atualizar URL para refletir filtros atuais (exceto currentPage)
   useEffect(() => {
     const params = new URLSearchParams();
-
     if (filter) params.set("filter", filter);
     if (categoria) params.set("categoria", categoria);
     if (searchTerm) params.set("searchTerm", searchTerm);
     if (ordem) params.set("ordem", ordem);
-
-    const queryString = params.toString();
-    router.replace(`/search${queryString ? "?" + queryString : ""}`, { scroll: false });
+    router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`, {
+      scroll: false,
+    });
   }, [filter, categoria, searchTerm, ordem, router]);
 
-  // Paginação (sem alteração)
   const itemsPerPage = 6;
   const totalPages = Math.ceil(items.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -206,13 +173,13 @@ export default function SearchPage() {
       : [];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 space-y-6">
+    <div className="min-h-screen flex flex-col items-center bg-gray-100 space-y-6 px-4 pb-10">
       {/* Barra de Filtros */}
       <div className="w-full max-w-4xl bg-white p-6 mt-8 shadow-lg rounded-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full">
             <Select onValueChange={setFilter} value={filter}>
-              <SelectTrigger className="w-[180px] flex justify-between items-center">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -223,8 +190,9 @@ export default function SearchPage() {
                 </SelectGroup>
               </SelectContent>
             </Select>
+
             <Select onValueChange={setCategoria} value={categoria}>
-              <SelectTrigger className="w-[180px] flex justify-between items-center">
+              <SelectTrigger className="w-full sm:w-[180px]">
                 <SelectValue placeholder={filter === "usuario" ? "Formação" : "Categoria"} />
               </SelectTrigger>
               <SelectContent>
@@ -241,20 +209,21 @@ export default function SearchPage() {
                 </SelectGroup>
               </SelectContent>
             </Select>
-            <div className="relative">
+
+            <div className="relative w-full sm:w-56">
               <Input
                 id="input-text"
                 placeholder="Pesquisar"
-                className="w-56 pr-10"
+                className="w-full pr-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
             </div>
           </div>
-          {/* Filtro de Ordenação */}
+
           <Select onValueChange={setOrdem} value={ordem}>
-            <SelectTrigger className="w-[180px] flex justify-between items-center">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="Ordem" />
             </SelectTrigger>
             <SelectContent>
@@ -300,8 +269,8 @@ export default function SearchPage() {
       </div>
 
       {/* Paginação */}
-      <Pagination>
-        <PaginationContent>
+      <Pagination className="w-full">
+        <PaginationContent className="flex flex-wrap justify-center gap-2">
           <PaginationItem>
             <PaginationPrevious
               href="#"
