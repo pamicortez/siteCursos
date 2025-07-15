@@ -169,31 +169,25 @@ export async function POST(request: Request) {
 	try {
 	  const setParticipacao = new Set(Object.values(typeParticipacao))
 	  const data: Prisma.EventoCreateInput = await request.json(); // Pega os dados do corpo da requisição
-	  
 	  const { dataInicio, dataFim} = data;
-	  const { colaboradores,usuarioId, tipoParticipacao, imagem, ...eventoData } = data as any;
+	  const { colaboradores,usuarioId, tipoParticipacao, imagens, ...eventoData } = data as any;
 
 	  // Validação: usuárioId e funcao são obrigatórios
 	  if (!usuarioId || !tipoParticipacao) {
-		console.log("O ID DO USUÁRIO OU O TIPO DE PARTICIPAÇÃO NÃO ESTÃO SENDO PASSADOS")
 		return NextResponse.json({error: 'Id do usuário e o tipo de participação são obrigatórios'}, {status: 400})
 	  } else if (!setParticipacao.has(tipoParticipacao)){
-		console.log("O TIPO DE PARTICIPAÇÃO NÃO FAZ PARTE DOS ENUMS")
 		return NextResponse.json({error: 'Tipo de participação não reconhecido'}, {status: 400})
-	  } else if(!imagem){
-		console.log("IMAGEM NÃO ESTÁ SENDO PASSADA")
+	  } else if(!imagens){
 		return NextResponse.json({error: 'Imagem é obrigatória'}, {status: 400})
 	  }
 	  // Verifica se o usuário existe
 	  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
 	  if (!usuario) {
-		console.log("USUÁRIO NÃO EXISTENTE")
 		return NextResponse.json({error: 'Usuário não encontrado'}, {status: 404})
 	  }
 
 	// Verificação para garantir que a data de fim não seja anterior à data de início
 	  if (new Date(dataFim) < new Date(dataInicio)) {
-		console.log("DATAS NÃO FAZEM SENTIDO")
 		return NextResponse.json({error: 'O fim do evento é anterior ao início'}, {status: 400});
 	  }
 
@@ -210,6 +204,11 @@ export async function POST(request: Request) {
 					},
 				})),
 			},
+			imagemEvento: {
+				create: imagens.map((link: string) => ({
+					link: link,
+				}))
+			}
 		},
 		include: {
 			eventoColaborador: {
@@ -223,14 +222,6 @@ export async function POST(request: Request) {
 			idEvento: novoEvento.id,
 			idUsuario: usuarioId,
 			tipoParticipacao: tipoParticipacao
-		}
-	  })
-
-	  // Imagem/video do evento
-	  const novoImagemEvento = await prisma.imagemEvento.create({
-		data: {
-			link: imagem,
-			idEvento: novoEvento.id
 		}
 	  })
 
@@ -251,7 +242,7 @@ export async function PATCH(request: Request) {
 	  const id = Number(searchParams.get('id')); // ID do evento
 
 	  const atualizacoes = await request.json();
-	  const colNovos: {nome: string; categoria: funcaoProjeto}[] = atualizacoes.colaboradores || []; 
+	  const colNovos: {nome: string; categoria: typeParticipacao}[] = atualizacoes.colaboradores || []; 
 	  // Verifica se o evento existe
 		const evento = await prisma.evento.findUnique({ where: { id: id } });
 		if (!evento) {
@@ -272,7 +263,7 @@ export async function PATCH(request: Request) {
 		);
 		}
 	  
-	  const {colaboradores, tipoParticipacao, usuarioId, imagem, imagemId, ...dadosEvento} = atualizacoes;
+	  const {colaboradores, tipoParticipacao, usuarioId, imagens, imagemId, ...dadosEvento} = atualizacoes;
 
 	  const eventoAtualizado = await prisma.evento.update({
 		where: { id },
@@ -297,16 +288,19 @@ export async function PATCH(request: Request) {
 		}
 	  }
 
-	  if (imagem){
-			await prisma.imagemEvento.update({
-				where: { idEvento: id,
-						 id: imagemId
-				},
-				data:{
-					link: imagem
-				}
-			})
-	  }
+	  if (imagens && Array.isArray(imagens)) {
+      await prisma.imagemEvento.deleteMany({
+        where: { idEvento: id },
+      })
+
+      // Cria todas as novas
+      await prisma.imagemEvento.createMany({
+        data: imagens.map((url: string) => ({
+          link: url,
+          idEvento: id,
+        })),
+      })
+      }
 
 	  if (colaboradores){
 		const colAtuais = await prisma.eventoColaborador.findMany({
