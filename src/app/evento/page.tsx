@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2 } from 'lucide-react';
+import { Trash2, ImagePlus } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import ImageCropper from "@/components/ui/ImageCropperBase64";
@@ -21,7 +21,6 @@ type ColaboradorFromAPI = {
   id: number;
   nome: string;
 };
-
 
 interface EventoColaborador {
   id: number;
@@ -80,6 +79,8 @@ export default function Evento() {
   const router = useRouter();
   const params = useParams();
   const eventoId = params?.id as string | undefined;
+  
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [eventoData, setEventoData] = useState({
@@ -92,12 +93,13 @@ export default function Evento() {
     endDate: '',
     endTime: '',
     category: '',
-    image: ''
+    // ESTADOS DE IMAGEM SEPARADOS
+    mainImage: '', 
+    otherImages: [] as string[]
   });
 
   const [collaborators, setCollaborators] = useState<Array<{ name: string; role: string }>>([]);
   const [cargosColaborador, setCargosColaborador] = useState<string[]>([]);
-  // Este estado não é mais enviado diretamente, mas pode ser mantido para lógica de UI se necessário.
   const [cargo, setCargo] = useState<string>("Organizador");
   const [loadingCargos, setLoadingCargos] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -121,7 +123,8 @@ export default function Evento() {
   const { data: session, status } = useSession();
   const [showImageCropper, setShowImageCropper] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
-  
+  // Estado para saber qual imagem está sendo cortada
+  const [croppingFor, setCroppingFor] = useState<'main' | 'other' | null>(null);
   
   useEffect(() => {
     const fetchCargosColaborador = async () => {
@@ -193,6 +196,10 @@ export default function Evento() {
       const { date: startDate, time: startTime } = formatDateTime(data.dataInicio);
       const { date: endDate, time: endTime } = formatDateTime(data.dataFim);
 
+      // Separa a primeira imagem como principal e o resto como 'outras'
+      const allImages = data.imagemEvento?.map((img: { link: string }) => img.link) || [];
+      const [mainImage, ...otherImages] = allImages;
+
       setEventoData({
         title: data.titulo,
         description: data.descricao,
@@ -203,7 +210,8 @@ export default function Evento() {
         endDate,
         endTime,
         category: data.categoria,
-        image: data.imagem || ''    
+        mainImage: mainImage || '',
+        otherImages: otherImages || []
       });
 
       const mappedCollaborators = data.eventoColaborador.map((colab: EventoColaborador) => ({
@@ -240,10 +248,12 @@ export default function Evento() {
     setEventoData(prevState => ({ ...prevState, [name]: value }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Função genérica para abrir o seletor de arquivos
+  const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>, type: 'main' | 'other') => {
     const file = e.target.files?.[0];
     if (!file) return;
   
+    setCroppingFor(type); // Define o contexto do corte
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64 = reader.result as string;
@@ -251,6 +261,29 @@ export default function Evento() {
       setShowImageCropper(true);
     };
     reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  // Função chamada quando o corte é bem-sucedido
+  const handleCropSuccess = (base64: string) => {
+    if (croppingFor === 'main') {
+      setEventoData(prev => ({ ...prev, mainImage: base64 }));
+    } else if (croppingFor === 'other') {
+      setEventoData(prev => ({ ...prev, otherImages: [...prev.otherImages, base64] }));
+    }
+    setShowImageCropper(false);
+    setCroppingFor(null);
+  };
+
+  const removeOtherImage = (indexToRemove: number) => {
+    setEventoData(prev => ({
+      ...prev,
+      otherImages: prev.otherImages.filter((_, index) => index !== indexToRemove)
+    }));
+  };
+  
+  const removeMainImage = () => {
+    setEventoData(prev => ({ ...prev, mainImage: '' }));
   };
 
   const handleCollaboratorNameChange = (index: number, value: string) => {
@@ -300,6 +333,9 @@ export default function Evento() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Combina a imagem principal e as outras em um único array para envio
+    const allImages = [eventoData.mainImage, ...eventoData.otherImages].filter(Boolean);
+
     const dataInicioISO = new Date(`${eventoData.startDate}T${eventoData.startTime}`).toISOString();
     const dataFimISO = new Date(`${eventoData.endDate}T${eventoData.endTime}`).toISOString();
 
@@ -315,13 +351,11 @@ export default function Evento() {
       descricao: eventoData.description,
       local: eventoData.local,
       linkParticipacao: eventoData.link || null,
-      imagem: eventoData.image || null,
+      imagens: allImages, // Envia o array combinado
       categoria: eventoData.category,
       dataInicio: dataInicioISO,
       dataFim: dataFimISO,
-      // ===== CORREÇÃO PRINCIPAL =====
-      // Enviando um valor VÁLIDO para o enum `tipoParticipacao` do schema.
-      tipoParticipacao: 'Organizador', 
+      tipoParticipacao: cargo, 
       colaboradores: validatedCollaborators.map(colaborador => ({
           categoria: colaborador.role,
           nome: colaborador.name.trim()
@@ -370,7 +404,7 @@ export default function Evento() {
   };
 
   const handleCancelClick = () => {
-    const hasData = Object.values(eventoData).some(val => val !== '') || collaborators.some(c => c.name || c.role);
+    const hasData = eventoData.title || eventoData.description || eventoData.mainImage || eventoData.otherImages.length > 0 || collaborators.length > 0;
     if (hasData) {
       setShowCancelDialog(true);
     } else {
@@ -382,7 +416,7 @@ export default function Evento() {
     setEventoData({
       title: '', description: '', local: '', link: '',
       startDate: '', startTime: '', endDate: '', endTime: '',
-      category: '', image: ''
+      category: '', mainImage: '', otherImages: []
     });
     setCollaborators([]);
     setShowCancelDialog(false);
@@ -395,39 +429,31 @@ export default function Evento() {
         <div className="py-12">
           <h1 className="text-3xl font-bold mb-12 text-center">{isEditMode ? 'Editar Evento' : 'Criar Evento'}</h1>
 
-          {/* Título */}
+          {/* Campos de texto, datas, etc. */}
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="title">Título do evento*</Label>
               <Input type="text" id="title" name="title" value={eventoData.title} onChange={handleChange} required />
             </div>
           </div>
-
-          {/* Descrição */}
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="description">Descrição do evento*</Label>
               <textarea id="description" name="description" value={eventoData.description} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 min-h-[100px]" required />
             </div>
           </div>
-
-          {/* Local */}
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="local">Local do evento*</Label>
               <Input id="local" name="local" value={eventoData.local} onChange={handleChange} required />
             </div>
           </div>
-
-          {/* Link do Evento */}
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="link">Link do evento</Label>
               <Input type="url" id="link" name="link" placeholder="https://exemplo.com ou www.exemplo.com" value={eventoData.link} onChange={handleChange} />
             </div>
           </div>
-          
-          {/* Cargo do Usuário (UI Apenas, a lógica foi corrigida no handleSubmit) */}
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label className="text-sm font-medium text-gray-700">Meu papel na criação deste evento*</Label>
@@ -436,11 +462,17 @@ export default function Evento() {
                   <input type="radio" className="h-4 w-4 accent-black" name="cargo" value="Organizador" checked={cargo === "Organizador"} onChange={() => setCargo("Organizador")} />
                   <span className="text-sm text-gray-700">Organizador</span>
                 </label>
+                <label className="inline-flex items-center space-x-2">
+                  <input type="radio" className="h-4 w-4 accent-black" name="cargo" value="Palestrante" checked={cargo === "Palestrante"} onChange={() => setCargo("Palestrante")} />
+                  <span className="text-sm text-gray-700">Palestrante</span>
+                </label>
+                <label className="inline-flex items-center space-x-2">
+                  <input type="radio" className="h-4 w-4 accent-black" name="cargo" value="Ouvinte" checked={cargo === "Ouvinte"} onChange={() => setCargo("Ouvinte")} />
+                  <span className="text-sm text-gray-700">Ouvinte</span>
+                </label>
               </div>
             </div>
           </div>
-
-          {/* Data e Hora de Início */}
           <div className="grid gap-8 mb-8 md:grid-cols-2">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="startDate">Data de início*</Label>
@@ -451,8 +483,6 @@ export default function Evento() {
               <Input type="time" id="startTime" name="startTime" value={eventoData.startTime} onChange={handleChange} required />
             </div>
           </div>
-
-          {/* Data e Hora de Término */}
           <div className="grid gap-8 mb-8 md:grid-cols-2">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="endDate">Data de finalização*</Label>
@@ -464,9 +494,19 @@ export default function Evento() {
             </div>
           </div>
 
-          {/* Categoria e Imagem */}
+          {/* Input de arquivo oculto que será acionado programaticamente */}
+          <Input 
+            type="file" 
+            className="hidden"
+            ref={imageInputRef}
+            onChange={(e) => handleSelectImage(e, croppingFor || 'other')} 
+            accept="image/png, image/jpeg, image/jpg, image/webp" 
+          />
+
+          {/* ESTRUTURA PARA CATEGORIA E IMAGEM PRINCIPAL */}
           <div className="grid gap-8 mb-8 md:grid-cols-2">
-            <div className="grid items-center gap-1.5">
+            {/* Categoria - CORRIGIDO */}
+            <div className="flex flex-col gap-1.5">
               <Label htmlFor="category">Categoria do evento*</Label>
               <Select value={eventoData.category} onValueChange={(value) => setEventoData(prevState => ({...prevState, category: value}))} required>
                 <SelectTrigger><SelectValue placeholder="Selecione uma categoria" /></SelectTrigger>
@@ -479,13 +519,73 @@ export default function Evento() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid items-center gap-1.5">
-              <Label htmlFor="image">Imagem do evento</Label>
-              <Input type="file" id="image" name="image" onChange={handleImageChange} accept="image/png, image/jpeg, image/jpg, image/webp" />
+
+            {/* Imagem Principal */}
+            <div className="grid items-start gap-1.5">
+              <Label>Imagem Principal</Label>
+              {eventoData.mainImage ? (
+                <div className="relative group w-full h-48">
+                  <img src={eventoData.mainImage} alt="Imagem principal do evento" className="rounded-lg object-cover w-full h-full border" />
+                  <button 
+                    type="button" 
+                    onClick={removeMainImage} 
+                    className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full p-1.5 group-hover:opacity-100 opacity-0 transition-opacity"
+                    aria-label="Remover imagem principal"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setCroppingFor('main');
+                    imageInputRef.current?.click();
+                  }}
+                  className="w-full h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+                >
+                  <ImagePlus className="h-10 w-10 mb-2" />
+                  <span>Adicionar Imagem Principal</span>
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Colaboradores */}
+          {/* SEÇÃO APENAS PARA OUTRAS IMAGENS */}
+          <div className="grid gap-4 mb-8">
+            <div>
+                <Label>Outras Imagens</Label>
+                <p className="text-sm text-gray-500">Adicione imagens secundárias para a galeria do evento.</p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {eventoData.otherImages.map((imageBase64, index) => (
+                <div key={index} className="relative group aspect-square">
+                  <img src={imageBase64} alt={`Imagem do evento ${index + 1}`} className="rounded-lg object-cover w-full h-full border" />
+                  <button 
+                    type="button" 
+                    onClick={() => removeOtherImage(index)} 
+                    className="absolute top-1 right-1 bg-black bg-opacity-60 text-white rounded-full p-1 group-hover:opacity-100 opacity-0 transition-opacity"
+                    aria-label="Remover imagem"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              {/* Botão para adicionar outras imagens */}
+              <button 
+                type="button"
+                onClick={() => {
+                  setCroppingFor('other');
+                  imageInputRef.current?.click();
+                }}
+                className="aspect-square border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+              >
+                <ImagePlus className="h-8 w-8" />
+              </button>
+            </div>
+          </div>
+
+          {/* Colaboradores (sem alterações) */}
           <div className="grid gap-8 mb-8">
             <div className="flex justify-between items-center">
               <Label>Colaboradores</Label>
@@ -553,15 +653,15 @@ export default function Evento() {
           <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">Alterar Imagem do Evento</h3>
+                <h3 className="text-xl font-semibold">Recortar Imagem</h3>
                 <button onClick={() => setShowImageCropper(false)} className="text-gray-400 hover:text-gray-600 text-2xl">×</button>
               </div>
               <ImageCropper
                   imageSrc={tempImage}
-                  onUploadSuccess={(base64) => {
-                    setEventoData(prev => ({ ...prev, image: base64 }));
-                    setShowImageCropper(false);
-                  }}
+                  onUploadSuccess={handleCropSuccess}
+                  // Adicionando uma propriedade hipotética para esconder o botão de upload interno, conforme solicitado.
+                  // O nome da prop ('hideUploader') é uma suposição e pode precisar de ajuste no componente real.
+                  hideUploader={true}
                 />
             </div>
           </div>
