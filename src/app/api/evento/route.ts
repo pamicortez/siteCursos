@@ -175,21 +175,25 @@ export async function POST(request: Request) {
 
 	  // Validação: usuárioId e funcao são obrigatórios
 	  if (!usuarioId || !tipoParticipacao) {
+		console.log("O ID DO USUÁRIO OU O TIPO DE PARTICIPAÇÃO NÃO ESTÃO SENDO PASSADOS")
 		return NextResponse.json({error: 'Id do usuário e o tipo de participação são obrigatórios'}, {status: 400})
 	  } else if (!setParticipacao.has(tipoParticipacao)){
+		console.log("O TIPO DE PARTICIPAÇÃO NÃO FAZ PARTE DOS ENUMS")
 		return NextResponse.json({error: 'Tipo de participação não reconhecido'}, {status: 400})
 	  } else if(!imagem){
+		console.log("IMAGEM NÃO ESTÁ SENDO PASSADA")
 		return NextResponse.json({error: 'Imagem é obrigatória'}, {status: 400})
 	  }
-  
 	  // Verifica se o usuário existe
 	  const usuario = await prisma.usuario.findUnique({ where: { id: usuarioId } });
 	  if (!usuario) {
+		console.log("USUÁRIO NÃO EXISTENTE")
 		return NextResponse.json({error: 'Usuário não encontrado'}, {status: 404})
 	  }
 
 	// Verificação para garantir que a data de fim não seja anterior à data de início
 	  if (new Date(dataFim) < new Date(dataInicio)) {
+		console.log("DATAS NÃO FAZEM SENTIDO")
 		return NextResponse.json({error: 'O fim do evento é anterior ao início'}, {status: 400});
 	  }
 
@@ -197,7 +201,7 @@ export async function POST(request: Request) {
 		data:{
 			...eventoData, // Dados do projeto que será criado
 			eventoColaborador: {
-				create: colaboradores.map((colaborador: {categoria: funcaoProjeto, nome: string}) => ({
+				create: colaboradores.map((colaborador: {categoria: typeParticipacao, nome: string}) => ({
 					categoria: colaborador.categoria,
 					colaborador: {
 						create: {
@@ -213,7 +217,6 @@ export async function POST(request: Request) {
 			},
 		},
 	  });
-
 	  // Relação entre o usuário e o evento
 	  const novoEventUsu = await prisma.eventoUsuario.create({ 
 		data:{
@@ -237,7 +240,7 @@ export async function POST(request: Request) {
 		console.error(error.message);
 		return NextResponse.json({error: 'Tipos dos dados incorretos (Ou enum não correspondente)'}, {status: 400})
 	  } 
-	  console.error('Erro ao criar o evento:', error);
+	  console.log('Erro ao criar o evento:', error);
 	  return NextResponse.error(); // Retorna um erro em caso de falha
 	}
   }

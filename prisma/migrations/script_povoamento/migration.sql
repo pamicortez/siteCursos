@@ -152,15 +152,15 @@ VALUES
 
 INSERT INTO "eventoColaborador" (categoria, "idEvento", "idColaborador", "createdAt", "updatedAt")
 VALUES
-('Cordenador(a)', 1, 1, NOW(), NOW()),
-('Colaborador(a)', 1, 2, NOW(), NOW()),
-('Cordenador(a)', 2, 3, NOW(), NOW()),
-('Bolsista', 2, 4, NOW(), NOW()),
-('Cordenador(a)', 3, 5, NOW(), NOW()),
-('Voluntário', 3, 6, NOW(), NOW()),
-('Colaborador(a)', 4, 1, NOW(), NOW()),
-('Cordenador(a)', 5, 2, NOW(), NOW()),
-('Colaborador(a)', 6, 3, NOW(), NOW());
+('Ouvinte', 1, 1, NOW(), NOW()),
+('Palestrante', 1, 2, NOW(), NOW()),
+('Organizador', 2, 3, NOW(), NOW()),
+('Ouvinte', 2, 4, NOW(), NOW()),
+('Palestrante', 3, 5, NOW(), NOW()),
+('Organizador', 3, 6, NOW(), NOW()),
+('Ouvinte', 4, 1, NOW(), NOW()),
+('Palestrante', 5, 2, NOW(), NOW()),
+('Organizador', 6, 3, NOW(), NOW());
 
 -- Relacionando usuários com cursos (expandido)
 INSERT INTO "cursoUsuario" ("idCurso", "idUsuario", "createdAt", "updatedAt")
