@@ -216,7 +216,11 @@ export default function Evento() {
       const { date: endDate, time: endTime } = formatDateTime(data.dataFim);
 
       // Separa a primeira imagem como principal e o resto como 'outras'
-      const allImages = data.imagemEvento?.map((img: { link: string }) => img.link) || [];
+      //const allImages = data.imagemEvento?.map((img: { link: string }) => img.link) || [];
+
+      // Validando se "data.imagemEvento" é um array com "isArray" antes de fazer .map
+      const allImages = Array.isArray(data.imagemEvento)? data.imagemEvento.map((img: { link: string }) => img.link): [];
+
       const [mainImage, ...otherImages] = allImages;
 
       setEventoData({
@@ -233,10 +237,17 @@ export default function Evento() {
         otherImages: otherImages || []
       });
 
-      const mappedCollaborators = data.eventoColaborador.map((colab: EventoColaborador) => ({
-        name: colab.colaborador.nome,
-        role: colab.categoria 
-      }));
+      //const mappedCollaborators = data.eventoColaborador.map((colab: EventoColaborador) => ({
+       // name: colab.colaborador.nome,
+       // role: colab.categoria 
+      //}));
+
+      // Validando se "data.eventoColaborador" é um array antes de fazer .map
+      const mappedCollaborators = Array.isArray(data.eventoColaborador)? data.eventoColaborador.map((colab: EventoColaborador) => ({
+      name: colab.colaborador.nome,
+      role: colab.categoria,
+    })): [];
+
 
       setCollaborators(mappedCollaborators);
 
