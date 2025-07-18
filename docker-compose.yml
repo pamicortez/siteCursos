@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  nextjs-app:
+    build: .
+    container_name: nextjs-container
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    restart: always
