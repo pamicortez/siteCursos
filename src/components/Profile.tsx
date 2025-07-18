@@ -47,6 +47,7 @@ interface Projeto {
   imagem: string
   descricao: string
   categoria: string
+  categoriaFormatada: string
   dataInicio: string
   dataFim: string
   projetoColaborador: Array<{
@@ -913,7 +914,7 @@ export default function ProfilePage() {
                     imagem={projeto.imagem}
                     titulo={projeto.titulo}
                     descricao={projeto.descricao}
-                    categoria={projeto.categoria}
+                    categoria={projeto.categoriaFormatada}
                     dataInicio={projeto.dataInicio}
                     dataFim={projeto.dataFim}
                     isOwner={true}

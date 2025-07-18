@@ -1,6 +1,27 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 
+const categoriaFormatada: Record<string, string> = {
+  ArtesECultura: "Artes e Cultura",
+  CienciasAgrarias: "Ciências Agrárias",
+  CienciasBiologicasENaturais: "Ciências Biológicas e Naturais",
+  CienciasExatas: "Ciências Exatas",
+  CienciasHumanas: "Ciências Humanas",
+  CienciasSociaisAplicadasANegocios: "Ciências Sociais Aplicadas a Negócios",
+  ComunicacaoEInformacao: "Comunicação e Informação",
+  EducacaoEFormacaoDeProfessores: "Educação e Formação de Professores",
+  EngenhariaEProducao: "Engenharia e Produção",
+  GestaoEPlanejamento: "Gestão e Planejamento",
+  LinguagensLetrasEComunicacao: "Linguagens, Letras e Comunicação",
+  MeioAmbienteESustentabilidade: "Meio Ambiente e Sustentabilidade",
+  NegociosAdministracaoEDireito: "Negócios, Administração e Direito",
+  PesquisaEInovacao: "Pesquisa e Inovação",
+  ProducaoEConstrucao: "Produção e Construção",
+  SaudeEBemEstar: "Saúde e Bem-Estar",
+  ServicosSociasEComunitarios: "Serviços Sociais e Comunitários",
+  TecnologiaEComputacao: "Tecnologia e Computação"
+};
+
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -43,11 +64,15 @@ export async function GET(
     });
 
     // Transformar os dados para retornar apenas os projetos com informações do usuário
-    const projetosFormatados = projetos.map(projetoUsuario => ({
-      ...projetoUsuario.projeto,
-      funcaoUsuario: projetoUsuario.funcao,
-      isOwner: projetoUsuario.funcao === 'Coordenador'
-    }));
+    const projetosFormatados = projetos.map(projetoUsuario => {
+      const projeto = projetoUsuario.projeto;
+      return {
+        ...projeto,
+        categoriaFormatada: categoriaFormatada[projeto.categoria] || projeto.categoria, // Adiciona a categoria formatada
+        funcaoUsuario: projetoUsuario.funcao,
+        isOwner: projetoUsuario.funcao === 'Coordenador'
+      };
+    });
 
     return NextResponse.json(projetosFormatados);
 
