@@ -93,12 +93,10 @@ export async function GET(request: Request) {
             // Exemplo de requisição http para chegar aqui: http://localhost:3000/api/evento?data_inicio=2021-10-01&data_fim=2021-10-31
             const eventos = await prisma.evento.findMany({
                 where: {
-                    dataInicio: {
+                    data: {
                         gte: new Date(data_inicio),
-                    },
-					dataFim:{
-						lte: new Date(data_fim)
-					}, deletedAt: null
+                        lte: new Date(data_fim)
+                    }, deletedAt: null
 					, eventoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } } }}
                 },
 				include: {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
-import { categoriaCurso, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { connect } from 'http2';
 
 const categoriaFormatada: Record<string, string> = {
@@ -40,8 +40,7 @@ export async function GET(request: Request) {
 			// Buscar cursos que tenham o título especificado
 			const cursos = await prisma.curso.findMany({
 				where: { titulo: {contains: titulo, mode: 'insensitive',}, deletedAt: null,
-					categoria: categoria ? categoriaCurso[categoria as keyof typeof categoriaCurso] : undefined
- // Se categoria não for passada, não filtra por categoria 
+					categoria: categoria? categoria : undefined // Se categoria não for passada, não filtra por categoria 
 					, usuario: { tipo: { in: ['Super', 'Normal'] } } // Só obtem usuarios do tipo Super ou Normal
 				},
 				include: {
@@ -114,9 +113,7 @@ export async function GET(request: Request) {
 			// Buscar cursos que tenham a categoria especificada
 			const cursos = await prisma.curso.findMany({
 				where: { 
-					//categoria, titulo: titulo? {contains: titulo, mode: 'insensitive',} : undefined
-					categoria: categoria ? categoriaCurso[categoria as keyof typeof categoriaCurso] : undefined
-
+					categoria, titulo: titulo? {contains: titulo, mode: 'insensitive',} : undefined
 					, deletedAt: null
 					, usuario: { tipo: { in: ['Super', 'Normal'] } } // Só obtem usuarios do tipo Super ou Normal
 				 }, // Se título não for passado, não filtra por título
@@ -138,8 +135,7 @@ export async function GET(request: Request) {
 		else {
 			const cursos = await prisma.curso.findMany({
 				where: { 				 	
-					categoria: categoria ? categoriaCurso[categoria as keyof typeof categoriaCurso] : undefined
- // Se categoria não for passada, não filtra por categoria 
+					categoria: categoria? categoria : undefined // Se categoria não for passada, não filtra por categoria 
 					, deletedAt: null // Verifica se o curso não foi deletado
 					, usuario: { tipo: { in: ['Super', 'Normal'] } } // Só obtem usuarios do tipo Super ou Normal
 				}, // Verifica se o curso não foi deletado
