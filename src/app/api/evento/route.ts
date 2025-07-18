@@ -48,6 +48,7 @@ export async function GET(request: Request) {
 				 },
 				include: {
 					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
+					eventoColaborador: { include: {colaborador: true}},
 					imagemEvento: true,
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
@@ -72,6 +73,7 @@ export async function GET(request: Request) {
 			 	},
 				include: {
 					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
+					eventoColaborador: { include: {colaborador: true}},
 					imagemEvento: true,
 				}
 			});
@@ -98,6 +100,7 @@ export async function GET(request: Request) {
 				}, // Verifica se o evento não foi deletado
 				include: {
 					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
+					eventoColaborador: { include: {colaborador: true}},
 					imagemEvento: true,
 				},
 				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
