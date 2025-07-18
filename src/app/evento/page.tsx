@@ -20,7 +20,10 @@ import ImageCropper from "@/components/ui/ImageCropperBase64";
 type ColaboradorFromAPI = {
   id: number;
   nome: string;
+  
 };
+
+
 
 interface EventoColaborador {
   id: number;
@@ -75,6 +78,11 @@ function ConfirmationModal({
   );
 }
 
+type SuggestionItem = {
+  label: string;
+  nome: string;
+};
+
 export default function Evento() {
   const router = useRouter();
   const params = useParams();
@@ -119,7 +127,7 @@ export default function Evento() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<ColaboradorFromAPI[]>([]);
-  const [suggestions, setSuggestions] = useState<{index: number, names: string[]} | null>(null);
+  const [suggestions, setSuggestions] = useState<{index: number, names: SuggestionItem[]} | null>(null);
   const { data: session, status } = useSession();
   const [showImageCropper, setShowImageCropper] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
@@ -156,8 +164,15 @@ export default function Evento() {
   }, []);
 
   useEffect(() => {
-    if (status === "loading") return;
 
+  const intervalId = setInterval(() => {
+      console.log("Verificando status...", status);
+
+    if (status === "loading") {
+      return;
+    }
+
+    clearInterval(intervalId);
     if (status !== "authenticated") {
       router.push("/404");
       return;
@@ -167,6 +182,8 @@ export default function Evento() {
       setIsEditMode(true);
       fetchEventoData(eventoId);
     }
+  }, 300); 
+    return () => clearInterval(intervalId);
   }, [eventoId, status]);
 
   const fetchEventoData = async (id: string) => {
@@ -176,10 +193,12 @@ export default function Evento() {
 
       const data = await response.json();
 
-      const isEventoOwner = data.eventoUsuario?.some(
-        (user: any) => Number(user.idUsuario) === Number(session?.user?.id)
+      const isEventoOwner = data.eventoUsuario?.some 
+      ((user: any) => Number(user.idUsuario) === Number(session?.user?.id)
       );
       
+ console.log(isEventoOwner, data)
+
       if (!isEventoOwner) {
         router.push("/home");
         return;
@@ -230,7 +249,9 @@ export default function Evento() {
     const fetchCategories = async () => {
       try {
         const response = await fetch("/api/enums/categoriaCurso");
-        if (!response.ok) throw new Error("Erro ao buscar categorias de evento");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar categorias de evento");
+        }
         const data = await response.json();
         setCategories(data);
       } catch (error) {
@@ -362,17 +383,21 @@ export default function Evento() {
         })),
       ...(isEditMode ? {} : { usuarioId: Number(session?.user?.id) })
     };
-  
+    
+    console.log(requestBody)
+    
     try {
       const route = isEditMode ? `/api/evento?id=${eventoId}` : "/api/evento";
       const response = await fetch(route, {
         method: isEditMode ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", 
+        },
         body: JSON.stringify(requestBody),
       });
   
-      const data = await response.json();
+      
       if (response.ok) {
+        const data = await response.json();
         setResultDialog({
           title: 'Sucesso!',
           message: isEditMode ? 'Evento atualizado com sucesso.' : 'Evento criado com sucesso.',
@@ -418,9 +443,13 @@ export default function Evento() {
       startDate: '', startTime: '', endDate: '', endTime: '',
       category: '', mainImage: '', otherImages: []
     });
-    setCollaborators([]);
+    setCollaborators([{ name: '', role: '' }]);
     setShowCancelDialog(false);
     router.push('/home');
+  };
+
+    const handleContinueEditing = () => {
+    setShowCancelDialog(false);
   };
 
   return (
