@@ -86,32 +86,6 @@ export async function GET(request: Request) {
 			}
 
 		}
-		// === Buscando eventos com data >= data_inicio e data <= data_fim ===
-		else if (data_fim && data_inicio) {
-            console.log('Buscando eventos com data_inicio:', data_inicio, 'e data_fim:', data_fim);
-            // Buscar eventos que tenham a data_inicio e data_fim especificadas
-            // Exemplo de requisição http para chegar aqui: http://localhost:3000/api/evento?data_inicio=2021-10-01&data_fim=2021-10-31
-            const eventos = await prisma.evento.findMany({
-                where: {
-                    data: {
-                        gte: new Date(data_inicio),
-                        lte: new Date(data_fim)
-                    }, deletedAt: null
-					, eventoUsuario: { some:{ usuario: { tipo: { in: ['Super', 'Normal'] } } }}
-                },
-				include: {
-					eventoUsuario: {include: {usuario: true}}, // Inclui o usuário que criou o evento
-					imagemEvento: true,
-				},
-				orderBy: ordem==='recente' ? {createdAt: 'desc'}: {titulo: 'asc'}
-            });
-            return NextResponse.json(
-				eventos.map(c => ({
-					...c,
-					categoriaFormatada: categoriaFormatada[c.categoria as keyof typeof categoriaFormatada] || c.categoria
-				}))
-			);
-		}
 		// === Buscando todos os eventos === 
 		else {
 			console.log('Buscando todos os eventos'); 
