@@ -204,7 +204,7 @@ export default function DetalhesEvento() {
               <p><strong>Início:</strong> {formatDateTime(evento?.dataInicio)}</p>
               <p><strong>Fim:</strong> {formatDateTime(evento?.dataFim)}</p>
               <p><strong>Local:</strong> {evento?.local}</p>
-              <p><strong>Coordenador:</strong> {coordenador?.usuario?.Nome || 'Não informado'}</p>
+             
               <div>
                 <strong>Colaboradores:</strong>
                 <ul className="list-disc pl-5 mt-2 text-sm line-clamp-1">
