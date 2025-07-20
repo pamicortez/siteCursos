@@ -23,7 +23,11 @@ type ColaboradorFromAPI = {
   
 };
 
-
+type User = {
+  id: number;
+  Nome: string;
+  email: string;
+}
 
 interface EventoColaborador {
   id: number;
@@ -107,6 +111,7 @@ export default function Evento() {
   });
 
   const [collaborators, setCollaborators] = useState<Array<{ name: string; role: string }>>([]);
+  
   const [cargosColaborador, setCargosColaborador] = useState<string[]>([]);
   const [cargo, setCargo] = useState<string>("Organizador");
   const [loadingCargos, setLoadingCargos] = useState(true);
@@ -126,7 +131,7 @@ export default function Evento() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
-  const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<ColaboradorFromAPI[]>([]);
+  const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<User[]>([]);
   const [suggestions, setSuggestions] = useState<{index: number, names: SuggestionItem[]} | null>(null);
   const { data: session, status } = useSession();
   const [showImageCropper, setShowImageCropper] = useState(false);
@@ -150,7 +155,9 @@ export default function Evento() {
 
     const fetchColaboradores = async () => {
       try {
-        const response = await fetch("/api/colaborador");
+       // const response = await fetch("/api/colaborador");
+       const response = await fetch("/api/usuario?tipo=Ativo");
+       
         if (!response.ok) throw new Error("Erro ao buscar colaboradores");
         const data = await response.json();
         setColaboradoresDisponiveis(data);
@@ -237,16 +244,16 @@ export default function Evento() {
         otherImages: otherImages || []
       });
 
-      //const mappedCollaborators = data.eventoColaborador.map((colab: EventoColaborador) => ({
-       // name: colab.colaborador.nome,
-       // role: colab.categoria 
-      //}));
+      const mappedCollaborators = data.eventoColaborador.map((colab: EventoColaborador) => ({
+        name: colab.colaborador.nome,
+       role: colab.categoria 
+      }));
 
       // Validando se "data.eventoColaborador" é um array antes de fazer .map
-      const mappedCollaborators = Array.isArray(data.eventoColaborador)? data.eventoColaborador.map((colab: EventoColaborador) => ({
-      name: colab.colaborador.nome,
-      role: colab.categoria,
-    })): [];
+      //const mappedCollaborators = Array.isArray(data.eventoColaborador)? data.eventoColaborador.map((colab: EventoColaborador) => ({
+     // name: colab.colaborador.nome,
+     // role: colab.categoria,
+    //})): [];
 
 
       setCollaborators(mappedCollaborators);
@@ -319,21 +326,55 @@ export default function Evento() {
   };
 
   const handleCollaboratorNameChange = (index: number, value: string) => {
+     const trimmedValue = value.trimStart();
+      // Verifica se há múltiplos espaços consecutivos e substitui por um único
+    const normalizedValue = trimmedValue.replace(/\s+/g, ' ');
+      // Verifica se há mais de duas palavras (nome + sobrenome)
+    const wordCount = normalizedValue.split(' ').filter(word => word.length > 0).length;
+    if (wordCount > 2) {
+      return; // Não permite mais de dois nomes
+    }
+    
     const updatedCollaborators = [...collaborators];
-    updatedCollaborators[index] = { ...updatedCollaborators[index], name: value };
+    updatedCollaborators[index] = { ...updatedCollaborators[index], name: normalizedValue };
     setCollaborators(updatedCollaborators);
   
-    if (value.length > 0) {
+        // Mostrar sugestões se houver texto
+    if (normalizedValue.length > 0) {
       const matchedNames = colaboradoresDisponiveis
-        .filter(colab => colab.nome.toLowerCase().includes(value.toLowerCase()))
-        .map(colab => colab.nome)
-        .slice(0, 5);
+        .filter(colab => {
+                const isNotCurrentUser = colab.id !== Number(session?.user?.id);
+                const matchesNome = colab.Nome.toLowerCase().includes(normalizedValue.toLowerCase());
+                const matchesEmail = colab.email.toLowerCase().includes(normalizedValue.toLowerCase());
+
+                console.log({
+                  colabId: colab.id,
+                  sessionUserId: Number(session?.user?.id),
+                  isNotCurrentUser,
+                  matchesNome,
+                  matchesEmail,
+                  shouldInclude: isNotCurrentUser && (matchesNome || matchesEmail)
+                });
+
+                return isNotCurrentUser && (matchesNome || matchesEmail);
+              })
+            .map(colab => ({
+                    label: `${colab.Nome} (${colab.email})`,
+                    nome: colab.Nome
+              }))
+        .slice(0, 5); // Limita a 5 sugestões
       
-      setSuggestions(matchedNames.length > 0 ? {index, names: matchedNames} : null);
+      setSuggestions(matchedNames.length > 0 ? { index, names: matchedNames } : null);
     } else {
       setSuggestions(null);
     }
   };
+    const handleSelectSuggestion = (nome: string, index: number) => {
+      const updated = [...collaborators];
+      updated[index].name = nome;
+      setCollaborators(updated);
+      setSuggestions(null);
+    };
 
   const handleCollaboratorRoleChange = (index: number, value: string) => {
     const updatedCollaborators = [...collaborators];
@@ -362,6 +403,15 @@ export default function Evento() {
     setSuggestions(null);
   };
 
+  function validateCollaborators() {
+    for (const collaborator of collaborators) {
+      if (!collaborator.name.trim() || !collaborator.role.trim()) {
+        alert("Todos os colaboradores devem ter nome e cargo preenchidos.");
+        return false;
+      }
+    }
+    return true;
+  }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -371,12 +421,19 @@ export default function Evento() {
     const dataInicioISO = new Date(`${eventoData.startDate}T${eventoData.startTime}`).toISOString();
     const dataFimISO = new Date(`${eventoData.endDate}T${eventoData.endTime}`).toISOString();
 
-    const validatedCollaborators = collaborators
-      .filter(c => c.name.trim() && c.role)
-      .map(colab => ({
-        ...colab,
-        name: colab.name.trim().replace(/\s+/g, ' '), 
-      }));
+ const validatedCollaborators = collaborators.map(colab => ({
+      ...colab,
+      name: colab.name.trim().replace(/\s+/g, ' '), 
+    }));
+    
+    if (new Date(dataFimISO) < new Date(dataInicioISO)) {
+  alert("A data de término deve ser posterior à data de início.");
+  return;
+}
+
+    if (!validateCollaborators()) {
+      return; // Interrompe se houver campos vazios
+    }
 
     const requestBody = {
       titulo: eventoData.title,
@@ -415,14 +472,21 @@ export default function Evento() {
           isError: false,
           eventoId: data.id 
         });
-      } else {
-        throw new Error(data.message || 'Erro desconhecido da API');
+     } else {
+        const errorData = await response.json();
+        console.error("Erro da API:", errorData);
+        setResultDialog({
+          title: 'Erro',
+          message: 'Erro ao salvar o evento, tente novamente mais tarde. Erro: ' + errorData.message,
+          isError: true,
+          eventoId: null
+        });
       }
-    } catch (error: any) {
-      console.error("Erro ao submeter:", error);
+    } catch (error) {
+      console.error(error);
       setResultDialog({
         title: 'Erro',
-        message: 'Erro ao salvar o evento. ' + error.message,
+        message: 'Erro ao salvar o evento, tente novamente mais tarde. Erro: ' + error,
         isError: true,
         eventoId: null
       });
@@ -440,7 +504,7 @@ export default function Evento() {
   };
 
   const handleCancelClick = () => {
-    const hasData = eventoData.title || eventoData.description || eventoData.mainImage || eventoData.otherImages.length > 0 || collaborators.length > 0;
+    const hasData = eventoData.title || eventoData.description || eventoData.mainImage || eventoData.otherImages.length > 0 || collaborators.some(c => c.name || c.role);
     if (hasData) {
       setShowCancelDialog(true);
     } else {
@@ -626,36 +690,71 @@ export default function Evento() {
           </div>
 
           {/* Colaboradores (sem alterações) */}
+
           <div className="grid gap-8 mb-8">
             <div className="flex justify-between items-center">
               <Label>Colaboradores</Label>
-              <Button type="button" onClick={addCollaborator} className="w-fit">+ Adicionar colaborador</Button>
+              <Button type="button" onClick={addCollaborator} className="w-fit">
+                + Adicionar colaborador
+              </Button>
             </div>
-            {collaborators.length === 0 && <p className="text-gray-500">Nenhum colaborador adicionado.</p>}
+            {collaborators.length === 0 && (
+              <p className="text-gray-500">Nenhum colaborador adicionado.</p>
+            )}
+
             {collaborators.map((collaborator, index) => (
               <div key={index} className="grid gap-6 md:grid-cols-2 items-end">
                 <div className="grid items-center gap-1.5 relative">
-                  <Input type="text" placeholder="Nome do colaborador" value={collaborator.name} onChange={(e) => handleCollaboratorNameChange(index, e.target.value)} />
+                  <Input
+                    type="text"
+                    placeholder="Nome do colaborador"
+                    value={collaborator.name}
+                    onChange={(e) => handleCollaboratorNameChange(index, e.target.value)}
+                  />
                   {suggestions?.index === index && (
                     <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
-                      {suggestions.names.map((name, i) => (
-                        <div key={i} className="p-2 hover:bg-gray-100 cursor-pointer" onClick={() => selectSuggestion(index, name)}>{name}</div>
+                      {suggestions.names.map((nameObj, i) => (
+                        <div 
+                          key={i}
+                          className="p-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => selectSuggestion(index, nameObj.nome)} // pega só o nome
+                        >
+                          {nameObj.label} {/* mostra Nome (email) */}
+                        </div>
                       ))}
                     </div>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Select value={collaborator.role} onValueChange={(value) => handleCollaboratorRoleChange(index, value)}>
-                    <SelectTrigger><SelectValue placeholder="Selecione o cargo" /></SelectTrigger>
+                  <Select
+                    value={collaborator.role}
+                    onValueChange={(value) => handleCollaboratorRoleChange(index, value)}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Selecione o cargo" />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {loadingCargos ? <SelectItem value="loading" disabled>Carregando...</SelectItem> : cargosColaborador.map((cargo) => (
-                          <SelectItem key={cargo} value={cargo}>{cargo}</SelectItem>
-                        ))}
+                        {loadingCargos ? (
+                          <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                        ) : (
+                          cargosColaborador.map((cargo) => (
+                            <SelectItem key={cargo} value={cargo}>
+                              {cargo}
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-                  <Button type="button" variant="ghost" onClick={() => removeCollaborator(index)} className="text-black hover:text-black hover:bg-gray-100 p-2"><Trash2 className="h-4 w-4" /></Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => removeCollaborator(index)}
+                    className="text-black hover:text-black hover:bg-gray-100 p-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             ))}
