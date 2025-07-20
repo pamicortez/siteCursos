@@ -219,13 +219,12 @@ export default function Evento() {
         return { date, time };
       };
 
+// page.tsx (dentro da função fetchEventoData)
+
       const { date: startDate, time: startTime } = formatDateTime(data.dataInicio);
       const { date: endDate, time: endTime } = formatDateTime(data.dataFim);
 
       // Separa a primeira imagem como principal e o resto como 'outras'
-      //const allImages = data.imagemEvento?.map((img: { link: string }) => img.link) || [];
-
-      // Validando se "data.imagemEvento" é um array com "isArray" antes de fazer .map
       const allImages = Array.isArray(data.imagemEvento)? data.imagemEvento.map((img: { link: string }) => img.link): [];
 
       const [mainImage, ...otherImages] = allImages;
@@ -243,6 +242,16 @@ export default function Evento() {
         mainImage: mainImage || '',
         otherImages: otherImages || []
       });
+
+      // Encontra a participação do usuário logado no evento
+      const currentUserParticipation = data.eventoUsuario?.find(
+        (user: any) => Number(user.idUsuario) === Number(session?.user?.id)
+      );
+
+      // Se encontrar a participação, atualiza o estado 'cargo'
+      if (currentUserParticipation) {
+        setCargo(currentUserParticipation.tipoParticipacao);
+      }
 
       const mappedCollaborators = data.eventoColaborador.map((colab: EventoColaborador) => ({
         name: colab.colaborador.nome,
