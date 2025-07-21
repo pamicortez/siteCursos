@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
-import { Prisma } from '@prisma/client';
+import { categoriaCurso, Prisma } from '@prisma/client';
 import { connect } from 'http2';
 
 const categoriaFormatada: Record<string, string> = {
@@ -27,12 +27,22 @@ const categoriaFormatada: Record<string, string> = {
 
 // Método GET para retornar todos os cursos
 export async function GET(request: Request) {
+
+
 	const { searchParams } = new URL(request.url);
 	const titulo = searchParams.get('titulo');
-	const categoria = searchParams.get('categoria');
 	const idUsuario = searchParams.get('idUsuario'); // ID do usuário
 	const idCurso = searchParams.get('id'); // ID do curso
 	const ordem = searchParams.get('ordem');
+	const categoriaRaw = searchParams.get('categoria') || undefined;
+
+	const isValidCategoria = categoriaRaw && 
+	Object.values(categoriaCurso).includes(categoriaRaw as any);
+
+	const categoria = isValidCategoria 
+	? categoriaCurso[categoriaRaw as keyof typeof categoriaCurso] 
+	: undefined;
+
 	try {
 		// === Buscando cursos com título ===
 		if (titulo) {
@@ -40,7 +50,7 @@ export async function GET(request: Request) {
 			// Buscar cursos que tenham o título especificado
 			const cursos = await prisma.curso.findMany({
 				where: { titulo: {contains: titulo, mode: 'insensitive',}, deletedAt: null,
-					categoria: categoria? categoria : undefined // Se categoria não for passada, não filtra por categoria 
+					categoria: categoria 
 					, usuario: { tipo: { in: ['Super', 'Normal'] } } // Só obtem usuarios do tipo Super ou Normal
 				},
 				include: {
@@ -135,7 +145,7 @@ export async function GET(request: Request) {
 		else {
 			const cursos = await prisma.curso.findMany({
 				where: { 				 	
-					categoria: categoria? categoria : undefined // Se categoria não for passada, não filtra por categoria 
+					categoria: categoria 
 					, deletedAt: null // Verifica se o curso não foi deletado
 					, usuario: { tipo: { in: ['Super', 'Normal'] } } // Só obtem usuarios do tipo Super ou Normal
 				}, // Verifica se o curso não foi deletado

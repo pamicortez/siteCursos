@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import ImageCropper from "@/components/ui/ImageCropperBase64"
 
+import { Suspense } from 'react';
+
 import {
   Select,
   SelectContent,
@@ -27,7 +29,6 @@ type AulaType = {
   slide: File | null;
   podcast: string;
 };
-
 
 export default function Curso() {
 
@@ -256,7 +257,7 @@ export default function Curso() {
 
 
   // Verifica se o projeto foi carregado e se o usuário é o dono
-  const isProjectOwner = projeto?.projetoUsuario?.some(
+  const isProjectOwner = (projeto as any)?.projetoUsuario?.some(
     (user: any) => Number(user.idUsuario) === Number(session?.user?.id)
   );
 
