@@ -30,8 +30,10 @@ type AulaType = {
   podcast: string;
 };
 
-export default function Curso() {
 
+
+
+function SearchComponent() {
   const searchParams = useSearchParams();
   const idProjeto = searchParams.get('idProjeto')
   const router = useRouter();
@@ -462,5 +464,15 @@ export default function Curso() {
       )}
     </div>
 
+  );
+}
+
+
+
+export default function Curso() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <SearchComponent />
+    </Suspense>
   );
 }

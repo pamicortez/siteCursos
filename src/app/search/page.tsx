@@ -22,7 +22,9 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-export default function SearchPage() {
+import { Suspense } from 'react';
+
+function SearchPageNoSuspense() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -335,5 +337,16 @@ export default function SearchPage() {
         </PaginationContent>
       </Pagination>
     </div>
+  );
+}
+
+
+
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <SearchPageNoSuspense />
+    </Suspense>
   );
 }
