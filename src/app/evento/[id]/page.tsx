@@ -75,6 +75,8 @@ export default function DetalhesEvento() {
   const [showImageModal, setShowImageModal] = useState(false);
   const [isImageModalClosing, setIsImageModalClosing] = useState(false);
 
+  
+
   useEffect(() => {
     async function loadEventoAndCategories() {
       try {
@@ -123,6 +125,22 @@ export default function DetalhesEvento() {
     return notFound();
   }
 
+  // Lógica para filtrar colaboradores duplicados
+const colaboradoresOriginais = evento.eventoColaborador || [];
+const colaboradoresUnicosMap = new Map();
+
+colaboradoresOriginais.forEach(colab => {
+  // Cria uma chave única baseada no nome e na categoria do colaborador
+  const chaveUnica = `${colab.colaborador.nome.trim()}-${colab.categoria.trim()}`;
+  
+  // Adiciona ao Map apenas se a chave ainda não existir
+  if (!colaboradoresUnicosMap.has(chaveUnica)) {
+    colaboradoresUnicosMap.set(chaveUnica, colab);
+  }
+});
+
+// Converte os valores do Map de volta para um array
+const colaboradoresUnicos = Array.from(colaboradoresUnicosMap.values());
   const absoluteLink = (url: any) => {
     return url.startsWith('http://') || url.startsWith('https://')
       ? url
@@ -214,7 +232,7 @@ export default function DetalhesEvento() {
                   ) : (
                     <>
                       {/* Lista de colaboradores externos */}
-                      {evento.eventoColaborador?.map((colab, index) => (
+                       {colaboradoresUnicos.map((colab, index) => (
                         <li key={`colab-${index}`}>
                           {colab.colaborador.nome} - {colab.categoria}
                         </li>
