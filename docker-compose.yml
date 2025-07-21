@@ -1,16 +1,14 @@
 version: '3.8'
 
 services:
-  app:
+  nextjs:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: sitecursos-app
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
-      NODE_ENV: ${NODE_ENV:-production}
+      target: runner
     ports:
       - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
     restart: unless-stopped
