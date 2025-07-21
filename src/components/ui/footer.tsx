@@ -45,7 +45,7 @@ const Footer2 = ({
   const orientadoraSection: MenuItem = {
     title: "Orientadora",
     links: [
-      { text: "Pamela Cortez", url: "https://github.com/pamicortez" },
+      { text: "Pamela Cortez", url: "/pamela" },
     ],
   };
 

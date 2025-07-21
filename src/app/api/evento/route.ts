@@ -219,6 +219,7 @@ export async function PATCH(request: Request) {
 	  const id = Number(searchParams.get('id')); // ID do evento
 
 	  const atualizacoes = await request.json();
+	  console.log(atualizacoes)
 	  const colNovos: {nome: string; categoria: typeParticipacao}[] = atualizacoes.colaboradores || []; 
 	  // Verifica se o evento existe
 		const evento = await prisma.evento.findUnique({ where: { id: id } });
@@ -285,18 +286,18 @@ export async function PATCH(request: Request) {
 			include: {colaborador: true},
 		});
 
-		const nomesAtuais = colAtuais.map((projCol) => projCol.colaborador.nome);
+		const nomesAtuais = colAtuais.map((evenCol) => evenCol.colaborador.nome);
 		const nomesNovos = colNovos.map((col) => col.nome);
 
 		const pRemover = colAtuais.filter(
-			(eventCol) => !nomesNovos.includes(eventCol.colaborador.nome)
+			(evenCol) => !nomesNovos.includes(evenCol.colaborador.nome)
 		);
 
 		await prisma.eventoColaborador.deleteMany({
 			where: {
 				idEvento: id,
 				idColaborador: {
-					in: pRemover.map((eventCol) => eventCol.idColaborador),
+					in: pRemover.map((evenCol) => evenCol.idColaborador),
 				},
 			},
 		});
@@ -342,7 +343,7 @@ export async function PATCH(request: Request) {
 		}
 	  }
 
-	  const projAtua = await prisma.evento.findUnique({
+	  const evenAtua = await prisma.evento.findUnique({
 		where: {id: id},
 		include: {
 			eventoColaborador: {
@@ -350,7 +351,7 @@ export async function PATCH(request: Request) {
 			}
 		}
 	  })
-	  return NextResponse.json(projAtua, { status: 200 });
+	  return NextResponse.json(evenAtua, { status: 200 });
   
 	} catch (error) {
 	  console.error(error);
