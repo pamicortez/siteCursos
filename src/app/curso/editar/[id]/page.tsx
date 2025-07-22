@@ -21,13 +21,27 @@ import { ConfirmationModal } from '@/components/ConfirmationModal';
 
 type OptionType = { value: string; label: string };
 type AulaType = {
+  id?: string | number;
   titulo: string;
   linkVideo: string;
   linkPdf: File | null;
   linkPodcast: string;
 };
 
-
+type CursoType = {
+  id: string;
+  idUsuario: string;
+  titulo: string;
+  metodologia: string;
+  linkInscricao: string;
+  descricao: string;
+  bibliografia: string;
+  categoria: string;
+  imagem: string;
+  vagas: number;
+  metodoAvaliacao: string;
+  cargaHoraria: number;
+}
 
 
 export default function Curso() {
@@ -42,7 +56,20 @@ export default function Curso() {
   }
 
   const [aulas, setAulas] = useState<AulaType[]>([{ titulo: "", linkVideo: "", linkPdf: null, linkPodcast: "" }]);
-  const [curso, setCurso] = useState([]);
+  const [curso, setCurso] = useState<CursoType>({
+  id: '',
+  idUsuario: '',
+  titulo: '',
+  metodologia: '',
+  linkInscricao: '',
+  descricao: '',
+  bibliografia: '',
+  categoria: '',
+  imagem: '',
+  vagas: 0,
+  metodoAvaliacao: '',
+  cargaHoraria: 0,
+  });
   const [categories, setCategories] = useState<Category[]>([]);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(true); // Novo estado para controle inicial de carregamento

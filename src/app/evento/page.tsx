@@ -809,7 +809,6 @@ export default function Evento() {
                   onUploadSuccess={handleCropSuccess}
                   // Adicionando uma propriedade hipotética para esconder o botão de upload interno, conforme solicitado.
                   // O nome da prop ('hideUploader') é uma suposição e pode precisar de ajuste no componente real.
-                  hideUploader={true}
                 />
             </div>
           </div>

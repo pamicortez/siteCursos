@@ -22,7 +22,9 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-export default function SearchPage() {
+import { Suspense } from 'react';
+
+function SearchPageNoSuspense() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -32,9 +34,10 @@ export default function SearchPage() {
   const [ordem, setOrdem] = useState(searchParams.get("ordem") ?? "alfabetica");
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [items, setItems] = useState([]);
+  const [items, setItems] = useState<Item[]>([]);
 
   const [formacoes, setFormacoes] = useState<string[]>([]);
+
   const [categoriasCursos, setCategoriasCursos] = useState<string[]>([]);
   const [categoriasProjetos, setCategoriasProjetos] = useState<string[]>([]);
 
@@ -59,11 +62,13 @@ export default function SearchPage() {
     "Meio Ambiente e Sustentabilidade",
   ];
 
-  const fetchFormacoesAcademicas = async () => {
+  const fetchFormacoesAcademicas = async (): Promise<string[]> => {
     try {
       const response = await fetch("http://localhost:3000/api/usuario");
-      const usuarios = await response.json();
-      const formacoes = usuarios.map((u: any) => u.formacaoAcademica).filter(Boolean);
+      const usuarios: { formacaoAcademica?: string }[] = await response.json();
+      const formacoes = usuarios
+        .map((u) => u.formacaoAcademica)
+        .filter((f): f is string => Boolean(f));
       return Array.from(new Set(formacoes));
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
@@ -71,11 +76,13 @@ export default function SearchPage() {
     }
   };
 
-  const fetchCategoriasCursos = async () => {
+  const fetchCategoriasCursos = async (): Promise<string[]> => {
     try {
       const response = await fetch("http://localhost:3000/api/curso");
-      const cursos = await response.json();
-      const categorias = cursos.map((c: any) => c.categoria).filter(Boolean);
+      const cursos: { categoria?: string }[] = await response.json();
+      const categorias = cursos
+        .map((c) => c.categoria)
+        .filter((c): c is string => Boolean(c));
       return Array.from(new Set(categorias));
     } catch (error) {
       console.error("Erro ao buscar categorias de cursos:", error);
@@ -83,17 +90,44 @@ export default function SearchPage() {
     }
   };
 
-  const fetchCategoriasProjetos = async () => {
+  const fetchCategoriasProjetos = async (): Promise<string[]> => {
     try {
       const response = await fetch("http://localhost:3000/api/projeto");
-      const projetos = await response.json();
-      const categorias = projetos.map((p: any) => p.categoria).filter(Boolean);
+      const projetos: { categoria?: string }[] = await response.json();
+      const categorias = projetos
+        .map((p) => p.categoria)
+        .filter((c): c is string => Boolean(c));
       return Array.from(new Set(categorias));
     } catch (error) {
       console.error("Erro ao buscar categorias de projetos:", error);
       return [];
     }
   };
+
+  type Curso = {
+    id: string;
+    titulo: string;
+    descricao: string;
+    imagem: string;
+  };
+
+  type Projeto = {
+    id: string;
+    titulo: string;
+    descricao: string;
+    imagem: string;
+  };
+
+  type Usuario = {
+    id: string;
+    fotoPerfil: string;
+    Nome: string;
+    resumoPessoal: string;
+  };
+
+  type Item = Curso | Projeto | Usuario;
+
+
 
   useEffect(() => {
     setCategoria("");
@@ -167,10 +201,10 @@ export default function SearchPage() {
     filter === "usuario"
       ? formacoes
       : filter === "curso"
-      ? categoriasCursos
-      : filter === "projeto"
-      ? categoriasProjetos
-      : [];
+        ? categoriasCursos
+        : filter === "projeto"
+          ? categoriasProjetos
+          : [];
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-100 space-y-6 px-4 pb-10">
@@ -204,7 +238,9 @@ export default function SearchPage() {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem disabled>Nenhuma categoria</SelectItem>
+                    <SelectItem value="" disabled>
+                      Selecione uma opção
+                    </SelectItem>
                   )}
                 </SelectGroup>
               </SelectContent>
@@ -237,21 +273,25 @@ export default function SearchPage() {
       </div>
 
       {/* Lista de Cards */}
+
       <div className="w-full max-w-4xl space-y-4">
         {currentItems.map((item, index) => {
           let cardData;
 
           if (filter === "curso" || filter === "projeto") {
+            // Aqui podemos garantir que item é Curso | Projeto
+            const cursoOuProjeto = item as Curso | Projeto;
             cardData = {
-              imageSrc: item.imagem,
-              title: item.titulo,
-              description: item.descricao,
+              imageSrc: cursoOuProjeto.imagem,
+              title: cursoOuProjeto.titulo,
+              description: cursoOuProjeto.descricao,
             };
           } else if (filter === "usuario") {
+            const usuario = item as Usuario;
             cardData = {
-              imageSrc: item.fotoPerfil,
-              title: item.Nome,
-              description: item.resumoPessoal,
+              imageSrc: usuario.fotoPerfil,
+              title: usuario.Nome,
+              description: usuario.resumoPessoal,
             };
           }
 
@@ -260,9 +300,9 @@ export default function SearchPage() {
               key={index}
               id={item.id}
               type={filter}
-              imageSrc={cardData?.imageSrc}
-              title={cardData?.title}
-              description={cardData?.description}
+              imageSrc={cardData?.imageSrc ?? ""}
+              title={cardData?.title ?? ""}
+              description={cardData?.description ?? ""}
             />
           );
         })}
@@ -297,5 +337,16 @@ export default function SearchPage() {
         </PaginationContent>
       </Pagination>
     </div>
+  );
+}
+
+
+
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <SearchPageNoSuspense />
+    </Suspense>
   );
 }

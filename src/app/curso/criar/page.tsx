@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import ImageCropper from "@/components/ui/ImageCropperBase64"
 
+import { Suspense } from 'react';
+
 import {
   Select,
   SelectContent,
@@ -29,8 +31,9 @@ type AulaType = {
 };
 
 
-export default function Curso() {
 
+
+function SearchComponent() {
   const searchParams = useSearchParams();
   const idProjeto = searchParams.get('idProjeto')
   const router = useRouter();
@@ -256,7 +259,7 @@ export default function Curso() {
 
 
   // Verifica se o projeto foi carregado e se o usuário é o dono
-  const isProjectOwner = projeto?.projetoUsuario?.some(
+  const isProjectOwner = (projeto as any)?.projetoUsuario?.some(
     (user: any) => Number(user.idUsuario) === Number(session?.user?.id)
   );
 
@@ -461,5 +464,15 @@ export default function Curso() {
       )}
     </div>
 
+  );
+}
+
+
+
+export default function Curso() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <SearchComponent />
+    </Suspense>
   );
 }
