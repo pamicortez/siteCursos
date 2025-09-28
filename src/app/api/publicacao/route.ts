@@ -3,6 +3,9 @@ import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
 
 
+export const dynamic = "force-dynamic";
+
+
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);
 	const idUsuario = searchParams.get('idUsuario'); // Busca pelo ID do usuário, caso fornecido

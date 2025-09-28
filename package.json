@@ -7,7 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "seed":"node prisma/seed.js"
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "seed":"node prisma/seed.js",
+    "expanded-seed": "node prisma/expanded-seed.js"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -88,6 +93,7 @@
     "typescript": "^5.8.2"
   },
   "prisma": {
-    "seed": "node ./prisma/expanded-seed.js"
+  "seed": "npm run expanded-seed"
   }
+
 }

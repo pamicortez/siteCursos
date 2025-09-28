@@ -283,17 +283,17 @@ function SearchComponent() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="titulo">Título*</Label>
-              <Input type="text" name="titulo" required/>
+              <Input id="titulo" type="text" name="titulo" required />
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="metodologia">Metodologia*</Label>
-              <Input type="text" name="metodologia" required/>
+              <Input id="metodologia" type="text" name="metodologia" required />
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="inscricao">Link de Inscrição*</Label>
-              <Input type="text" name="inscricao" required/>
+              <Input id="inscricao" type="text" name="inscricao" required />
             </div>
 
           </div>
@@ -301,13 +301,13 @@ function SearchComponent() {
           <div className="grid gap-6 mb-6 md:grid-cols-2">
 
             <div className="grid w-full gap-1.5">
-              <Label htmlFor="message">Descrição*</Label>
-              <Textarea name="descricao" required/>
+              <Label htmlFor="descricao">Descrição*</Label>
+              <Textarea id="descricao" name="descricao" required />
             </div>
 
             <div className="grid w-full gap-1.5">
               <Label htmlFor="bibliografia">Bibliografia*</Label>
-              <Textarea name="bibliografia" required/>
+              <Textarea id="bibliografia" name="bibliografia" required />
             </div>
 
           </div>
@@ -316,6 +316,8 @@ function SearchComponent() {
             <div className="grid items-center gap-1.5">
               <Label htmlFor="imagem">Imagem*</Label>
               <Input
+                id="imagem"
+                name="imagem"
                 type="file"
                 accept="image/*"
                 onChange={(e) => {
@@ -334,14 +336,14 @@ function SearchComponent() {
             </div>
 
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="Carga horaria">Carga Horária*</Label>
-              <Input type="number" name="cargaHoraria" required></Input>
+              <Label htmlFor="cargaHoraria">Carga Horária*</Label>
+              <Input id="cargaHoraria" type="number" name="cargaHoraria" required></Input>
             </div>
 
             <div>
-              <label className="block mb-2 text-sm font-medium text-gray-900">Categoria*</label>
+              <Label htmlFor="categoria">Categoria*</Label>
               <Select name="categoria" required>
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="categoria" className="w-full">
                   <SelectValue placeholder="Escolha..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -354,7 +356,6 @@ function SearchComponent() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
-
             </div>
 
           </div>
@@ -363,17 +364,17 @@ function SearchComponent() {
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="apostila">Apostila</Label>
-              <Input type="file" accept=".pdf" name="apostila"></Input>
+              <Input id="apostila" type="file" accept=".pdf" name="apostila"></Input>
             </div>
 
             <div className="grid items-center gap-1.5">
-              <Label htmlFor="Vagas">Número de Vagas*</Label>
-              <Input type="number" name="vagas" required></Input>
+              <Label htmlFor="vagas">Número de Vagas*</Label>
+              <Input id="vagas" type="number" name="vagas" required></Input>
             </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="avaliacao">Método de Avaliação*</Label>
-              <Input type="text" name="avaliacao" required />
+              <Input id="avaliacao" type="text" name="avaliacao" required />
             </div>
 
           </div>
@@ -391,29 +392,31 @@ function SearchComponent() {
           {aulas.map((aula, index) => (
             <div key={index} className="flex justify-between gap-5 mb-6 md:grid-cols-5">
               <div className="grid items-center gap-1.5 w-xs">
-                <Label htmlFor="titulo">Título</Label>
-                <Input type="text" value={aula.titulo} onChange={(e) => handleAulasInputChange(index, 'titulo', e.target.value)}></Input>
+                <Label htmlFor={`titulo-aula-${index}`}>Título</Label>
+                <Input id={`titulo-aula-${index}`} name={`titulo-aula-${index}`} type="text" value={aula.titulo} onChange={(e) => handleAulasInputChange(index, 'titulo', e.target.value)}></Input>
               </div>
 
               <div className="grid items-center gap-1.5 w-xs">
-                <Label htmlFor="video">Link do Vídeo</Label>
-                <Input type="text" value={aula.video} onChange={(e) => handleAulasInputChange(index, 'video', e.target.value)}></Input>
+                <Label htmlFor={`video-aula-${index}`}>Link do Vídeo</Label>
+                <Input id={`video-aula-${index}`} name={`video-aula-${index}`} type="text" value={aula.video} onChange={(e) => handleAulasInputChange(index, 'video', e.target.value)}></Input>
               </div>
 
               <div className="grid items-center gap-1.5 w-xs">
-                <Label htmlFor="slide">Slide</Label>
-                <Input type="file" onChange={(e) => handleAulasInputChange(index, 'slide', e.target.files?.[0] || null)}></Input>
+                <Label htmlFor={`slide-aula-${index}`}>Slide</Label>
+                <Input id={`slide-aula-${index}`} name={`slide-aula-${index}`} type="file" onChange={(e) => handleAulasInputChange(index, 'slide', e.target.files?.[0] || null)}></Input>
               </div>
 
               <div className="grid items-center gap-1.5 w-xs">
-                <Label htmlFor="podcast">Link do Podcast</Label>
-                <Input type="text" value={aula.podcast} onChange={(e) => handleAulasInputChange(index, 'podcast', e.target.value)}></Input>
+                <Label htmlFor={`podcast-aula-${index}`}>Link do Podcast</Label>
+                <Input id={`podcast-aula-${index}`} name={`podcast-aula-${index}`} type="text" value={aula.podcast} onChange={(e) => handleAulasInputChange(index, 'podcast', e.target.value)}></Input>
               </div>
+
               <div className="grid items-center mt-6 w-10">
                 <Button
                   type="button"
                   onClick={() => removeAula(index)}
                   className="p-2"
+                  aria-label={`Remover aula ${index + 1}`}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

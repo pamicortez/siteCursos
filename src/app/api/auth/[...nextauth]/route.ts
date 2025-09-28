@@ -4,6 +4,9 @@ import prisma from "@/lib/prismaClient";
 import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 
+export const dynamic = "force-dynamic";
+
+
 const handler = NextAuth( {
     adapter: PrismaAdapter(prisma),
     providers: [

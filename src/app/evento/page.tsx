@@ -20,7 +20,7 @@ import ImageCropper from "@/components/ui/ImageCropperBase64";
 type ColaboradorFromAPI = {
   id: number;
   nome: string;
-  
+
 };
 
 type User = {
@@ -37,17 +37,17 @@ interface EventoColaborador {
   colaborador: ColaboradorFromAPI;
 }
 
-function ConfirmationModal({ 
-  isOpen, 
-  onClose, 
+function ConfirmationModal({
+  isOpen,
+  onClose,
   onConfirm,
   title,
   message,
   confirmText,
   variant = 'default'
-}: { 
-  isOpen: boolean; 
-  onClose?: () => void; 
+}: {
+  isOpen: boolean;
+  onClose?: () => void;
   onConfirm: () => void;
   title: string;
   message: string;
@@ -63,14 +63,14 @@ function ConfirmationModal({
         <p className="mb-6">{message}</p>
         <div className="flex justify-end gap-4">
           {onClose && (
-            <Button 
+            <Button
               variant="outline"
               onClick={onClose}
             >
               Continuar editando
             </Button>
           )}
-          <Button 
+          <Button
             variant={variant}
             onClick={onConfirm}
           >
@@ -91,7 +91,7 @@ export default function Evento() {
   const router = useRouter();
   const params = useParams();
   const eventoId = params?.id as string | undefined;
-  
+
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
@@ -106,12 +106,12 @@ export default function Evento() {
     endTime: '',
     category: '',
     // ESTADOS DE IMAGEM SEPARADOS
-    mainImage: '', 
+    mainImage: '',
     otherImages: [] as string[]
   });
 
   const [collaborators, setCollaborators] = useState<Array<{ name: string; role: string }>>([]);
-  
+
   const [cargosColaborador, setCargosColaborador] = useState<string[]>([]);
   const [cargo, setCargo] = useState<string>("Organizador");
   const [loadingCargos, setLoadingCargos] = useState(true);
@@ -132,13 +132,13 @@ export default function Evento() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [colaboradoresDisponiveis, setColaboradoresDisponiveis] = useState<User[]>([]);
-  const [suggestions, setSuggestions] = useState<{index: number, names: SuggestionItem[]} | null>(null);
+  const [suggestions, setSuggestions] = useState<{ index: number, names: SuggestionItem[] } | null>(null);
   const { data: session, status } = useSession();
   const [showImageCropper, setShowImageCropper] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
   // Estado para saber qual imagem está sendo cortada
   const [croppingFor, setCroppingFor] = useState<'main' | 'other' | null>(null);
-  
+
   useEffect(() => {
     const fetchCargosColaborador = async () => {
       try {
@@ -155,9 +155,9 @@ export default function Evento() {
 
     const fetchColaboradores = async () => {
       try {
-       // const response = await fetch("/api/colaborador");
-       const response = await fetch("/api/usuario?tipo=Ativo");
-       
+        // const response = await fetch("/api/colaborador");
+        const response = await fetch("/api/usuario?tipo=Ativo");
+
         if (!response.ok) throw new Error("Erro ao buscar colaboradores");
         const data = await response.json();
         setColaboradoresDisponiveis(data);
@@ -172,24 +172,24 @@ export default function Evento() {
 
   useEffect(() => {
 
-  const intervalId = setInterval(() => {
+    const intervalId = setInterval(() => {
       console.log("Verificando status...", status);
 
-    if (status === "loading") {
-      return;
-    }
+      if (status === "loading") {
+        return;
+      }
 
-    clearInterval(intervalId);
-    if (status !== "authenticated") {
-      router.push("/404");
-      return;
-    }
+      clearInterval(intervalId);
+      if (status !== "authenticated") {
+        router.push("/404");
+        return;
+      }
 
-    if (eventoId) {
-      setIsEditMode(true);
-      fetchEventoData(eventoId);
-    }
-  }, 300); 
+      if (eventoId) {
+        setIsEditMode(true);
+        fetchEventoData(eventoId);
+      }
+    }, 300);
     return () => clearInterval(intervalId);
   }, [eventoId, status]);
 
@@ -200,17 +200,17 @@ export default function Evento() {
 
       const data = await response.json();
 
-      const isEventoOwner = data.eventoUsuario?.some 
-      ((user: any) => Number(user.idUsuario) === Number(session?.user?.id)
-      );
-      
- console.log(isEventoOwner, data)
+      const isEventoOwner = data.eventoUsuario?.some
+        ((user: any) => Number(user.idUsuario) === Number(session?.user?.id)
+        );
+
+      console.log(isEventoOwner, data)
 
       if (!isEventoOwner) {
         router.push("/home");
         return;
       }
-      
+
       const formatDateTime = (dateTimeString?: string) => {
         if (!dateTimeString) return { date: '', time: '' };
         const dateObj = new Date(dateTimeString);
@@ -219,13 +219,13 @@ export default function Evento() {
         return { date, time };
       };
 
-// page.tsx (dentro da função fetchEventoData)
+      // page.tsx (dentro da função fetchEventoData)
 
       const { date: startDate, time: startTime } = formatDateTime(data.dataInicio);
       const { date: endDate, time: endTime } = formatDateTime(data.dataFim);
 
       // Separa a primeira imagem como principal e o resto como 'outras'
-      const allImages = Array.isArray(data.imagemEvento)? data.imagemEvento.map((img: { link: string }) => img.link): [];
+      const allImages = Array.isArray(data.imagemEvento) ? data.imagemEvento.map((img: { link: string }) => img.link) : [];
 
       const [mainImage, ...otherImages] = allImages;
 
@@ -255,14 +255,14 @@ export default function Evento() {
 
       const mappedCollaborators = data.eventoColaborador.map((colab: EventoColaborador) => ({
         name: colab.colaborador.nome,
-       role: colab.categoria 
+        role: colab.categoria
       }));
 
       // Validando se "data.eventoColaborador" é um array antes de fazer .map
       //const mappedCollaborators = Array.isArray(data.eventoColaborador)? data.eventoColaborador.map((colab: EventoColaborador) => ({
-     // name: colab.colaborador.nome,
-     // role: colab.categoria,
-    //})): [];
+      // name: colab.colaborador.nome,
+      // role: colab.categoria,
+      //})): [];
 
 
       setCollaborators(mappedCollaborators);
@@ -287,7 +287,7 @@ export default function Evento() {
         setLoadingCategories(false);
       }
     };
-  
+
     fetchCategories();
   }, []);
 
@@ -300,7 +300,7 @@ export default function Evento() {
   const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>, type: 'main' | 'other') => {
     const file = e.target.files?.[0];
     if (!file) return;
-  
+
     setCroppingFor(type); // Define o contexto do corte
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -329,61 +329,61 @@ export default function Evento() {
       otherImages: prev.otherImages.filter((_, index) => index !== indexToRemove)
     }));
   };
-  
+
   const removeMainImage = () => {
     setEventoData(prev => ({ ...prev, mainImage: '' }));
   };
 
   const handleCollaboratorNameChange = (index: number, value: string) => {
-     const trimmedValue = value.trimStart();
-      // Verifica se há múltiplos espaços consecutivos e substitui por um único
+    const trimmedValue = value.trimStart();
+    // Verifica se há múltiplos espaços consecutivos e substitui por um único
     const normalizedValue = trimmedValue.replace(/\s+/g, ' ');
-      // Verifica se há mais de duas palavras (nome + sobrenome)
+    // Verifica se há mais de duas palavras (nome + sobrenome)
     const wordCount = normalizedValue.split(' ').filter(word => word.length > 0).length;
     if (wordCount > 2) {
       return; // Não permite mais de dois nomes
     }
-    
+
     const updatedCollaborators = [...collaborators];
     updatedCollaborators[index] = { ...updatedCollaborators[index], name: normalizedValue };
     setCollaborators(updatedCollaborators);
-  
-        // Mostrar sugestões se houver texto
+
+    // Mostrar sugestões se houver texto
     if (normalizedValue.length > 0) {
       const matchedNames = colaboradoresDisponiveis
         .filter(colab => {
-                const isNotCurrentUser = colab.id !== Number(session?.user?.id);
-                const matchesNome = colab.Nome.toLowerCase().includes(normalizedValue.toLowerCase());
-                const matchesEmail = colab.email.toLowerCase().includes(normalizedValue.toLowerCase());
+          const isNotCurrentUser = colab.id !== Number(session?.user?.id);
+          const matchesNome = colab.Nome.toLowerCase().includes(normalizedValue.toLowerCase());
+          const matchesEmail = colab.email.toLowerCase().includes(normalizedValue.toLowerCase());
 
-                console.log({
-                  colabId: colab.id,
-                  sessionUserId: Number(session?.user?.id),
-                  isNotCurrentUser,
-                  matchesNome,
-                  matchesEmail,
-                  shouldInclude: isNotCurrentUser && (matchesNome || matchesEmail)
-                });
+          console.log({
+            colabId: colab.id,
+            sessionUserId: Number(session?.user?.id),
+            isNotCurrentUser,
+            matchesNome,
+            matchesEmail,
+            shouldInclude: isNotCurrentUser && (matchesNome || matchesEmail)
+          });
 
-                return isNotCurrentUser && (matchesNome || matchesEmail);
-              })
-            .map(colab => ({
-                    label: `${colab.Nome} (${colab.email})`,
-                    nome: colab.Nome
-              }))
+          return isNotCurrentUser && (matchesNome || matchesEmail);
+        })
+        .map(colab => ({
+          label: `${colab.Nome} (${colab.email})`,
+          nome: colab.Nome
+        }))
         .slice(0, 5); // Limita a 5 sugestões
-      
+
       setSuggestions(matchedNames.length > 0 ? { index, names: matchedNames } : null);
     } else {
       setSuggestions(null);
     }
   };
-    const handleSelectSuggestion = (nome: string, index: number) => {
-      const updated = [...collaborators];
-      updated[index].name = nome;
-      setCollaborators(updated);
-      setSuggestions(null);
-    };
+  const handleSelectSuggestion = (nome: string, index: number) => {
+    const updated = [...collaborators];
+    updated[index].name = nome;
+    setCollaborators(updated);
+    setSuggestions(null);
+  };
 
   const handleCollaboratorRoleChange = (index: number, value: string) => {
     const updatedCollaborators = [...collaborators];
@@ -415,7 +415,13 @@ export default function Evento() {
   function validateCollaborators() {
     for (const collaborator of collaborators) {
       if (!collaborator.name.trim() || !collaborator.role.trim()) {
-        alert("Todos os colaboradores devem ter nome e cargo preenchidos.");
+        setResultDialog({
+          title: 'Erro de Validação',
+          message: 'Todos os colaboradores devem ter nome e cargo preenchidos.',
+          isError: true,
+          eventoId: null
+        });
+        setShowResultDialog(true);
         return false;
       }
     }
@@ -430,15 +436,37 @@ export default function Evento() {
     const dataInicioISO = new Date(`${eventoData.startDate}T${eventoData.startTime}`).toISOString();
     const dataFimISO = new Date(`${eventoData.endDate}T${eventoData.endTime}`).toISOString();
 
- const validatedCollaborators = collaborators.map(colab => ({
+    const validatedCollaborators = collaborators.map(colab => ({
       ...colab,
-      name: colab.name.trim().replace(/\s+/g, ' '), 
+      name: colab.name.trim().replace(/\s+/g, ' '),
     }));
-    
-    if (new Date(dataFimISO) < new Date(dataInicioISO)) {
-  alert("A data de término deve ser posterior à data de início.");
-  return;
-}
+
+    const dataInicio = new Date(dataInicioISO);
+    const dataFim = new Date(dataFimISO);
+
+    // Verifica se a data de fim é anterior à data de início
+    if (dataFim < dataInicio) {
+      setResultDialog({
+        title: 'Erro de Validação',
+        message: 'A data e horário de término não podem ser anteriores à data e horário de início.',
+        isError: true,
+        eventoId: null
+      });
+      setShowResultDialog(true);
+      return;
+    }
+
+    // Verifica se são na mesma data e mesmo horário
+    if (dataFim.getTime() === dataInicio.getTime()) {
+      setResultDialog({
+        title: 'Erro de Validação',
+        message: 'A data e horário de término não podem ser iguais à data e horário de início.',
+        isError: true,
+        eventoId: null
+      });
+      setShowResultDialog(true);
+      return;
+    }
 
     if (!validateCollaborators()) {
       return; // Interrompe se houver campos vazios
@@ -453,35 +481,36 @@ export default function Evento() {
       categoria: eventoData.category,
       dataInicio: dataInicioISO,
       dataFim: dataFimISO,
-      tipoParticipacao: cargo, 
+      tipoParticipacao: cargo,
       colaboradores: validatedCollaborators.map(colaborador => ({
-          categoria: colaborador.role,
-          nome: colaborador.name.trim()
-        })),
+        categoria: colaborador.role,
+        nome: colaborador.name.trim()
+      })),
       ...(isEditMode ? {} : { usuarioId: Number(session?.user?.id) })
     };
-    
+
     console.log(requestBody)
-    
+
     try {
       const route = isEditMode ? `/api/evento?id=${eventoId}` : "/api/evento";
       const response = await fetch(route, {
         method: isEditMode ? "PATCH" : "POST",
-        headers: { "Content-Type": "application/json", 
+        headers: {
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(requestBody),
       });
-  
-      
+
+
       if (response.ok) {
         const data = await response.json();
         setResultDialog({
           title: 'Sucesso!',
           message: isEditMode ? 'Evento atualizado com sucesso.' : 'Evento criado com sucesso.',
           isError: false,
-          eventoId: data.id 
+          eventoId: data.id
         });
-     } else {
+      } else {
         const errorData = await response.json();
         console.error("Erro da API:", errorData);
         setResultDialog({
@@ -532,7 +561,7 @@ export default function Evento() {
     router.push('/home');
   };
 
-    const handleContinueEditing = () => {
+  const handleContinueEditing = () => {
     setShowCancelDialog(false);
   };
 
@@ -552,7 +581,14 @@ export default function Evento() {
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="description">Descrição do evento*</Label>
-              <textarea id="description" name="description" value={eventoData.description} onChange={handleChange} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 min-h-[100px]" required />
+              <textarea
+                id="description"
+                name="description"
+                value={eventoData.description}
+                onChange={handleChange}
+                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 min-h-[100px]"
+                required
+              />
             </div>
           </div>
           <div className="grid gap-8 mb-8">
@@ -572,15 +608,39 @@ export default function Evento() {
               <Label className="text-sm font-medium text-gray-700">Meu papel na criação deste evento*</Label>
               <div className="flex items-center space-x-6 mt-2">
                 <label className="inline-flex items-center space-x-2">
-                  <input type="radio" className="h-4 w-4 accent-black" name="cargo" value="Organizador" checked={cargo === "Organizador"} onChange={() => setCargo("Organizador")} />
+                  <input
+                    type="radio"
+                    id="cargo-organizador"
+                    name="cargo"
+                    value="Organizador"
+                    className="h-4 w-4 accent-black"
+                    checked={cargo === "Organizador"}
+                    onChange={() => setCargo("Organizador")}
+                  />
                   <span className="text-sm text-gray-700">Organizador</span>
                 </label>
                 <label className="inline-flex items-center space-x-2">
-                  <input type="radio" className="h-4 w-4 accent-black" name="cargo" value="Palestrante" checked={cargo === "Palestrante"} onChange={() => setCargo("Palestrante")} />
+                  <input
+                    type="radio"
+                    id="cargo-palestrante"
+                    name="cargo"
+                    value="Palestrante"
+                    className="h-4 w-4 accent-black"
+                    checked={cargo === "Palestrante"}
+                    onChange={() => setCargo("Palestrante")}
+                  />
                   <span className="text-sm text-gray-700">Palestrante</span>
                 </label>
                 <label className="inline-flex items-center space-x-2">
-                  <input type="radio" className="h-4 w-4 accent-black" name="cargo" value="Ouvinte" checked={cargo === "Ouvinte"} onChange={() => setCargo("Ouvinte")} />
+                  <input
+                    type="radio"
+                    id="cargo-ouvinte"
+                    name="cargo"
+                    value="Ouvinte"
+                    className="h-4 w-4 accent-black"
+                    checked={cargo === "Ouvinte"}
+                    onChange={() => setCargo("Ouvinte")}
+                  />
                   <span className="text-sm text-gray-700">Ouvinte</span>
                 </label>
               </div>
@@ -599,7 +659,7 @@ export default function Evento() {
           <div className="grid gap-8 mb-8 md:grid-cols-2">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="endDate">Data de finalização*</Label>
-              <Input type="date" id="endDate" name="endDate" value={eventoData.endDate} onChange={handleChange} min={eventoData.startDate} required />
+              <Input type="date" id="endDate" name="endDate" value={eventoData.endDate} onChange={handleChange} required />
             </div>
             <div className="grid items-center gap-1.5">
               <Label htmlFor="endTime">Horário de término*</Label>
@@ -608,12 +668,14 @@ export default function Evento() {
           </div>
 
           {/* Input de arquivo oculto que será acionado programaticamente */}
-          <Input 
-            type="file" 
+          <Input
+            id="image-upload-input"
+            name="image-upload-input"
+            type="file"
             className="hidden"
             ref={imageInputRef}
-            onChange={(e) => handleSelectImage(e, croppingFor || 'other')} 
-            accept="image/png, image/jpeg, image/jpg, image/webp" 
+            onChange={(e) => handleSelectImage(e, croppingFor || 'other')}
+            accept="image/png, image/jpeg, image/jpg, image/webp"
           />
 
           {/* ESTRUTURA PARA CATEGORIA E IMAGEM PRINCIPAL */}
@@ -621,8 +683,10 @@ export default function Evento() {
             {/* Categoria - CORRIGIDO */}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="category">Categoria do evento*</Label>
-              <Select value={eventoData.category} onValueChange={(value) => setEventoData(prevState => ({...prevState, category: value}))} required>
-                <SelectTrigger><SelectValue placeholder="Selecione uma categoria" /></SelectTrigger>
+              <Select value={eventoData.category} onValueChange={(value) => setEventoData(prevState => ({ ...prevState, category: value }))} required>
+                <SelectTrigger id="category">
+                  <SelectValue placeholder="Selecione uma categoria" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
                     {loadingCategories ? <SelectItem value="loading" disabled>Carregando...</SelectItem> : categories.map((cat) => (
@@ -639,9 +703,9 @@ export default function Evento() {
               {eventoData.mainImage ? (
                 <div className="relative group w-full h-48">
                   <img src={eventoData.mainImage} alt="Imagem principal do evento" className="rounded-lg object-cover w-full h-full border" />
-                  <button 
-                    type="button" 
-                    onClick={removeMainImage} 
+                  <button
+                    type="button"
+                    onClick={removeMainImage}
                     className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full p-1.5 group-hover:opacity-100 opacity-0 transition-opacity"
                     aria-label="Remover imagem principal"
                   >
@@ -649,7 +713,7 @@ export default function Evento() {
                   </button>
                 </div>
               ) : (
-                <button 
+                <button
                   type="button"
                   onClick={() => {
                     setCroppingFor('main');
@@ -667,16 +731,16 @@ export default function Evento() {
           {/* SEÇÃO APENAS PARA OUTRAS IMAGENS */}
           <div className="grid gap-4 mb-8">
             <div>
-                <Label>Outras Imagens</Label>
-                <p className="text-sm text-gray-500">Adicione imagens secundárias para a galeria do evento.</p>
+              <Label>Outras Imagens</Label>
+              <p className="text-sm text-gray-500">Adicione imagens secundárias para a galeria do evento.</p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {eventoData.otherImages.map((imageBase64, index) => (
                 <div key={index} className="relative group aspect-square">
                   <img src={imageBase64} alt={`Imagem do evento ${index + 1}`} className="rounded-lg object-cover w-full h-full border" />
-                  <button 
-                    type="button" 
-                    onClick={() => removeOtherImage(index)} 
+                  <button
+                    type="button"
+                    onClick={() => removeOtherImage(index)}
                     className="absolute top-1 right-1 bg-black bg-opacity-60 text-white rounded-full p-1 group-hover:opacity-100 opacity-0 transition-opacity"
                     aria-label="Remover imagem"
                   >
@@ -685,7 +749,7 @@ export default function Evento() {
                 </div>
               ))}
               {/* Botão para adicionar outras imagens */}
-              <button 
+              <button
                 type="button"
                 onClick={() => {
                   setCroppingFor('other');
@@ -714,7 +778,10 @@ export default function Evento() {
             {collaborators.map((collaborator, index) => (
               <div key={index} className="grid gap-6 md:grid-cols-2 items-end">
                 <div className="grid items-center gap-1.5 relative">
+                  <Label htmlFor={`collaborator-name-${index}`}>Nome do colaborador</Label>
                   <Input
+                    id={`collaborator-name-${index}`}
+                    name={`collaborator-name-${index}`}
                     type="text"
                     placeholder="Nome do colaborador"
                     value={collaborator.name}
@@ -723,44 +790,48 @@ export default function Evento() {
                   {suggestions?.index === index && (
                     <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
                       {suggestions.names.map((nameObj, i) => (
-                        <div 
+                        <div
                           key={i}
                           className="p-2 hover:bg-gray-100 cursor-pointer"
-                          onClick={() => selectSuggestion(index, nameObj.nome)} // pega só o nome
+                          onClick={() => selectSuggestion(index, nameObj.nome)}
                         >
-                          {nameObj.label} {/* mostra Nome (email) */}
+                          {nameObj.label}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Select
-                    value={collaborator.role}
-                    onValueChange={(value) => handleCollaboratorRoleChange(index, value)}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Selecione o cargo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {loadingCargos ? (
-                          <SelectItem value="loading" disabled>Carregando...</SelectItem>
-                        ) : (
-                          cargosColaborador.map((cargo) => (
-                            <SelectItem key={cargo} value={cargo}>
-                              {cargo}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex-1">
+                    <Label htmlFor={`collaborator-role-${index}`}>Cargo do colaborador</Label>
+                    <Select
+                      value={collaborator.role}
+                      onValueChange={(value) => handleCollaboratorRoleChange(index, value)}
+                    >
+                      <SelectTrigger id={`collaborator-role-${index}`}>
+                        <SelectValue placeholder="Selecione o cargo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {loadingCargos ? (
+                            <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                          ) : (
+                            cargosColaborador.map((cargo) => (
+                              <SelectItem key={cargo} value={cargo}>
+                                {cargo}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={() => removeCollaborator(index)}
                     className="text-black hover:text-black hover:bg-gray-100 p-2"
+                    aria-label={`Remover colaborador ${index + 1}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -805,11 +876,11 @@ export default function Evento() {
                 <button onClick={() => setShowImageCropper(false)} className="text-gray-400 hover:text-gray-600 text-2xl">×</button>
               </div>
               <ImageCropper
-                  imageSrc={tempImage}
-                  onUploadSuccess={handleCropSuccess}
-                  // Adicionando uma propriedade hipotética para esconder o botão de upload interno, conforme solicitado.
-                  // O nome da prop ('hideUploader') é uma suposição e pode precisar de ajuste no componente real.
-                />
+                imageSrc={tempImage}
+                onUploadSuccess={handleCropSuccess}
+              // Adicionando uma propriedade hipotética para esconder o botão de upload interno, conforme solicitado.
+              // O nome da prop ('hideUploader') é uma suposição e pode precisar de ajuste no componente real.
+              />
             </div>
           </div>
         </div>

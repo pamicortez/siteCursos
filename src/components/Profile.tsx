@@ -250,16 +250,10 @@ export default function ProfilePage() {
   }, [session])
 
   useEffect(() => {
-    console.log("Debug - Projetos:", projetos)
-    console.log("Debug - Eventos:", eventos)
-    console.log("Debug - Usuario:", usuario)
-  }, [projetos, eventos, usuario])
-
-  useEffect(() => {
-    console.log("Session changed:", { status, session })
+    //console.log("Session changed:", { status, session })
 
     if (status === "unauthenticated") {
-      console.log("User is not authenticated, redirecting to login")
+      //console.log("User is not authenticated, redirecting to login")
       router.push("/login")
     }
 

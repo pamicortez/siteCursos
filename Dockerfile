@@ -1,26 +1,37 @@
-# Etapa 1: Instalar dependências
-FROM node:20-alpine AS deps
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --production
+# ---------- STAGE 1: Builder ----------
+    FROM node:20-alpine AS builder
+    WORKDIR /app
+    
+    # Copia dependências
+    COPY package.json package-lock.json* ./
+    RUN npm install
+    
+    # Copia restante do código
+    COPY . .
+    
+    # Gera Prisma Client sem precisar do banco
+    RUN npx prisma generate
+    
+    # Build Next.js ignorando validação de DATABASE_URL
+    ENV NEXT_SKIP_ENV_VALIDATION=1
+    RUN npm run build
+    
+# ---------- STAGE 2: Runtime ----------
+    FROM node:20-alpine AS runner
+    WORKDIR /app
+    
+    COPY --from=builder /app/package*.json ./
+    COPY --from=builder /app/node_modules ./node_modules
+    COPY --from=builder /app/.next ./.next
+    COPY --from=builder /app/prisma ./prisma   
+    COPY --from=builder /app/public ./public  
+    
+    EXPOSE 3000
+    
+    CMD npx prisma migrate deploy && npm run expanded-seed && npm start
 
-# Etapa 2: Construir o projeto
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-RUN npm run build
 
-# Etapa 3: Executar o projeto
-FROM node:20-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=build /app/.next ./.next
-COPY --from=build /app/public ./public
-COPY --from=build /app/package*.json ./
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs && \
-    chown -R nextjs:nodejs /app
-USER nextjs
-EXPOSE 3000
-CMD ["npm", "start"]
+    
+
+
+    

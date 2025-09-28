@@ -1,14 +1,67 @@
-version: '3.8'
-
 services:
-  nextjs:
-    build:
+  app:
+    build: 
       context: .
-      target: runner
+      dockerfile: Dockerfile
+    container_name: nextjs-app-local
     ports:
       - "3000:3000"
+      - "5555:5555"
     env_file:
-      - .env
+      - .env.production
     environment:
       - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      # As variáveis sensíveis vêm do .env.production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
     restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-local
+    env_file:
+      - .env.production
+    environment:
+      # Variáveis não-sensíveis podem ficar aqui
+      POSTGRES_DB: siteCursos
+      # POSTGRES_USER e POSTGRES_PASSWORD vêm do .env.production
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_local_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  adminer:
+    image: adminer
+    container_name: adminer-local
+    ports:
+      - "8081:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=postgres
+    networks:
+      - app-network
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_local_data:
+
+networks:
+  app-network:
+    driver: bridge

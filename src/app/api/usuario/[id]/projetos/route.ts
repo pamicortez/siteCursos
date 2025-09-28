@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 
+export const dynamic = "force-dynamic";
+
+
 const categoriaFormatada: Record<string, string> = {
   ArtesECultura: "Artes e Cultura",
   CienciasAgrarias: "Ciências Agrárias",

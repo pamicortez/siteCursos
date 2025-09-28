@@ -3,6 +3,9 @@ import prisma from '@/lib/prismaClient';
 import { categoriaCurso, Prisma } from '@prisma/client';
 import { connect } from 'http2';
 
+export const dynamic = "force-dynamic";
+
+
 const categoriaFormatada: Record<string, string> = {
   ArtesECultura: "Artes e Cultura",
   CienciasAgrarias: "Ciências Agrárias",

@@ -3,6 +3,9 @@ import { PrismaClient } from '@prisma/client';
 import { randomInt } from 'crypto';
 import nodemailer from 'nodemailer';
 
+export const dynamic = "force-dynamic";
+
+
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {

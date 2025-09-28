@@ -13,7 +13,7 @@ interface SignUpFormData {
   password: string
   confirmPassword: string
   emailVerificationCode: string
-  isEmailVerified: boolean 
+  isEmailVerified: boolean
   Titulacao: string
   instituicaoEnsino: string
   formacaoAcademica: string
@@ -43,7 +43,9 @@ function ConfirmationModal({
   title,
   message,
   confirmText,
-  variant = 'default'
+  variant = 'default',
+  showSpinner = false,
+  centerText = false
 }: {
   isOpen: boolean;
   onClose?: () => void;
@@ -52,33 +54,51 @@ function ConfirmationModal({
   message: string;
   confirmText: string;
   variant?: 'default' | 'destructive';
+  showSpinner?: boolean;
+  centerText?: boolean;
 }) {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200">
-        <h2 className="text-xl font-bold mb-4">{title}</h2>
-        <p className="mb-6">{message}</p>
-        <div className="flex justify-end gap-4">
-          {onClose && (
+        <h2 className="text-xl font-bold mb-4 text-center">{title}</h2>
+        <p
+          className={`mb-6 ${centerText ? 'text-center' : ''}`}
+          style={centerText ? { whiteSpace: 'pre-line' } : undefined}
+        >
+          {message}
+        </p>
+
+        {/* Spinner */}
+        {showSpinner && (
+          <div className="flex justify-center mb-4">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          </div>
+        )}
+
+        {/* Botões - só aparecem quando não está carregando */}
+        {!showSpinner && (
+          <div className="flex justify-end gap-4">
+            {onClose && (
+              <button
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition"
+                onClick={onClose}
+              >
+                Continuar editando
+              </button>
+            )}
             <button
-              className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition"
-              onClick={onClose}
+              className={`px-4 py-2 rounded-md transition ${variant === 'destructive'
+                ? 'bg-red-600 text-white hover:bg-red-700'
+                : 'bg-black text-white hover:bg-gray-700'
+                }`}
+              onClick={onConfirm}
             >
-              Continuar editando
+              {confirmText}
             </button>
-          )}
-          <button
-            className={`px-4 py-2 rounded-md transition ${variant === 'destructive'
-              ? 'bg-red-600 text-white hover:bg-red-700'
-              : 'bg-black text-white hover:bg-gray-700'
-              }`}
-            onClick={onConfirm}
-          >
-            {confirmText}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -129,6 +149,7 @@ export default function SignUpPage() {
   const [isClient, setIsClient] = useState(false)
   const [isSendingCode, setIsSendingCode] = useState(false)
   const [isVerifyingCode, setIsVerifyingCode] = useState(false)
+  const [showEmailSendingModal, setShowEmailSendingModal] = useState(false)
 
   useEffect(() => {
     setIsClient(true)
@@ -229,6 +250,13 @@ export default function SignUpPage() {
       if (!formData.Titulacao) newErrors.Titulacao = "Titulação é obrigatória"
       if (!formData.instituicaoEnsino.trim()) newErrors.instituicaoEnsino = "Instituição de ensino é obrigatória"
       if (!formData.formacaoAcademica.trim()) newErrors.formacaoAcademica = "Formação acadêmica é obrigatória"
+    } else if (step === 4) {
+      // Validar experiências profissionais que têm nome preenchido
+      formData.carreira.forEach((exp, index) => {
+        if (exp.nome.trim() && !exp.descricao.trim()) {
+          newErrors[`carreira_${index}_descricao`] = "Descrição da experiência não pode estar vazia"
+        }
+      })
     }
 
     setErrors(newErrors)
@@ -241,12 +269,15 @@ export default function SignUpPage() {
         if (formData.isEmailVerified) {
           setCurrentStep(3);
         } else {
+          // Mostrar modal de envio de e-mail
+          setShowEmailSendingModal(true);
           await handleSendVerificationCode();
+          setShowEmailSendingModal(false);
         }
-      } 
+      }
       else if (currentStep === 4) {
         await handleCreateAccount();
-      } 
+      }
       else {
         setCurrentStep(prev => Math.min(prev + 1, 5));
       }
@@ -254,12 +285,12 @@ export default function SignUpPage() {
   }
 
   const handlePrevious = () => {
-  if (currentStep === 3 && formData.isEmailVerified) {
-    setCurrentStep(1);
-  } else {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    if (currentStep === 3 && formData.isEmailVerified) {
+      setCurrentStep(1);
+    } else {
+      setCurrentStep(prev => Math.max(prev - 1, 1));
+    }
   }
-}
 
   const handleCreateAccount = async () => {
     setLoading(true)
@@ -333,75 +364,101 @@ export default function SignUpPage() {
   }
 
   const handleSendVerificationCode = async () => {
-  setIsSendingCode(true);
-  try {
-    const response = await axios.post("/api/solicitar-email", {
-      email: formData.email
-    });
+    setIsSendingCode(true);
+    try {
+      const response = await axios.post("/api/solicitar-email", {
+        email: formData.email
+      });
 
-    setResultDialog({
-      title: 'Código enviado',
-      message: 'Enviamos um código de verificação para seu e-mail.',
-      isError: false
-    });
-    setShowResultDialog(true);
-    setCurrentStep(2);
-  } catch (error: any) {
-    if (error.response?.status === 409) {
-      setErrors(prev => ({
-        ...prev,
-        email: 'Este email já está cadastrado'
-      }));
-      setCurrentStep(1);
-      return;
+      // Só mostrar modal de sucesso se não estiver dentro do fluxo do handleNext
+      if (!showEmailSendingModal) {
+        setResultDialog({
+          title: 'Código enviado',
+          message: 'Enviamos um código de verificação para seu e-mail.',
+          isError: false
+        });
+        setShowResultDialog(true);
+      }
+      setCurrentStep(2);
+    } catch (error: any) {
+      if (error.response?.status === 409) {
+        setErrors(prev => ({
+          ...prev,
+          email: 'Este email já está cadastrado'
+        }));
+        setCurrentStep(1);
+        return;
+      }
+
+      setResultDialog({
+        title: 'Erro',
+        message: error.response?.data?.error || 'Falha ao enviar código. Tente novamente.',
+        isError: true
+      });
+      setShowResultDialog(true);
+    } finally {
+      setIsSendingCode(false);
     }
-    
-    setResultDialog({
-      title: 'Erro',
-      message: error.response?.data?.error || 'Falha ao enviar código. Tente novamente.',
-      isError: true
-    });
-    setShowResultDialog(true);
-  } finally {
-    setIsSendingCode(false);
-  }
-};
+  };
 
-const handleVerifyCode = async () => {
-  setIsVerifyingCode(true)
-  try {
-    await axios.post("/api/validar-email", {
-      email: formData.email,
-      code: formData.emailVerificationCode
-    })
-    
-    setFormData(prev => ({
-      ...prev,
-      isEmailVerified: true
-    }))
-    
-    // Avança automaticamente para a próxima etapa
-    setCurrentStep(3)
-    
-    setResultDialog({
-      title: 'E-mail verificado',
-      message: 'Seu e-mail foi confirmado com sucesso!',
-      isError: false
-    })
-    setShowResultDialog(true)
-  } catch (error: any) {
-    setResultDialog({
-      title: 'Erro',
-      message: error.response?.data?.error || 'Código inválido. Tente novamente.',
-      isError: true
-    })
-    setShowResultDialog(true)
-  } finally {
-    setIsVerifyingCode(false)
-  }
-}
+  const handleVerifyCode = async () => {
+    setIsVerifyingCode(true)
+    try {
+      await axios.post("/api/validar-email", {
+        email: formData.email,
+        code: formData.emailVerificationCode
+      })
 
-  const stepTitles = ["Informações Básicas",  "Confirmação de E-mail", "Formação Acadêmica",  "Experiência e Links", "Foto do Perfil"]
+      setFormData(prev => ({
+        ...prev,
+        isEmailVerified: true
+      }))
+
+      // Avança automaticamente para a próxima etapa
+      setCurrentStep(3)
+
+      setResultDialog({
+        title: 'E-mail verificado',
+        message: 'Seu e-mail foi confirmado com sucesso!',
+        isError: false
+      })
+      setShowResultDialog(true)
+    } catch (error: any) {
+      setResultDialog({
+        title: 'Erro',
+        message: error.response?.data?.error || 'Código inválido. Tente novamente.',
+        isError: true
+      })
+      setShowResultDialog(true)
+    } finally {
+      setIsVerifyingCode(false)
+    }
+  }
+
+  const stepTitles = ["Informações Básicas", "Confirmação de E-mail", "Formação Acadêmica", "Experiência e Links", "Foto do Perfil"]
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleNext()
+    }
+  }
+
+  const handleVerificationKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      if (formData.emailVerificationCode && !isVerifyingCode) {
+        handleVerifyCode()
+      }
+    }
+  }
+
+  const handleResumoKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleNext()
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 pt-32 md:pt-8">
@@ -418,15 +475,13 @@ const handleVerifyCode = async () => {
             <div className="flex items-center justify-center">
               {[1, 2, 3, 4, 5].map((step) => (
                 <React.Fragment key={step}>
-                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
-                    step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
-                  }`}>
+                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
+                    }`}>
                     {step}
                   </div>
                   {step < 5 && (
-                    <div className={`w-8 h-1 mx-1 ${
-                      step < currentStep ? "bg-blue-600" : "bg-gray-200"
-                    }`} />
+                    <div className={`w-8 h-1 mx-1 ${step < currentStep ? "bg-blue-600" : "bg-gray-200"
+                      }`} />
                   )}
                 </React.Fragment>
               ))}
@@ -448,19 +503,17 @@ const handleVerifyCode = async () => {
           {/* Progress Bar - Visível apenas no desktop */}
           <div className="hidden md:flex items-center justify-center mt-6">
             {[1, 2, 3, 4, 5].map((step) => (
-                <React.Fragment key={step}>
-                  <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${
-                    step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
+              <React.Fragment key={step}>
+                <div className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium ${step <= currentStep ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-600"
                   }`}>
-                    {step}
-                  </div>
-                  {step < 5 && (
-                    <div className={`w-8 h-1 mx-1 ${
-                      step < currentStep ? "bg-blue-600" : "bg-gray-200"
+                  {step}
+                </div>
+                {step < 5 && (
+                  <div className={`w-8 h-1 mx-1 ${step < currentStep ? "bg-blue-600" : "bg-gray-200"
                     }`} />
-                  )}
-                </React.Fragment>
-              ))}
+                )}
+              </React.Fragment>
+            ))}
           </div>
           <div className="text-center mt-2 hidden md:block">
             <span className="text-sm text-gray-600">{stepTitles[currentStep - 1]}</span>
@@ -504,6 +557,7 @@ const handleVerifyCode = async () => {
                     name="Nome"
                     value={formData.Nome}
                     onChange={handleInputChange}
+                    tabIndex={1}
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.Nome ? "border-red-500" : "border-gray-300"
                       }`}
                     placeholder="Digite seu nome completo"
@@ -526,10 +580,10 @@ const handleVerifyCode = async () => {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
+                    tabIndex={2}
                     disabled={formData.isEmailVerified} // Bloqueia edição se verificado
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.email ? "border-red-500" : "border-gray-300"
-                    } ${formData.isEmailVerified ? "bg-gray-100 cursor-not-allowed" : ""}`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.email ? "border-red-500" : "border-gray-300"
+                      } ${formData.isEmailVerified ? "bg-gray-100 cursor-not-allowed" : ""}`}
                     placeholder="seu@email.com"
                   />
                   {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
@@ -546,6 +600,7 @@ const handleVerifyCode = async () => {
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
+                      tabIndex={3}
                       className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${errors.password ? "border-red-500" : "border-gray-300"
                         }`}
                       placeholder="Mínimo 8 caracteres"
@@ -553,6 +608,7 @@ const handleVerifyCode = async () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
                       {showPassword ? (
@@ -576,6 +632,8 @@ const handleVerifyCode = async () => {
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
+                      onKeyDown={handleKeyDown}
+                      tabIndex={4}
                       className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10 ${errors.confirmPassword ? "border-red-500" : "border-gray-300"
                         }`}
                       placeholder="Repita a senha"
@@ -583,6 +641,7 @@ const handleVerifyCode = async () => {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      tabIndex={-1}
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     >
                       {showConfirmPassword ? (
@@ -602,7 +661,7 @@ const handleVerifyCode = async () => {
           {currentStep === 2 && (
             <div className="space-y-4">
               <h3 className="text-xl font-semibold mb-4 text-gray-800">Confirmação de E-mail</h3>
-              
+
               <div className="bg-blue-50 p-4 rounded-md mb-4">
                 <p className="text-blue-800">
                   Enviamos um código de verificação para <strong>{formData.email}</strong>.
@@ -620,6 +679,7 @@ const handleVerifyCode = async () => {
                     name="emailVerificationCode"
                     value={formData.emailVerificationCode}
                     onChange={handleInputChange}
+                    onKeyDown={handleVerificationKeyDown}
                     maxLength={6}
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.emailVerificationCode ? "border-red-500" : "border-gray-300"}`}
                     placeholder="Código de 6 Dígitos"
@@ -639,7 +699,7 @@ const handleVerifyCode = async () => {
                 >
                   {isSendingCode ? 'Enviando...' : 'Reenviar Código'}
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={handleVerifyCode}
@@ -722,6 +782,7 @@ const handleVerifyCode = async () => {
                     name="resumoPessoal"
                     value={formData.resumoPessoal}
                     onChange={handleInputChange}
+                    onKeyDown={handleResumoKeyDown}
                     rows={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Fale um pouco sobre você, sua experiência e objetivos..."
@@ -877,13 +938,19 @@ const handleVerifyCode = async () => {
                         className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    <textarea
-                      value={exp.descricao}
-                      onChange={(e) => handleArrayInputChange("carreira", index, "descricao", e.target.value)}
-                      placeholder="Descrição da experiência"
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <div>
+                      <textarea
+                        value={exp.descricao}
+                        onChange={(e) => handleArrayInputChange("carreira", index, "descricao", e.target.value)}
+                        placeholder="Descrição da experiência"
+                        rows={2}
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[`carreira_${index}_descricao`] ? "border-red-500" : "border-gray-300"
+                          }`}
+                      />
+                      {errors[`carreira_${index}_descricao`] && (
+                        <p className="text-red-500 text-xs mt-1">{errors[`carreira_${index}_descricao`]}</p>
+                      )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => removeArrayItem("carreira", index)}
@@ -935,50 +1002,50 @@ const handleVerifyCode = async () => {
           )}
 
           {/* Navigation Buttons - New*/}
-            {currentStep !== 2 && (
-              <div className="flex justify-between pt-6 border-t border-gray-200">
-                <div>
-                  {currentStep > 1 && currentStep < 5 && (
-                    <button
-                      type="button"
-                      onClick={handlePrevious}
-                      className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition"
-                    >
-                      Anterior
-                    </button>
-                  )}
-                </div>
-
-                <div className="space-x-3">
-                  {currentStep === 5 ? (
-                    <button
-                      type="button"
-                      onClick={handleFinish}
-                      className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
-                    >
-                      Sair
-                    </button>
-                  ) : currentStep === 4 ? (
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      onClick={handleNext}
-                      className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? "Criando..." : "Criar Conta"}
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
-                    >
-                      Próximo
-                    </button>
-                  )}
-                </div>
+          {currentStep !== 2 && (
+            <div className="flex justify-between pt-6 border-t border-gray-200">
+              <div>
+                {currentStep > 1 && currentStep < 5 && (
+                  <button
+                    type="button"
+                    onClick={handlePrevious}
+                    className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-500 transition"
+                  >
+                    Anterior
+                  </button>
+                )}
               </div>
-            )}
+
+              <div className="space-x-3">
+                {currentStep === 5 ? (
+                  <button
+                    type="button"
+                    onClick={handleFinish}
+                    className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
+                  >
+                    Sair
+                  </button>
+                ) : currentStep === 4 ? (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    onClick={handleNext}
+                    className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Criando..." : "Criar Conta"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-700 transition"
+                  >
+                    Próximo
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </form>
 
         {/* Login Link */}
@@ -1035,6 +1102,17 @@ const handleVerifyCode = async () => {
         message={resultDialog.message}
         confirmText="OK"
         variant={resultDialog.isError ? 'destructive' : 'default'}
+        centerText={true}
+      />
+      {/* Modal de Envio de E-mail */}
+      <ConfirmationModal
+        isOpen={showEmailSendingModal}
+        onConfirm={() => { }}
+        title="Enviando código de verificação"
+        message={`Estamos enviando um código de verificação para:\n${formData.email}\nPor favor, aguarde...`}
+        confirmText=""
+        showSpinner={true}
+        centerText={true}
       />
     </div>
   )

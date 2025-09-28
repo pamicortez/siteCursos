@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
 
+export const dynamic = "force-dynamic";
+
+
 // Método para criar um novo Link. É preciso ter um usuário
 export async function POST(request: Request) {
 	try {

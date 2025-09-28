@@ -239,7 +239,7 @@ const ProjetoHome: React.FC<ProjetoHomeProps> = ({ idOverride }) => {
   return (
     <div>
       <div
-        className="bg-gray-200 bg-cover bg-center bg-no-repeat relative min-h-[400px]"
+        className="bg-gray-200 bg-cover bg-center bg-no-repeat relative min-h-[400px] -mt-4"
         style={{
           backgroundImage: projeto?.imagem ? `url(${projeto.imagem})` : undefined,
         }}

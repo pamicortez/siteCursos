@@ -3,6 +3,9 @@ import prisma from '@/lib/prismaClient';
 import { Prisma } from '@prisma/client';
 import { PrismaClient, colaboradorCategoria } from '@prisma/client';
 
+export const dynamic = "force-dynamic";
+
+
 // Método GET para retornar todos os Colaboradores
 export async function GET(request: Request) {
 	const { searchParams } = new URL(request.url);

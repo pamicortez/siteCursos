@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { categoriaCurso } from '@prisma/client';
 
+export const dynamic = "force-dynamic";
+
+
 // Mapeamento dos valores do enum para os formatos desejados
 const categoriaFormatada: Record<categoriaCurso, string> = {
   ArtesECultura: "Artes e Cultura",

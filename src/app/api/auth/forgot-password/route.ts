@@ -3,6 +3,9 @@ import prisma from "@/lib/prismaClient";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 
+export const dynamic = "force-dynamic";
+
+
 export async function POST(request: Request) {
   const { email } = await request.json();
 

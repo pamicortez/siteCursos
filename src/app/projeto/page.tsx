@@ -17,7 +17,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import ImageCropper from "@/components/ui/ImageCropperBase64";
 
-
+// ... (types mantidos iguais)
 type ColaboradorFromAPI = {
   id: number;
   nome: string;
@@ -104,7 +104,6 @@ export default function Projeto() {
 
   const [collaborators, setCollaborators] = useState<Array<{ name: string; role: string }>>([]);
 
-
   const [cargosColaborador, setCargosColaborador] = useState<string[]>([]);
   const [cargo, setCargo] = useState<string>("Coordenador");
   const [loadingCargos, setLoadingCargos] = useState(true);
@@ -128,10 +127,9 @@ export default function Projeto() {
   const [suggestions, setSuggestions] = useState<{ index: number; names: SuggestionItem[] } | null>(null);
   const { data: session, status } = useSession();
   const [showImageCropper, setShowImageCropper] = useState(false);
-  const [tempImage, setTempImage] = useState<string | null>(null); // base64 da imagem original
-  
-  
+  const [tempImage, setTempImage] = useState<string | null>(null);
 
+  // ... (todos os useEffect e funções mantidos iguais até handleSubmit)
 
   useEffect(() => {
     const fetchCargosColaborador = async () => {
@@ -167,19 +165,17 @@ export default function Projeto() {
   }, []);
 
   useEffect(() => {
-
     const intervalId = setInterval(() => {
       console.log("Verificando status...", status);
 
       if (status === "loading") {
-        return; // Continua esperando
+        return;
       }
 
-      // Se saiu do loading, para o intervalo e toma a ação
       clearInterval(intervalId);
 
       if (status !== "authenticated") {
-        router.push("/404"); // Redireciona se não autenticado
+        router.push("/404");
         return;
       }
 
@@ -191,8 +187,6 @@ export default function Projeto() {
     return () => clearInterval(intervalId);
 }, [projectId, status]);
 
-
-
   const fetchProjectData = async (id: string) => {
     try {
       const response = await fetch(`/api/projeto?id=${id}`);
@@ -200,13 +194,12 @@ export default function Projeto() {
 
       const data = await response.json();
 
-      
       const isProjectOwner = data.projetoUsuario?.some
       ((user: any) =>
           Number(user.idUsuario) === Number(session?.user?.id) 
       );
       console.log(isProjectOwner, data)
-      // Redireciona se não for dono nem estiver logado
+      
       if (!isProjectOwner) {
         router.push("/home");
       }
@@ -266,23 +259,18 @@ export default function Projeto() {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64 = reader.result as string;
-      setTempImage(base64); // salva imagem original pra passar pro cropper
-      setShowImageCropper(true); // abre o modal
+      setTempImage(base64);
+      setShowImageCropper(true);
     };
     reader.readAsDataURL(file);
   };
 
   const handleCollaboratorNameChange = (index: number, value: string) => {
-    // Permite espaços entre palavras, mas remove espaços extras no início/final
-    const trimmedValue = value.trimStart(); // Mantém espaços no meio, mas remove no início
-    
-    // Verifica se há múltiplos espaços consecutivos e substitui por um único
+    const trimmedValue = value.trimStart();
     const normalizedValue = trimmedValue.replace(/\s+/g, ' ');
-    
-    // Verifica se há mais de duas palavras (nome + sobrenome)
     const wordCount = normalizedValue.split(' ').filter(word => word.length > 0).length;
     if (wordCount > 2) {
-      return; // Não permite mais de dois nomes
+      return;
     }
   
     const updatedCollaborators = [...collaborators];
@@ -292,7 +280,6 @@ export default function Projeto() {
     };
     setCollaborators(updatedCollaborators);
     
-    // Mostrar sugestões se houver texto
     if (normalizedValue.length > 0) {
       const matchedNames = colaboradoresDisponiveis
         .filter(colab => {
@@ -315,19 +302,21 @@ export default function Projeto() {
                     label: `${colab.Nome} (${colab.email})`,
                     nome: colab.Nome
               }))
-        .slice(0, 5); // Limita a 5 sugestões
+        .slice(0, 5);
       
       setSuggestions(matchedNames.length > 0 ? { index, names: matchedNames } : null);
     } else {
       setSuggestions(null);
     }
   };
-    const handleSelectSuggestion = (nome: string, index: number) => {
-      const updated = [...collaborators];
-      updated[index].name = nome;
-      setCollaborators(updated);
-      setSuggestions(null);
-    };
+
+  const handleSelectSuggestion = (nome: string, index: number) => {
+    const updated = [...collaborators];
+    updated[index].name = nome;
+    setCollaborators(updated);
+    setSuggestions(null);
+  };
+
   const handleCollaboratorRoleChange = (index: number, value: string) => {
     const updatedCollaborators = [...collaborators];
     updatedCollaborators[index] = {
@@ -372,17 +361,17 @@ export default function Projeto() {
     }
     return true;
   }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validação dos nomes dos colaboradores (remove espaços extras)
     const validatedCollaborators = collaborators.map(colab => ({
       ...colab,
       name: colab.name.trim().replace(/\s+/g, ' '), 
     }));
     
     if (!validateCollaborators()) {
-      return; // Interrompe se houver campos vazios
+      return;
     }
 
     const requestBody = {
@@ -399,7 +388,7 @@ export default function Projeto() {
           nome: colaborador.name.trim()
         }))
       : [],
-      ...(isEditMode ? {} : { usuarioId:   Number(session?.user?.id) })
+      ...(isEditMode ? {} : { usuarioId: Number(session?.user?.id) })
     };
     
     console.log(requestBody)
@@ -525,8 +514,9 @@ export default function Projeto() {
             <div className="grid items-center gap-1.5">
               <Label className="text-sm font-medium text-gray-700">Meu cargo no projeto*</Label>
               <div className="flex items-center space-x-6 mt-2">
-                <label className="inline-flex items-center space-x-2">
+                <label htmlFor="cargo-coordenador" className="inline-flex items-center space-x-2">
                   <input 
+                    id="cargo-coordenador"
                     type="radio" 
                     className="h-4 w-4 accent-black border-gray-300 focus:ring-black cursor-pointer"
                     name="cargo"
@@ -536,8 +526,9 @@ export default function Projeto() {
                   />
                   <span className="text-sm text-gray-700">Coordenador</span>
                 </label>
-                <label className="inline-flex items-center space-x-2">
+                <label htmlFor="cargo-colaborador" className="inline-flex items-center space-x-2">
                   <input 
+                    id="cargo-colaborador"
                     type="radio" 
                     className="h-4 w-4 accent-black border-gray-300 focus:ring-black cursor-pointer"
                     name="cargo"
@@ -586,7 +577,7 @@ export default function Projeto() {
                   category: value,
                 }))}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger id="category" name="category" className="w-full">
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -631,7 +622,10 @@ export default function Projeto() {
             {collaborators.map((collaborator, index) => (
               <div key={index} className="grid gap-6 md:grid-cols-2 items-end">
                 <div className="grid items-center gap-1.5 relative">
+                  <Label htmlFor={`collaborator-name-${index}`}>Nome do colaborador</Label>
                   <Input
+                    id={`collaborator-name-${index}`}
+                    name={`collaborator-name-${index}`}
                     type="text"
                     placeholder="Nome do colaborador"
                     value={collaborator.name}
@@ -643,41 +637,45 @@ export default function Projeto() {
                         <div 
                           key={i}
                           className="p-2 hover:bg-gray-100 cursor-pointer"
-                          onClick={() => selectSuggestion(index, nameObj.nome)} // pega só o nome
+                          onClick={() => selectSuggestion(index, nameObj.nome)}
                         >
-                          {nameObj.label} {/* mostra Nome (email) */}
+                          {nameObj.label}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Select
-                    value={collaborator.role}
-                    onValueChange={(value) => handleCollaboratorRoleChange(index, value)}
-                  >
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Selecione o cargo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        {loadingCargos ? (
-                          <SelectItem value="loading" disabled>Carregando...</SelectItem>
-                        ) : (
-                          cargosColaborador.map((cargo) => (
-                            <SelectItem key={cargo} value={cargo}>
-                              {cargo}
-                            </SelectItem>
-                          ))
-                        )}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex-1">
+                    <Label htmlFor={`collaborator-role-${index}`}>Cargo do colaborador</Label>
+                    <Select
+                      value={collaborator.role}
+                      onValueChange={(value) => handleCollaboratorRoleChange(index, value)}
+                    >
+                      <SelectTrigger id={`collaborator-role-${index}`} name={`collaborator-role-${index}`} className="flex-1">
+                        <SelectValue placeholder="Selecione o cargo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {loadingCargos ? (
+                            <SelectItem value="loading" disabled>Carregando...</SelectItem>
+                          ) : (
+                            cargosColaborador.map((cargo) => (
+                              <SelectItem key={cargo} value={cargo}>
+                                {cargo}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
                     onClick={() => removeCollaborator(index)}
-                    className="text-black hover:text-black hover:bg-gray-100 p-2"
+                    className="text-black hover:text-black hover:bg-gray-100 p-2 mt-6"
+                    aria-label={`Remover colaborador ${index + 1}`}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -714,34 +712,34 @@ export default function Projeto() {
         variant={resultDialog.isError ? 'destructive' : 'default'}
       />
 
-        {/* Modal do Image Cropper */}
-            {showImageCropper && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                  <div className="p-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-xl font-semibold">Alterar Foto de Perfil</h3>
-                      <button
-                        onClick={() => setShowImageCropper(false)}
-                        className="text-gray-400 hover:text-gray-600 text-2xl"
-                      >
-                        ×
-                      </button>
-                    </div>
-                    <ImageCropper
-                        imageSrc={tempImage} // imagem original
-                        onUploadSuccess={(base64) => {
-                          setProjectData(prev => ({
-                            ...prev,
-                            image: base64, // salva imagem cortada
-                          }));
-                          setShowImageCropper(false);
-                        }}
-                      />
-                  </div>
-                </div>
+      {showImageCropper && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold">Alterar Foto de Perfil</h3>
+                <button
+                  onClick={() => setShowImageCropper(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                  aria-label="Fechar modal de edição de imagem"
+                >
+                  ×
+                </button>
               </div>
-            )}
+              <ImageCropper
+                  imageSrc={tempImage}
+                  onUploadSuccess={(base64) => {
+                    setProjectData(prev => ({
+                      ...prev,
+                      image: base64,
+                    }));
+                    setShowImageCropper(false);
+                  }}
+                />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

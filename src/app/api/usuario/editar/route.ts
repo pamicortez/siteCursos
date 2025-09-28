@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth-config"
 import prisma from "@/lib/prismaClient"
 import bcrypt from "bcryptjs"
 
+export const dynamic = "force-dynamic";
+
+
 // Interface para os dados recebidos na requisição
 interface EditarUsuarioRequest {
   // Dados básicos do usuário
