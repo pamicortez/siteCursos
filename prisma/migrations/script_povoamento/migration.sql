@@ -1,12 +1,12 @@
 -- Inserindo usuários (expandido para 5+)
-INSERT INTO "Usuario" (email, "fotoPerfil", senha, "Nome", "Titulacao", "instituicaoEnsino", "formacaoAcademica", "resumoPessoal", "createdAt", "updatedAt")
+INSERT INTO "Usuario" (email, "fotoPerfil", senha, "Nome", "Titulacao", "instituicaoEnsino", "formacaoAcademica", "resumoPessoal", tipo, "createdAt", "updatedAt")
 VALUES
-('jose@email.com', '/professor_man_1.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'José Machado', 'Doutor', 'Universidade X', 'Engenharia de Software', 'Pesquisador na área de IA', NOW(), NOW()),
-('julia@email.com', '/professor_woman_1.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Júlia Souza', 'Mestre', 'Universidade Y', 'Ciência da Computação', 'Especialista em segurança digital', NOW(), NOW()),
-('carlos@email.com', '/professor_man_2.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Carlos Silva', 'Especialista', 'Instituto Federal Z', 'Análise de Sistemas', 'Desenvolvedor full-stack com foco em aplicações web', NOW(), NOW()),
-('ana@email.com', '/professor_woman_2.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Ana Costa', 'Mestre', 'Universidade ABC', 'Biotecnologia', 'Pesquisadora em genética molecular', NOW(), NOW()),
-('pedro@email.com', '/professor_man_3.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Pedro Santos', 'Doutor', 'Universidade DEF', 'Matemática Aplicada', 'Especialista em modelagem estatística', NOW(), NOW()),
-('maria@email.com', '/professor_woman_3.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Maria Oliveira', 'Bacharel', 'Faculdade GHI', 'Design Gráfico', 'Designer UX/UI com experiência em produtos digitais', NOW(), NOW());
+('pamela@uefs.br', '/foto_pamela.jpg', '$2b$10$JWQLu9Puay/5Qot040zvbO8sVSDNuYPjIrL9maYOC8Vr2KC86fxAa', 'Pâmela Cândida', 'Doutor', 'The University of Melbourne', 'Ciências de Computação', 'Doutorado em Operations Research', 'Super', NOW(), NOW()),
+('julia@email.com', '/professor_woman_1.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Júlia Souza', 'Mestre', 'Universidade Y', 'Ciência da Computação', 'Especialista em segurança digital', 'Normal', NOW(), NOW()),
+('carlos@email.com', '/professor_man_2.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Carlos Silva', 'Especialista', 'Instituto Federal Z', 'Análise de Sistemas', 'Desenvolvedor full-stack com foco em aplicações web', 'Normal', NOW(), NOW()),
+('ana@email.com', '/professor_woman_2.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Ana Costa', 'Mestre', 'Universidade ABC', 'Biotecnologia', 'Pesquisadora em genética molecular', 'Normal', NOW(), NOW()),
+('pedro@email.com', '/professor_man_3.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Pedro Santos', 'Doutor', 'Universidade DEF', 'Matemática Aplicada', 'Especialista em modelagem estatística', 'Normal', NOW(), NOW()),
+('maria@email.com', '/professor_woman_3.jpg', '$2b$10$pebYXLFuAwcyo0Esbiwuc.nUHkd73jmAGxZfHw06S1mD0JNtcoM6m', 'Maria Oliveira', 'Bacharel', 'Faculdade GHI', 'Design Gráfico', 'Designer UX/UI com experiência em produtos digitais', 'Normal', NOW(), NOW());
 
 -- Inserindo projetos (expandido para 5+)
 INSERT INTO "Projeto" (titulo, imagem, descricao, categoria, "dataInicio", "dataFim", "createdAt", "updatedAt")
@@ -96,9 +96,9 @@ VALUES
 -- Inserindo links dos usuários (expandido para 5+ por usuário)
 INSERT INTO "Link" (link, "idUsuario", tipo, "createdAt", "updatedAt")
 VALUES
-('https://github.com/josemachado', 1, 'Genérico', NOW(), NOW()),
-('https://linkedin.com/in/josemachado', 1, 'Linkedin', NOW(), NOW()),
-('https://instagram.com/josemachado', 1, 'Instragram', NOW(), NOW()),
+('https://github.com/pamicortez', 1, 'Genérico', NOW(), NOW()),
+('https://linkedin.com/in/pamiccortez', 1, 'Linkedin', NOW(), NOW()),
+('https://instagram.com/pamiccortez', 1, 'Instragram', NOW(), NOW()),
 ('https://linkedin.com/in/juliasouza', 2, 'Linkedin', NOW(), NOW()),
 ('https://github.com/juliasouza', 2, 'Genérico', NOW(), NOW()),
 ('https://github.com/carlossilva', 3, 'Genérico', NOW(), NOW()),
@@ -129,7 +129,7 @@ VALUES
 -- Inserindo colaboradores
 INSERT INTO "Colaborador" (nome)
 VALUES
-('José Machado'),
+('Pâmela Cândida'),
 ('Júlia Souza'),
 ('Carlos Silva'),
 ('Ana Costa'),
@@ -152,7 +152,7 @@ VALUES
 
 INSERT INTO "eventoColaborador" (categoria, "idEvento", "idColaborador", "createdAt", "updatedAt")
 VALUES
-('Ouvinte', 1, 1, NOW(), NOW()),
+('Organizador', 1, 1, NOW(), NOW()),
 ('Palestrante', 1, 2, NOW(), NOW()),
 ('Organizador', 2, 3, NOW(), NOW()),
 ('Ouvinte', 2, 4, NOW(), NOW()),
@@ -195,7 +195,7 @@ VALUES
 -- CORREÇÃO: Usando os valores corretos do enum categoriaCarreira
 INSERT INTO "Carreira" (nome, descricao, categoria, "dataInicio", "dataFim", "idUsuario", "createdAt", "updatedAt")
 VALUES
-('Doutorado em IA', 'Pesquisa em redes neurais profundas', 'Formação acadêmica', '2018-03-01', '2022-12-15', 1, NOW(), NOW()),
+('Doutorado em Operations Research', 'Mathematical models for humanitarian logistics response in natural disasters', 'Formação acadêmica', '2016-03-01', '2024-12-15', 1, NOW(), NOW()),
 ('Mestrado em Computação', 'Especialização em segurança cibernética', 'Formação acadêmica', '2019-02-01', '2021-07-30', 2, NOW(), NOW()),
 ('Desenvolvedor Senior', 'Desenvolvimento de sistemas web', 'Experiencia profissional', '2020-01-15', '2024-01-15', 3, NOW(), NOW()),
 ('Pesquisadora em Biotecnologia', 'Pesquisa em genética molecular', 'Experiencia profissional', '2021-06-01', '2024-06-01', 4, NOW(), NOW()),

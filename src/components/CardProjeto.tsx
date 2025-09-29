@@ -17,10 +17,11 @@ interface CardProjetoProps {
   isOwner: boolean
   funcaoUsuario?: "Coordenador" | "Colaborador" | "Bolsista" | "Voluntário" | "Nenhuma"
   onProjetoDeleted?: () => void
-  maxCaracteres?: number // Opcional, padrão será 14
+  maxCaracteres?: number
   bottomDate?: string
   largura?: string
-  descricaoLinhas?: string;
+  descricaoLinhas?: string
+  isAuthenticated?: boolean // Nova prop
 }
 
 const CardProjeto: React.FC<CardProjetoProps> = ({
@@ -37,7 +38,8 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
   maxCaracteres = 14,
   largura = "14rem",
   bottomDate = "bottom-11",
-  descricaoLinhas = "line-clamp-2"
+  descricaoLinhas = "line-clamp-2",
+  isAuthenticated = false // Valor padrão false
 }) => {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
@@ -246,7 +248,7 @@ const CardProjeto: React.FC<CardProjetoProps> = ({
             <h5 className="text-lg font-semibold line-clamp-2 flex-1 mr-2 overflow-hidden min-h-12">
               {titulo}
             </h5>
-            {funcaoUsuario && (
+            {isAuthenticated && funcaoUsuario && (
               <span
                 className={cn(
                   "absolute top-29 left-1/2 transform -translate-x-1/2 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0",

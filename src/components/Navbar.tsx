@@ -138,6 +138,34 @@ const Navbar = () => {
     fetchCategories();
   }, []);
 
+  useEffect(() => {
+    if (isOpen) {
+      // Previne scroll quando menu está aberto
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
+    } else {
+      // Restaura scroll quando menu fecha
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
+    }
+  
+    return () => {
+      // Cleanup ao desmontar
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    };
+  }, [isOpen]);
+
 
   const handleCategoryMouseEnter = () => {
     if (categoryTimeout) {
@@ -218,9 +246,9 @@ const Navbar = () => {
         )}
       >
         <div className="container mx-auto px-6 md:px-8">
-          <div className="flex items-center">
+          <div className="flex items-center justify-between md:justify-start">
             {/* Logo and Categories */}
-            <div className="flex items-center space-x-20 w-1/4">
+            <div className="flex items-center space-x-20 md:w-1/4">
               <Logo />
 
               {/* Categories Dropdown */}
@@ -273,7 +301,14 @@ const Navbar = () => {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      router.push(`/search?searchTerm=${encodeURIComponent(searchTerm)}`);
+                      const searchUrl = `/search?searchTerm=${encodeURIComponent(searchTerm)}`;
+
+                      // Force navigation even on same page
+                      router.push(searchUrl);
+                      // Force refresh if already on search page
+                      if (window.location.pathname === '/search') {
+                        router.refresh();
+                      }
                     }
                   }}
                 />
@@ -283,11 +318,11 @@ const Navbar = () => {
             {/* User Profile / Login Buttons */}
             <div className="flex items-center justify-end w-1/4 gap-4">
               {hasUser ? (
-                    <div className="hidden md:flex items-center relative" id="user-menu-container">
-                      <button
-                        onClick={toggleUserMenu}
-                        className="flex items-center justify-center w-9 h-9 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors overflow-hidden"
-                      >
+                <div className="hidden md:flex items-center relative" id="user-menu-container">
+                  <button
+                    onClick={toggleUserMenu}
+                    className="flex items-center justify-center w-9 h-9 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors overflow-hidden"
+                  >
                     {userLoading ? (
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-200"></div>
                     ) : usuario?.fotoPerfil ? (
@@ -312,9 +347,9 @@ const Navbar = () => {
                       <div className="font-medium">{usuario?.Nome || "Carregando..."}</div>
                       <div className="text-xs text-gray-400">{usuario?.email || "..."}</div>
                     </div>
-                    <a 
-                      href="/profile" 
-                      onClick={(e) => handleNavigation('/profile', e)} 
+                    <a
+                      href="/profile"
+                      onClick={(e) => handleNavigation('/profile', e)}
                       className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700"
                     >
                       Perfil
@@ -401,6 +436,19 @@ const Navbar = () => {
                   type="search"
                   className="block w-full p-3 pl-10 text-sm border border-gray-700 rounded-lg bg-gray-800 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-600"
                   placeholder="Pesquise aqui"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const searchUrl = `/search?searchTerm=${encodeURIComponent(searchTerm)}`;
+                      router.push(searchUrl);
+                      closeMobileMenu();
+                      if (window.location.pathname === '/search') {
+                        window.location.href = searchUrl;
+                      }
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -432,7 +480,13 @@ const Navbar = () => {
             {/* Mobile User Info */}
             {hasUser && usuario && (
               <div className="px-6 mb-6">
-                <div className="flex items-center space-x-4 p-4 bg-gray-800 rounded-lg">
+                <div 
+                className="flex items-center space-x-4 p-4 bg-gray-800 rounded-lg"
+                onClick={(e) => {
+                  handleNavigation('/profile', e);
+                  closeMobileMenu();
+                }}
+                >
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-700 flex items-center justify-center flex-shrink-0">
                     {usuario.fotoPerfil ? (
                       <img
@@ -487,7 +541,7 @@ const Navbar = () => {
                   <User className="w-5 h-5" />
                   <span>Perfil</span>
                 </a>
-                
+
                 {usuario?.tipo === 'Super' && (
                   <a
                     href="/userManagement"
@@ -501,7 +555,7 @@ const Navbar = () => {
                     <span>Gerenciar Usuários</span>
                   </a>
                 )}
-                
+
                 <button
                   onClick={() => {
                     handleSignOut();
@@ -520,16 +574,16 @@ const Navbar = () => {
         </div>
       </nav>
 
-    {/* Espaçador dinâmico */}
-      <div 
+      {/* Espaçador dinâmico */}
+      <div
         className={cn(
           "w-full transition-all duration-300",
-          scrolled ? "h-[72px]" : "h-[96px]", 
+          scrolled ? "h-[72px]" : "h-[96px]",
           "bg-transparent"
         )}
       />
-        </>
-      );
+    </>
+  );
 };
 
 export default Navbar;

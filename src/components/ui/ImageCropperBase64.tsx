@@ -8,14 +8,22 @@ import { Slider } from "@/components/ui/slider";
 interface ImageCropperProps {
   imageSrc: string | null;
   onUploadSuccess: (base64: string) => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export default function ImageCropper({ imageSrc ,onUploadSuccess }: ImageCropperProps) {
+export default function ImageCropper({ 
+  imageSrc, 
+  onUploadSuccess,
+  isOpen = true,
+  onClose
+}: ImageCropperProps) {
   const [image, setImage] = useState<string | null>(imageSrc);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const ASPECT_RATIO = 630 / 335;
   const MIN_WIDTH = 630;
@@ -49,6 +57,16 @@ export default function ImageCropper({ imageSrc ,onUploadSuccess }: ImageCropper
     };
   };
 
+  const handleClose = () => {
+    if (onClose) {
+      setIsClosing(true);
+      setTimeout(() => {
+        onClose();
+        setIsClosing(false);
+      }, 700);
+    }
+  };
+
   const handleSave = async () => {
     if (!imageSrc || !croppedAreaPixels) {
       alert("Imagem não carregada corretamente.");
@@ -66,9 +84,9 @@ export default function ImageCropper({ imageSrc ,onUploadSuccess }: ImageCropper
         return;
       }
 
-      // Aqui apenas retornamos a base64
       onUploadSuccess(croppedImageBase64);
       handleCancel();
+      handleClose();
     } catch (error) {
       alert("Erro ao processar a imagem.");
       console.error(error);
@@ -82,9 +100,12 @@ export default function ImageCropper({ imageSrc ,onUploadSuccess }: ImageCropper
     setCroppedAreaPixels(null);
     setZoom(1);
     setCrop({ x: 0, y: 0 });
+    handleClose();
   };
 
-  return (
+  if (!isOpen) return null;
+
+  const content = (
     <div className="space-y-4">
       <input
         type="file"
@@ -150,6 +171,54 @@ export default function ImageCropper({ imageSrc ,onUploadSuccess }: ImageCropper
           </div>
         </>
       )}
+    </div>
+  );
+
+  // Se não tiver onClose, renderiza apenas o conteúdo (comportamento atual)
+  if (!onClose) {
+    return content;
+  }
+
+  // Se tiver onClose, renderiza com modal animado
+  return (
+    <div
+      className={`fixed inset-0 flex items-center justify-center z-50 p-4 transition-all duration-700 ease-in-out ${
+        isClosing
+          ? 'bg-slate-600/0 backdrop-blur-none opacity-0'
+          : 'bg-slate-600/40 backdrop-blur-sm opacity-100'
+      }`}
+      style={{
+        backdropFilter: isClosing ? 'blur(0px)' : 'blur(8px)',
+        background: isClosing
+          ? 'rgba(71, 85, 105, 0)'
+          : 'rgba(71, 85, 105, 0.4)'
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
+    >
+      <div
+        className={`bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-700 ease-in-out ${
+          isClosing
+            ? 'scale-95 opacity-0 translate-y-4'
+            : 'scale-100 opacity-100 translate-y-0'
+        }`}
+      >
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold">Recortar Imagem</h3>
+            <button
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600 text-2xl transition-colors duration-200"
+            >
+              ×
+            </button>
+          </div>
+          {content}
+        </div>
+      </div>
     </div>
   );
 }

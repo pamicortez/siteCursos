@@ -66,8 +66,8 @@ const Footer2 = ({
   };
 
   return (
-    <section className="w-full py-8 px-8 bg-white border-t ">
-      <div className="max-w-full mx-auto px-0 ">
+    <section className="w-full py-8 px-8 bg-white border-t">
+      <div className="max-w-full mx-auto px-0">
         <footer>
           <div className="flex items-center gap-2 lg:justify-start py-4">
             <Link href="https://www.uefs.br/">
@@ -79,8 +79,8 @@ const Footer2 = ({
               />
             </Link>
           </div>
-          {/* Main content area for Orientadora and Desenvolvedores */}
-          <div className="flex flex-col gap-8"> {/* This ensures vertical stacking of sections */}
+          
+          <div className="flex flex-col gap-8">
             {/* Orientadora Section */}
             <div>
               <h3 className="mb-4 font-bold">{orientadoraSection.title}</h3>
@@ -92,21 +92,21 @@ const Footer2 = ({
                 ))}
               </div>
             </div>
-
-            {/* Desenvolvedores Section */}
+            
+            {/* Desenvolvedores Section - Two Columns */}
             <div>
               <h3 className="mb-4 font-bold">{desenvolvedoresSection.title}</h3>
-              <div className="flex flex-wrap gap-x-4 gap-y-2 text-muted-foreground">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 w-fit text-muted-foreground">
                 {desenvolvedoresSection.links.map((link, linkIdx) => (
-                  <div key={linkIdx} className="font-medium hover:text-primary">
+                  <div key={linkIdx} className="font-medium hover:text-primary px-2">
                     <Link href={link.url}>{link.text}</Link>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-
-          <div className="mt-24 flex flex-col justify-between gap-4 pt-8 text-sm font-medium text-muted-foreground md:flex-row md:items-center justify-center"> {/* Added justify-center for centering */}
+          
+          <div className="mt-24 flex flex-col justify-between gap-4 pt-8 text-sm font-medium text-muted-foreground md:flex-row md:items-center justify-center">
             <p>{copyright}</p>
           </div>
         </footer>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSession } from "next-auth/react"
 import { useSearchParams, useRouter, notFound } from 'next/navigation';
 import { Button } from "@/components/ui/button"
@@ -19,8 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Trash2 } from 'lucide-react';
+import { Trash2, ImagePlus } from 'lucide-react';
 import { ConfirmationModal } from '@/components/ConfirmationModal';
+
 
 
 type AulaType = {
@@ -111,7 +112,32 @@ function SearchComponent() {
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
 
   const [aulas, setAulas] = useState<AulaType[]>([{ titulo: "", video: "", slide: null, podcast: "" }]);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const [showImageCropper, setShowImageCropper] = useState(false);
+  const [tempImage, setTempImage] = useState<string | null>(null);
+
+  const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setTempImage(base64);
+      setShowImageCropper(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleCropSuccess = (base64: string) => {
+    setImagemBase64(base64);
+    setShowImageCropper(false);
+  };
+
+  const removeImage = () => {
+    setImagemBase64(null);
+  };
 
 
   const handleAulasInputChange = (index: number, field: keyof AulaType, value: string | File | null) => {
@@ -279,6 +305,48 @@ function SearchComponent() {
       <form onSubmit={handleSubmit}>
         <div className="px-20 py-12">
           <h1 className="text-3xl font-bold mb-12 text-center">Criar Curso</h1>
+
+          <div className="grid items-center gap-1.5 max-w-md mx-auto mb-12">
+            <Label htmlFor="imagem">Imagem do Curso*</Label>
+
+            {/* Input oculto para seleção de arquivo */}
+            <Input
+              id="image-upload-input"
+              type="file"
+              className="hidden"
+              ref={imageInputRef}
+              onChange={handleSelectImage}
+              accept="image/png, image/jpeg, image/jpg, image/webp"
+            />
+
+            {imagemBase64 ? (
+              <div className="relative group w-full h-48">
+                <img
+                  src={imagemBase64}
+                  alt="Imagem do curso"
+                  className="rounded-lg object-cover w-full h-full border"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full p-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                  aria-label="Remover imagem"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="w-full h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+              >
+                <ImagePlus className="h-10 w-10 mb-2" />
+                <span>Adicionar Imagem</span>
+              </button>
+            )}
+          </div>
+
           <div className="grid gap-6 mb-6 md:grid-cols-3">
 
             <div className="grid items-center gap-1.5">
@@ -312,28 +380,7 @@ function SearchComponent() {
 
           </div>
 
-          <div className="grid gap-6 mb-6 md:grid-cols-3">
-            <div className="grid items-center gap-1.5">
-              <Label htmlFor="imagem">Imagem*</Label>
-              <Input
-                id="imagem"
-                name="imagem"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setImagemBase64(reader.result as string);
-                      setShowImageCropper(true);
-                      console.log("chegou aqui")
-                    };
-                    reader.readAsDataURL(file); // Converte para base64
-                  }
-                }}
-              />
-            </div>
+          <div className="grid gap-6 mb-6 md:grid-cols-2">
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="cargaHoraria">Carga Horária*</Label>
@@ -378,7 +425,6 @@ function SearchComponent() {
             </div>
 
           </div>
-
 
           <h1 className="text-3xl font-bold mb-3 mt-20 text-center">Aulas</h1>
           <div className="mb-5 flex justify-end">
@@ -442,28 +488,12 @@ function SearchComponent() {
 
       {/* Modal do Image Cropper */}
       {showImageCropper && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">Ajustar Imagem</h3>
-                <button
-                  onClick={() => setShowImageCropper(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
-                >
-                  ×
-                </button>
-              </div>
-              <ImageCropper
-                imageSrc={imagemBase64} // imagem original
-                onUploadSuccess={(base64) => {
-                  setImagemBase64(base64);
-                  setShowImageCropper(false);
-                }}
-              />
-            </div>
-          </div>
-        </div>
+        <ImageCropper
+          imageSrc={tempImage}
+          onUploadSuccess={handleCropSuccess}
+          isOpen={showImageCropper}
+          onClose={() => setShowImageCropper(false)}
+        />
       )}
     </div>
 

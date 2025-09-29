@@ -29,7 +29,7 @@ function SearchPageNoSuspense() {
   const router = useRouter();
 
   const [filter, setFilter] = useState(searchParams.get("filter") ?? "curso");
-  const [categoria, setCategoria] = useState(searchParams.get("categoria") ?? "");
+  const [categoria, setCategoria] = useState(searchParams.get("categoria") ?? "todas");
   const [searchTerm, setSearchTerm] = useState(searchParams.get("searchTerm") ?? "");
   const [ordem, setOrdem] = useState(searchParams.get("ordem") ?? "alfabetica");
 
@@ -40,6 +40,18 @@ function SearchPageNoSuspense() {
 
   const [categoriasCursos, setCategoriasCursos] = useState<string[]>([]);
   const [categoriasProjetos, setCategoriasProjetos] = useState<string[]>([]);
+
+  useEffect(() => {
+    const newFilter = searchParams.get("filter") ?? "curso";
+    const newCategoria = searchParams.get("categoria") ?? "todas";
+    const newSearchTerm = searchParams.get("searchTerm") ?? "";
+    const newOrdem = searchParams.get("ordem") ?? "alfabetica";
+    
+    setFilter(newFilter);
+    setCategoria(newCategoria);
+    setSearchTerm(newSearchTerm);
+    setOrdem(newOrdem);
+  }, [searchParams]);
 
   const categoriasFixas = [
     "Linguagens, Letras e Comunicação",
@@ -64,7 +76,7 @@ function SearchPageNoSuspense() {
 
   const fetchFormacoesAcademicas = async (): Promise<string[]> => {
     try {
-      const response = await fetch("http://localhost:3000/api/usuario");
+      const response = await fetch("/api/usuario");
       const usuarios: { formacaoAcademica?: string }[] = await response.json();
       const formacoes = usuarios
         .map((u) => u.formacaoAcademica)
@@ -78,7 +90,7 @@ function SearchPageNoSuspense() {
 
   const fetchCategoriasCursos = async (): Promise<string[]> => {
     try {
-      const response = await fetch("http://localhost:3000/api/curso");
+      const response = await fetch("/api/curso");
       const cursos: { categoria?: string }[] = await response.json();
       const categorias = cursos
         .map((c) => c.categoria)
@@ -92,7 +104,7 @@ function SearchPageNoSuspense() {
 
   const fetchCategoriasProjetos = async (): Promise<string[]> => {
     try {
-      const response = await fetch("http://localhost:3000/api/projeto");
+      const response = await fetch("/api/projeto");
       const projetos: { categoria?: string }[] = await response.json();
       const categorias = projetos
         .map((p) => p.categoria)
@@ -130,7 +142,7 @@ function SearchPageNoSuspense() {
 
 
   useEffect(() => {
-    setCategoria("");
+    setCategoria("todas");
 
     if (filter === "usuario") {
       fetchFormacoesAcademicas().then(setFormacoes);
@@ -155,10 +167,10 @@ function SearchPageNoSuspense() {
 
   useEffect(() => {
     const fetchData = async () => {
-      let url = `http://localhost:3000/api/${filter}`;
+      let url = `/api/${filter}`;
       const params = new URLSearchParams();
 
-      if (categoria) {
+      if (categoria && categoria !== "todas") {
         params.append(filter === "usuario" ? "formacaoAcademica" : "categoria", categoria);
       }
       if (searchTerm) {
@@ -181,10 +193,21 @@ function SearchPageNoSuspense() {
     fetchData();
   }, [filter, categoria, searchTerm, ordem]);
 
+  // useEffect(() => {
+  //   const params = new URLSearchParams();
+  //   if (filter) params.set("filter", filter);
+  //   if (categoria) params.set("categoria", categoria);
+  //   if (searchTerm) params.set("searchTerm", searchTerm);
+  //   if (ordem) params.set("ordem", ordem);
+  //   router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`, {
+  //     scroll: false,
+  //   });
+  // }, [filter, categoria, searchTerm, ordem, router]);
+
   useEffect(() => {
     const params = new URLSearchParams();
     if (filter) params.set("filter", filter);
-    if (categoria) params.set("categoria", categoria);
+    if (categoria && categoria !== "todas") params.set("categoria", categoria);
     if (searchTerm) params.set("searchTerm", searchTerm);
     if (ordem) params.set("ordem", ordem);
     router.replace(`/search${params.toString() ? `?${params.toString()}` : ""}`, {
@@ -231,6 +254,8 @@ function SearchPageNoSuspense() {
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
+                  {/* Opção "Todas" com valor não-vazio */}
+                  <SelectItem value="todas">Todas</SelectItem>
                   {categoriasParaSelect.length > 0 ? (
                     categoriasParaSelect.map((item, index) => (
                       <SelectItem key={index} value={item}>
@@ -238,7 +263,7 @@ function SearchPageNoSuspense() {
                       </SelectItem>
                     ))
                   ) : (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="sem-opcoes" disabled>
                       Selecione uma opção
                     </SelectItem>
                   )}

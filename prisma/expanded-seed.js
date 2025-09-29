@@ -105,7 +105,7 @@ async function main() {
             instituicaoEnsino: 'UEFS - Universidade Estadual de Feira de Santana',
             formacaoAcademica: 'Ciências da Computação',
             resumoPessoal: 'Doutora em Computação, pesquisadora em redes neurais.',
-            tipo: client_1.tipoUser.Super,
+            tipo: client_1.tipoUser.Normal,
         }),
         criarUsuarioSeNaoExistir({
             email: 'pedro.lima@example.com',

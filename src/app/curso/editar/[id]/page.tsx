@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -15,8 +15,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
-import { Trash2 } from 'lucide-react';
+import { Trash2, ImagePlus } from 'lucide-react';
 import { ConfirmationModal } from '@/components/ConfirmationModal';
+import ImageCropper from "@/components/ui/ImageCropperBase64";
 
 
 type OptionType = { value: string; label: string };
@@ -57,18 +58,18 @@ export default function Curso() {
 
   const [aulas, setAulas] = useState<AulaType[]>([{ titulo: "", linkVideo: "", linkPdf: null, linkPodcast: "" }]);
   const [curso, setCurso] = useState<CursoType>({
-  id: '',
-  idUsuario: '',
-  titulo: '',
-  metodologia: '',
-  linkInscricao: '',
-  descricao: '',
-  bibliografia: '',
-  categoria: '',
-  imagem: '',
-  vagas: 0,
-  metodoAvaliacao: '',
-  cargaHoraria: 0,
+    id: '',
+    idUsuario: '',
+    titulo: '',
+    metodologia: '',
+    linkInscricao: '',
+    descricao: '',
+    bibliografia: '',
+    categoria: '',
+    imagem: '',
+    vagas: 0,
+    metodoAvaliacao: '',
+    cargaHoraria: 0,
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [imagemBase64, setImagemBase64] = useState<string | null>(null);
@@ -82,6 +83,10 @@ export default function Curso() {
   const [showResultDialog, setShowResultDialog] = useState(false);
 
   const { data: session, status } = useSession();
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [showImageCropper, setShowImageCropper] = useState(false);
+  const [tempImage, setTempImage] = useState<string | null>(null);
 
   useEffect(() => {
 
@@ -104,7 +109,7 @@ export default function Curso() {
         setAulas(data.aula);
         setImagemBase64(data.imagem)
 
-      const resCategories = await fetch("/api/enums/categoriaCurso");
+        const resCategories = await fetch("/api/enums/categoriaCurso");
         if (!resCategories.ok) {
           throw new Error("Erro ao buscar categorias de evento");
         }
@@ -147,6 +152,29 @@ export default function Curso() {
       };
     });
   }
+
+  const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setTempImage(base64);
+      setShowImageCropper(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleCropSuccess = (base64: string) => {
+    setImagemBase64(base64);
+    setShowImageCropper(false);
+  };
+
+  const removeImage = () => {
+    setImagemBase64(null);
+  };
 
 
 
@@ -285,7 +313,7 @@ export default function Curso() {
 
   if (loadingInitial) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]"> 
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
         <p className="ml-4 text-lg text-gray-700">Carregando curso...</p>
       </div>
@@ -314,6 +342,48 @@ export default function Curso() {
       <form onSubmit={handleUpdate}>
         <div className="px-20 py-12">
           <h1 className="text-3xl font-bold mb-12 text-center">Editar Curso</h1>
+
+          <div className="grid items-center gap-1.5 max-w-md mx-auto mb-12">
+            <Label htmlFor="imagem">Imagem de Capa*</Label>
+
+            {/* Input oculto para seleção de arquivo */}
+            <Input
+              id="image-upload-input"
+              type="file"
+              className="hidden"
+              ref={imageInputRef}
+              onChange={handleSelectImage}
+              accept="image/png, image/jpeg, image/jpg, image/webp"
+            />
+
+            {imagemBase64 ? (
+              <div className="relative group w-full h-48">
+                <img
+                  src={imagemBase64}
+                  alt="Imagem do curso"
+                  className="rounded-lg object-cover w-full h-full border"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full p-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                  aria-label="Remover imagem"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="w-full h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+              >
+                <ImagePlus className="h-10 w-10 mb-2" />
+                <span>Adicionar Imagem</span>
+              </button>
+            )}
+          </div>
+
           <div className="grid gap-6 mb-6 md:grid-cols-3">
 
             <div className="grid items-center gap-1.5">
@@ -347,27 +417,8 @@ export default function Curso() {
 
           </div>
 
-          <div className="grid gap-6 mb-6 md:grid-cols-3">
+          <div className="grid gap-6 mb-6 md:grid-cols-2">
 
-            <div className="grid items-center gap-1.5">
-              <Label htmlFor="imagem">Imagem*</Label>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setImagemBase64(reader.result as string); // base64 com prefixo data:image/...
-                    };
-                    reader.readAsDataURL(file); // Converte para base64
-                    console.log(file.name)
-                  }
-                }}
-              />
-
-            </div>
 
             <div className="grid items-center gap-1.5">
               <Label htmlFor="Carga horaria">Carga Horária*</Label>
@@ -411,7 +462,6 @@ export default function Curso() {
               <Input required type="text" name="avaliacao" value={curso.metodoAvaliacao ?? ""} onChange={(e) => handleInputChange(e, setCurso, "metodoAvaliacao")} />
             </div>
           </div>
-
 
           <h1 className="text-3xl font-bold mb-3 mt-20 text-center">Aulas</h1>
           <div className="mb-5 flex justify-end">
@@ -470,6 +520,14 @@ export default function Curso() {
         confirmText="OK"
         variant={resultDialog.isError ? 'destructive' : 'default'}
       />
+      {showImageCropper && (
+        <ImageCropper
+          imageSrc={tempImage}
+          onUploadSuccess={handleCropSuccess}
+          isOpen={showImageCropper}
+          onClose={() => setShowImageCropper(false)}
+        />
+      )}
     </div>
 
   );

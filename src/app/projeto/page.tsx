@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Trash2 } from 'lucide-react';
+import { Trash2, ImagePlus } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import ImageCropper from "@/components/ui/ImageCropperBase64";
+import { ConfirmationModal } from '@/components/ConfirmationModal';
 
 // ... (types mantidos iguais)
 type ColaboradorFromAPI = {
@@ -37,50 +38,6 @@ interface ProjetoColaborador {
   colaborador: ColaboradorFromAPI;
 }
 
-function ConfirmationModal({ 
-  isOpen, 
-  onClose, 
-  onConfirm,
-  title,
-  message,
-  confirmText,
-  variant = 'default'
-}: { 
-  isOpen: boolean; 
-  onClose?: () => void; 
-  onConfirm: () => void;
-  title: string;
-  message: string;
-  confirmText: string;
-  variant?: 'default' | 'destructive';
-}) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200">
-        <h2 className="text-xl font-bold mb-4">{title}</h2>
-        <p className="mb-6">{message}</p>
-        <div className="flex justify-end gap-4">
-          {onClose && (
-            <Button 
-              variant="outline"
-              onClick={onClose}
-            >
-              Continuar editando
-            </Button>
-          )}
-          <Button 
-            variant={variant}
-            onClick={onConfirm}
-          >
-            {confirmText}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 type SuggestionItem = {
   label: string;
@@ -128,6 +85,9 @@ export default function Projeto() {
   const { data: session, status } = useSession();
   const [showImageCropper, setShowImageCropper] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [imagemBase64, setImagemBase64] = useState<string | null>(null);
 
   // ... (todos os useEffect e funções mantidos iguais até handleSubmit)
 
@@ -183,9 +143,9 @@ export default function Projeto() {
         setIsEditMode(true);
         fetchProjectData(projectId);
       }
-    }, 300); 
+    }, 300);
     return () => clearInterval(intervalId);
-}, [projectId, status]);
+  }, [projectId, status]);
 
   const fetchProjectData = async (id: string) => {
     try {
@@ -195,11 +155,11 @@ export default function Projeto() {
       const data = await response.json();
 
       const isProjectOwner = data.projetoUsuario?.some
-      ((user: any) =>
-          Number(user.idUsuario) === Number(session?.user?.id) 
-      );
+        ((user: any) =>
+          Number(user.idUsuario) === Number(session?.user?.id)
+        );
       console.log(isProjectOwner, data)
-      
+
       if (!isProjectOwner) {
         router.push("/home");
       }
@@ -210,15 +170,17 @@ export default function Projeto() {
         startDate: data.dataInicio.split('T')[0],
         endDate: data.dataFim ? data.dataFim.split('T')[0] : '',
         category: data.categoria,
-        image: data.imagem     
+        image: data.imagem
       });
+
+      setImagemBase64(data.imagem);
 
       const mappedCollaborators = data.projetoColaborador.map((colab: ProjetoColaborador) => ({
         name: colab.colaborador.nome,
-        role: colab.categoria 
+        role: colab.categoria
       }));
 
-    setCollaborators(mappedCollaborators);
+      setCollaborators(mappedCollaborators);
 
     } catch (error) {
       console.error("Erro ao carregar projeto:", error);
@@ -240,7 +202,7 @@ export default function Projeto() {
         setLoadingCategories(false);
       }
     };
-  
+
     fetchCategories();
   }, []);
 
@@ -255,7 +217,7 @@ export default function Projeto() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-  
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64 = reader.result as string;
@@ -272,42 +234,56 @@ export default function Projeto() {
     if (wordCount > 2) {
       return;
     }
-  
+
     const updatedCollaborators = [...collaborators];
     updatedCollaborators[index] = {
       ...updatedCollaborators[index],
       name: normalizedValue,
     };
     setCollaborators(updatedCollaborators);
-    
+
     if (normalizedValue.length > 0) {
       const matchedNames = colaboradoresDisponiveis
         .filter(colab => {
-                const isNotCurrentUser = colab.id !== Number(session?.user?.id);
-                const matchesNome = colab.Nome.toLowerCase().includes(normalizedValue.toLowerCase());
-                const matchesEmail = colab.email.toLowerCase().includes(normalizedValue.toLowerCase());
+          const isNotCurrentUser = colab.id !== Number(session?.user?.id);
+          const matchesNome = colab.Nome.toLowerCase().includes(normalizedValue.toLowerCase());
+          const matchesEmail = colab.email.toLowerCase().includes(normalizedValue.toLowerCase());
 
-                console.log({
-                  colabId: colab.id,
-                  sessionUserId: Number(session?.user?.id),
-                  isNotCurrentUser,
-                  matchesNome,
-                  matchesEmail,
-                  shouldInclude: isNotCurrentUser && (matchesNome || matchesEmail)
-                });
+          console.log({
+            colabId: colab.id,
+            sessionUserId: Number(session?.user?.id),
+            isNotCurrentUser,
+            matchesNome,
+            matchesEmail,
+            shouldInclude: isNotCurrentUser && (matchesNome || matchesEmail)
+          });
 
-                return isNotCurrentUser && (matchesNome || matchesEmail);
-              })
-            .map(colab => ({
-                    label: `${colab.Nome} (${colab.email})`,
-                    nome: colab.Nome
-              }))
+          return isNotCurrentUser && (matchesNome || matchesEmail);
+        })
+        .map(colab => ({
+          label: `${colab.Nome} (${colab.email})`,
+          nome: colab.Nome
+        }))
         .slice(0, 5);
-      
+
       setSuggestions(matchedNames.length > 0 ? { index, names: matchedNames } : null);
     } else {
       setSuggestions(null);
     }
+  };
+
+  const handleSelectImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setTempImage(base64);
+      setShowImageCropper(true);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const handleSelectSuggestion = (nome: string, index: number) => {
@@ -326,13 +302,26 @@ export default function Projeto() {
     setCollaborators(updatedCollaborators);
   };
 
+  const handleCropSuccess = (base64: string) => {
+    setImagemBase64(base64);
+    setShowImageCropper(false);
+  };
+
+  const removeImage = () => {
+    setImagemBase64(null);
+    setProjectData(prevState => ({
+      ...prevState,
+      image: ''
+    }));
+  };
+
   const addCollaborator = useCallback(() => {
     const last = collaborators[collaborators.length - 1];
 
     if (last && (!last.name.trim() || !last.role.trim())) {
       alert("Preencha o nome e o cargo do colaborador antes de adicionar outro.");
-    return;
-  }
+      return;
+    }
     setCollaborators([...collaborators, { name: '', role: '' }]);
   }, [collaborators]);
 
@@ -367,32 +356,32 @@ export default function Projeto() {
 
     const validatedCollaborators = collaborators.map(colab => ({
       ...colab,
-      name: colab.name.trim().replace(/\s+/g, ' '), 
+      name: colab.name.trim().replace(/\s+/g, ' '),
     }));
-    
+
     if (!validateCollaborators()) {
       return;
     }
 
     const requestBody = {
       titulo: projectData.title,
-      imagem: projectData.image,
+      imagem: imagemBase64 || projectData.image,
       descricao: projectData.description,
       categoria: projectData.category,
       dataInicio: new Date(projectData.startDate).toISOString(),
       dataFim: projectData.endDate ? new Date(projectData.endDate).toISOString() : null,
       funcao: cargo,
       colaboradores: validatedCollaborators.length > 0
-      ? validatedCollaborators.map(colaborador => ({
+        ? validatedCollaborators.map(colaborador => ({
           categoria: colaborador.role,
           nome: colaborador.name.trim()
         }))
-      : [],
+        : [],
       ...(isEditMode ? {} : { usuarioId: Number(session?.user?.id) })
     };
-    
+
     console.log(requestBody)
-  
+
     try {
       const rout = isEditMode ? `/api/projeto?id=${projectId}` : "/api/projeto";
       const response = await fetch(rout, {
@@ -402,14 +391,14 @@ export default function Projeto() {
         },
         body: JSON.stringify(requestBody),
       });
-  
+
       if (response.ok) {
         const data = await response.json();
         setResultDialog({
           title: 'Sucesso!',
           message: isEditMode ? 'Projeto atualizado com sucesso.' : 'Projeto criado com sucesso.',
           isError: false,
-          projectId: data.id 
+          projectId: data.id
         });
       } else {
         const errorData = await response.json();
@@ -443,14 +432,14 @@ export default function Projeto() {
   };
 
   const handleCancelClick = () => {
-    const hasData = projectData.title || 
-                   projectData.description || 
-                   projectData.startDate || 
-                   projectData.endDate || 
-                   projectData.category || 
-                   projectData.image || 
-                   collaborators.some(c => c.name || c.role);
-    
+    const hasData = projectData.title ||
+      projectData.description ||
+      projectData.startDate ||
+      projectData.endDate ||
+      projectData.category ||
+      projectData.image ||
+      collaborators.some(c => c.name || c.role);
+
     if (hasData) {
       setShowCancelDialog(true);
     } else {
@@ -482,6 +471,48 @@ export default function Projeto() {
         <div className="py-12">
           <h1 className="text-3xl font-bold mb-12 text-center">{isEditMode ? 'Editar Projeto' : 'Criar Projeto'}</h1>
 
+          <div className="grid items-center gap-1.5 max-w-md mx-auto mb-12">
+            <Label htmlFor="image">Imagem do projeto</Label>
+
+            {/* Input oculto para seleção de arquivo */}
+            <Input
+              id="image-upload-input"
+              type="file"
+              className="hidden"
+              ref={imageInputRef}
+              onChange={handleSelectImage}
+              accept="image/png, image/jpeg, image/jpg, image/webp"
+            />
+
+            {(imagemBase64 || projectData.image) ? (
+              <div className="relative group w-full h-48">
+                <img
+                  src={imagemBase64 || projectData.image}
+                  alt="Imagem do projeto"
+                  className="rounded-lg object-cover w-full h-full border"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full p-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                  aria-label="Remover imagem"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => imageInputRef.current?.click()}
+                className="w-full h-48 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-gray-500 hover:bg-gray-50 hover:text-gray-600 transition-colors"
+              >
+                <ImagePlus className="h-10 w-10 mb-2" />
+                <span>Adicionar Imagem</span>
+              </button>
+            )}
+          </div>
+
+
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label htmlFor="title">Título do projeto*</Label>
@@ -509,15 +540,15 @@ export default function Projeto() {
               />
             </div>
           </div>
-          
+
           <div className="grid gap-8 mb-8">
             <div className="grid items-center gap-1.5">
               <Label className="text-sm font-medium text-gray-700">Meu cargo no projeto*</Label>
               <div className="flex items-center space-x-6 mt-2">
                 <label htmlFor="cargo-coordenador" className="inline-flex items-center space-x-2">
-                  <input 
+                  <input
                     id="cargo-coordenador"
-                    type="radio" 
+                    type="radio"
                     className="h-4 w-4 accent-black border-gray-300 focus:ring-black cursor-pointer"
                     name="cargo"
                     value="Coordenador"
@@ -527,9 +558,9 @@ export default function Projeto() {
                   <span className="text-sm text-gray-700">Coordenador</span>
                 </label>
                 <label htmlFor="cargo-colaborador" className="inline-flex items-center space-x-2">
-                  <input 
+                  <input
                     id="cargo-colaborador"
-                    type="radio" 
+                    type="radio"
                     className="h-4 w-4 accent-black border-gray-300 focus:ring-black cursor-pointer"
                     name="cargo"
                     value="Colaborador"
@@ -596,16 +627,6 @@ export default function Projeto() {
               </Select>
             </div>
 
-            <div className="grid items-center gap-1.5">
-              <Label htmlFor="image">Imagem do projeto</Label>
-              <Input
-                type="file"
-                id="image"
-                name="image"
-                onChange={handleImageChange}
-                accept="image/png, image/jpeg, image/jpg, image/webp"
-              />
-            </div>
           </div>
 
           <div className="grid gap-8 mb-8">
@@ -634,7 +655,7 @@ export default function Projeto() {
                   {suggestions?.index === index && (
                     <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 mt-1">
                       {suggestions.names.map((nameObj, i) => (
-                        <div 
+                        <div
                           key={i}
                           className="p-2 hover:bg-gray-100 cursor-pointer"
                           onClick={() => selectSuggestion(index, nameObj.nome)}
@@ -713,32 +734,12 @@ export default function Projeto() {
       />
 
       {showImageCropper && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">Alterar Foto de Perfil</h3>
-                <button
-                  onClick={() => setShowImageCropper(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
-                  aria-label="Fechar modal de edição de imagem"
-                >
-                  ×
-                </button>
-              </div>
-              <ImageCropper
-                  imageSrc={tempImage}
-                  onUploadSuccess={(base64) => {
-                    setProjectData(prev => ({
-                      ...prev,
-                      image: base64,
-                    }));
-                    setShowImageCropper(false);
-                  }}
-                />
-            </div>
-          </div>
-        </div>
+        <ImageCropper
+          imageSrc={tempImage}
+          onUploadSuccess={handleCropSuccess}
+          isOpen={showImageCropper}
+          onClose={() => setShowImageCropper(false)}
+        />
       )}
     </div>
   );

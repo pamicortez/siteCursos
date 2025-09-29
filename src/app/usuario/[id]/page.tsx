@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import Carrossel from "@/components/Carrossel"
 import { useParams, useRouter } from "next/navigation"
 import CardEvento from "@/components/CardEvento"
@@ -65,6 +66,7 @@ interface Evento {
 export default function UsuarioProfilePage() {
   const params = useParams()
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [usuario, setUsuario] = useState<Usuario | null>(null)
   const [projetos, setProjetos] = useState<Projeto[]>([])
   const [eventos, setEventos] = useState<Evento[]>([])
@@ -166,6 +168,8 @@ export default function UsuarioProfilePage() {
 
     fetchEventos()
   }, [params])
+
+  const isOwnProfile = usuario && session?.user?.id && Number(usuario.id) === Number(session.user.id)
 
   const formatDate = (dateString: string) => {
     try {
@@ -306,6 +310,7 @@ export default function UsuarioProfilePage() {
                     dataFim={projeto.dataFim}
                     isOwner={false}
                     funcaoUsuario={projeto.funcaoUsuario}
+                    isAuthenticated={!!isOwnProfile}
                   />
                 </div>
               ))}

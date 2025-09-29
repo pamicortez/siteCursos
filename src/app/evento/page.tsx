@@ -16,6 +16,7 @@ import { Trash2, ImagePlus } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { useSession } from "next-auth/react";
 import ImageCropper from "@/components/ui/ImageCropperBase64";
+import { ConfirmationModal } from '@/components/ConfirmationModal';
 
 type ColaboradorFromAPI = {
   id: number;
@@ -35,51 +36,6 @@ interface EventoColaborador {
   idEvento: number;
   idColaborador: number;
   colaborador: ColaboradorFromAPI;
-}
-
-function ConfirmationModal({
-  isOpen,
-  onClose,
-  onConfirm,
-  title,
-  message,
-  confirmText,
-  variant = 'default'
-}: {
-  isOpen: boolean;
-  onClose?: () => void;
-  onConfirm: () => void;
-  title: string;
-  message: string;
-  confirmText: string;
-  variant?: 'default' | 'destructive';
-}) {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg max-w-md w-full shadow-xl border border-gray-200">
-        <h2 className="text-xl font-bold mb-4">{title}</h2>
-        <p className="mb-6">{message}</p>
-        <div className="flex justify-end gap-4">
-          {onClose && (
-            <Button
-              variant="outline"
-              onClick={onClose}
-            >
-              Continuar editando
-            </Button>
-          )}
-          <Button
-            variant={variant}
-            onClick={onConfirm}
-          >
-            {confirmText}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 type SuggestionItem = {
@@ -681,9 +637,9 @@ export default function Evento() {
           {/* ESTRUTURA PARA CATEGORIA E IMAGEM PRINCIPAL */}
           <div className="grid gap-8 mb-8 md:grid-cols-2">
             {/* Categoria - CORRIGIDO */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1.5 relative">
               <Label htmlFor="category">Categoria do evento*</Label>
-              <Select value={eventoData.category} onValueChange={(value) => setEventoData(prevState => ({ ...prevState, category: value }))} required>
+              <Select value={eventoData.category} onValueChange={(value) => setEventoData(prevState => ({ ...prevState, category: value }))}>
                 <SelectTrigger id="category">
                   <SelectValue placeholder="Selecione uma categoria" />
                 </SelectTrigger>
@@ -695,6 +651,24 @@ export default function Evento() {
                   </SelectGroup>
                 </SelectContent>
               </Select>
+              {/* Input oculto para validação HTML5 nativa - posicionado sobre o Select */}
+              <input
+                type="text"
+                value={eventoData.category}
+                required
+                style={{
+                  position: 'absolute',
+                  top: '28px',
+                  left: 0,
+                  width: '100%',
+                  height: '40px',
+                  opacity: 0,
+                  pointerEvents: 'none',
+                  zIndex: -1
+                }}
+                onChange={() => { }}
+                tabIndex={-1}
+              />
             </div>
 
             {/* Imagem Principal */}
@@ -706,7 +680,7 @@ export default function Evento() {
                   <button
                     type="button"
                     onClick={removeMainImage}
-                    className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full p-1.5 group-hover:opacity-100 opacity-0 transition-opacity"
+                    className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full p-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                     aria-label="Remover imagem principal"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -741,7 +715,7 @@ export default function Evento() {
                   <button
                     type="button"
                     onClick={() => removeOtherImage(index)}
-                    className="absolute top-1 right-1 bg-black bg-opacity-60 text-white rounded-full p-1 group-hover:opacity-100 opacity-0 transition-opacity"
+                    className="absolute top-2 right-2 bg-black bg-opacity-60 text-white rounded-full p-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                     aria-label="Remover imagem"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -867,24 +841,12 @@ export default function Evento() {
         variant={resultDialog.isError ? 'destructive' : 'default'}
       />
 
-      {showImageCropper && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-semibold">Recortar Imagem</h3>
-                <button onClick={() => setShowImageCropper(false)} className="text-gray-400 hover:text-gray-600 text-2xl">×</button>
-              </div>
-              <ImageCropper
-                imageSrc={tempImage}
-                onUploadSuccess={handleCropSuccess}
-              // Adicionando uma propriedade hipotética para esconder o botão de upload interno, conforme solicitado.
-              // O nome da prop ('hideUploader') é uma suposição e pode precisar de ajuste no componente real.
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      <ImageCropper
+        imageSrc={tempImage}
+        onUploadSuccess={handleCropSuccess}
+        isOpen={showImageCropper}
+        onClose={() => setShowImageCropper(false)}
+      />
     </div>
   );
 }
