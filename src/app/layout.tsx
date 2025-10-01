@@ -19,7 +19,6 @@ export const metadata: Metadata = {
   title: "Cursos UEFS",
   description: "Cursos online oferecidos pela UEFS",
   manifest: "/manifest.json",
-  themeColor: "#000000",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
