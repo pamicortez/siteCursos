@@ -142,7 +142,7 @@ function SearchPageNoSuspense() {
 
 
   useEffect(() => {
-    setCategoria("todas");
+    
 
     if (filter === "usuario") {
       fetchFormacoesAcademicas().then(setFormacoes);

@@ -64,15 +64,15 @@ async function main() {
     console.log('Criando usuários...');
     const novosUsuarios = await Promise.all([
         criarUsuarioSeNaoExistir({
-            email: 'joao.silva@example.com',
-            fotoPerfil: '/professor_man_1.jpg',
-            senha: senhaCriptografada,
-            Nome: 'João Silva',
-            Titulacao: client_1.Titulacao.Especialista,
-            instituicaoEnsino: 'Instituto de Tecnologia XYZ',
-            formacaoAcademica: 'Inteligência Artificial',
-            resumoPessoal: 'Especialista em IA com 5 anos de experiência.',
-            tipo: client_1.tipoUser.Normal,
+            email: 'pamela@uefs.br',
+            fotoPerfil: '/foto_pamela.jpg',
+            senha: '$2b$10$JWQLu9Puay/5Qot040zvbO8sVSDNuYPjIrL9maYOC8Vr2KC86fxAa',
+            Nome: 'Pâmela Cândida',
+            Titulacao: client_1.Titulacao.Doutor,
+            instituicaoEnsino: 'The University of Melbourne',
+            formacaoAcademica: 'Ciências de Computação',
+            resumoPessoal: 'Doutorado em Operations Research',
+            tipo: client_1.tipoUser.Super,
         }),
         criarUsuarioSeNaoExistir({
             email: 'ana.souza@example.com',
@@ -80,7 +80,7 @@ async function main() {
             senha: senhaCriptografada,
             Nome: 'Ana Souza',
             Titulacao: client_1.Titulacao.Doutor,
-            instituicaoEnsino: 'Universidade de Dados ABC',
+            instituicaoEnsino: 'The University of Melbourne',
             formacaoAcademica: 'Big Data e Analytics',
             resumoPessoal: 'Doutora em Big Data com foco em machine learning.',
             tipo: client_1.tipoUser.Normal,
@@ -401,7 +401,7 @@ async function main() {
     console.log('Criando colaboradores...');
     const colaboradores = [];
     const nomesColaboradores = [
-        'João Silva', 'Maria Souza', 'Carlos Mendes', 'Ana Paula',
+        'Pâmela Cândida', 'Maria Souza', 'Carlos Mendes', 'Ana Paula',
         'Roberto Costa', 'Fernanda Alves', 'Ricardo Pereira'
     ];
 
@@ -827,8 +827,9 @@ async function main() {
     // 9. Criar links para os usuários
     console.log('Criando links dos usuários...');
     const linksData = [
-        { link: 'https://linkedin.com/in/joaosilva', email: 'joao.silva@example.com', tipo: client_1.tipoLink.Linkedin },
-        { link: 'https://github.com/joaosilva', email: 'joao.silva@example.com', tipo: client_1.tipoLink.Genérico },
+        { link: 'https://github.com/pamicortez', email: 'pamela@uefs.br', tipo: client_1.tipoLink.Genérico },
+        { link: 'https://linkedin.com/in/pamiccortez', email: 'pamela@uefs.br', tipo: client_1.tipoLink.Linkedin },
+        { link: 'https://instagram.com/pamiccortez', email: 'pamela@uefs.br', tipo: client_1.tipoLink.Instragram },
         { link: 'https://twitter.com/anasouza', email: 'ana.souza@example.com', tipo: client_1.tipoLink.Genérico },
         { link: 'https://linkedin.com/in/anasouza', email: 'ana.souza@example.com', tipo: client_1.tipoLink.Linkedin },
         { link: 'https://portfolio.carlos.dev', email: 'carlos.santos@example.com', tipo: client_1.tipoLink.Genérico },
@@ -1145,12 +1146,12 @@ async function main() {
 
     const carreirasData = [
         {
-            nome: 'Desenvolvedor Full Stack',
-            descricao: 'Desenvolvimento de aplicações web completas',
-            categoria: client_1.categoriaCarreira.profissional,
-            dataInicio: new Date('2020-01-01'),
-            dataFim: new Date('2023-12-31'),
-            email: 'joao.silva@example.com',
+            nome: 'Doutorado em Operations Research',
+            descricao: 'Mathematical models for humanitarian logistics response in natural disasters',
+            categoria: client_1.categoriaCarreira.acadêmica,
+            dataInicio: new Date('2016-01-01'),
+            dataFim: new Date('2024-12-31'),
+            email: 'pamela@uefs.br',
         },
         {
             nome: 'Cientista de Dados',
