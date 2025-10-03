@@ -12,7 +12,9 @@
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
     "seed":"node prisma/seed.js",
-    "expanded-seed": "node prisma/expanded-seed.js"
+    "expanded-seed": "node prisma/expanded-seed.js",
+    "seed-admin": "node prisma/seed-admin.js"
+
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

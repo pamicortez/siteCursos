@@ -356,13 +356,14 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 Copie o resultado e substitua `"your-secret-key-here"` no arquivo `.env.production`.
 
------
 
-### 3\. Comandos Docker para Deploy
+### 3. Comandos Docker para Deploy
 
 Assumindo que você já possui o **Docker** e o **Docker Compose** instalados e configurados, e que os arquivos `Dockerfile` e `docker-compose.yml` estão prontos para usar o `.env.production`, siga os comandos abaixo:
 
-#### A. Build Inicial e Início dos Serviços
+#### **Primeira Execução**
+
+##### A. Build Inicial e Início dos Serviços
 
 Use este comando para construir as imagens (caso necessário) e iniciar todos os serviços definidos no `docker-compose.yml` em modo *detached* (em segundo plano).
 
@@ -376,15 +377,23 @@ ou
 npm run docker:up
 ```
 
-#### B. Popular o Banco de Dados (Seed)
+##### B. Popular o Banco de Dados (Seed)
 
-**Execute este comando *somente* na primeira vez** ou quando precisar recriar os dados iniciais do banco de dados.
+**Execute um destes comandos *somente* na primeira vez** ou quando precisar recriar os dados iniciais do banco de dados.
+
+O comando a seguir cria o usuário admin (Super) e alguns projetos, cursos e eventos fictícios para ocupar espaço.
+
+```bash
+docker-compose exec app npm run seed-admin
+```
+
+ou, se quiser criar mais usuários, projetos, cursos e eventos fictícios
 
 ```bash
 docker-compose exec app npm run expanded-seed
 ```
 
-#### C. Verificação de Logs
+##### C. Verificação de Logs
 
 Para monitorar o *status* e a inicialização da aplicação, verifique os logs do container principal (`app`).
 
@@ -398,15 +407,41 @@ ou
 npm run docker:logs
 ```
 
-#### D. Reconstrução Pós-Modificações
+#### **Segunda e Próximas Execuções**
 
-Se você fizer modificações no código-fonte do Next.js ou nas configurações do ambiente e precisar reconstruir a imagem da aplicação, use este comando. Ele preservará os dados existentes no volume do PostgreSQL.
+##### A. Atualizar o Código do Repositório
+
+Se houver alguma mudança no repositório remoto e você deseja aplicar as atualizações sem alterar o banco de dados, primeiro faça o pull das mudanças:
+
+```bash
+git pull origin main
+```
+
+> **Nota:** Substitua `main` pelo nome da branch que você está usando, se for diferente.
+
+##### B. Reconstrução e Início dos Serviços
+
+Após atualizar o código, use este comando para reconstruir a imagem da aplicação e iniciar os serviços. Ele preservará os dados existentes no volume do PostgreSQL.
 
 ```bash
 docker-compose up -d --build app
 ```
 
 > **Nota:** Não é necessário rodar o `seed` novamente após um *rebuild* se os dados já estiverem populados.
+
+##### C. Verificação de Logs
+
+Para monitorar os logs da aplicação:
+
+```bash
+docker-compose logs -f app
+```
+
+ou 
+
+```bash
+npm run docker:logs
+```
 
 </details>
 
